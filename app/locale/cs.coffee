@@ -92,6 +92,8 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     campaign_player_created_description: "...ve kterých bojujete proti kreativitě ostatních <a href=\"/contribute#artisan\">Zdatných Kouzelníků</a>."
     campaign_classic_algorithms: "Klasické algoritmy"
     campaign_classic_algorithms_description: "... ve kterých se naučíte nejoblíbenější algoritmy v IT."
+#    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
+#    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
 
   share_progress_modal:
     blurb: "Děláš velké pokroky!  Řekni někomu, co jsi se už naučil s CodeCombat." # {change}
@@ -301,7 +303,7 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     infinite_loop_reset_level: "Resetovat úroveň"
     infinite_loop_comment_out: "Zakomentovat můj kód"
     tip_toggle_play: "Přepněte přehrávání/pauzu pomocí Ctrl+P."
-    tip_scrub_shortcut: "Ctrl+[ a Ctrl+] pro přetočení a rychlý přesun."
+    tip_scrub_shortcut: "Ctrl+[ a Ctrl+] pro přetočení a rychlý přesun." # {change}
     tip_guide_exists: "Klikněte na průvode uvnitř herního menu (nahoře na stránce), pro užitečné informace."
     tip_open_source: "CodeCombat je 100% open source!"
     tip_beta_launch: "CodeCombat spustil svoji beta verzi v Říjnu, 2013."
@@ -408,7 +410,7 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
   subscribe:
     comparison_blurb: "Sharpen your skills with a CodeCombat subscription!"
     feature1: "60+ základních úrovní napříč 4 světy" # {change}
-    feature2: "7 silných <strong>nových hrdinů</strong> s jedinečnými dovednostmi!"
+    feature2: "7 silných <strong>nových hrdinů</strong> s jedinečnými dovednostmi!" # {change}
     feature3: "30+ bonusových úrovní" # {change}
     feature4: "<strong>3500 bonusových drahokamů</strong> každý měsíc!"
     feature5: "Video tutoriály"
@@ -591,22 +593,23 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
 #    retrostyle_blurb: "RetroStyle Games"
 
   teachers:
-    title: "CodeCombat pro učitele" # {change}
+    title: "CodeCombat pro učitele"
 #    intro_1: "CodeCombat is an online game that teaches programming. Students write code in real programming languages."
 #    intro_2: "No experience required!"
 #    free_title: "How much does it cost?"
 #    cost_china: "CodeCombat in China is free for the first five levels, after which it costs $9.99 USD per month for access to our other 140+ levels on our exclusive China servers."
-#    free_1: "CodeCombat Basic is FREE! There are 80+ free levels which cover every concept."
+#    free_1: "There are 100+ FREE levels which cover every concept."
 #    free_2: "A monthly subscription provides access to video tutorials and extra practice levels."
 #    teacher_subs_title: "Teachers get free subscriptions!"
-#    teacher_subs_1: "Please contact"
-#    teacher_subs_2: "to set up a free monthly subscription."
+#    teacher_subs_1: "Please fill out our"
+#    teacher_subs_2: "Teacher Survey"
+#    teacher_subs_3: "to set up your subscription."
 #    sub_includes_title: "What is included in the subscription?"
-#    sub_includes_1: "In addition to the 80+ basic levels, students with a monthly subscription get access to these additional features:"
-#    sub_includes_2: "60+ practice levels"
+#    sub_includes_1: "In addition to the 100+ basic levels, students with a monthly subscription get access to these additional features:"
+#    sub_includes_2: "70+ practice levels"
 #    sub_includes_3: "Video tutorials"
 #    sub_includes_4: "Premium email support"
-#    sub_includes_5: "7 new heroes with unique skills to master"
+#    sub_includes_5: "10 new heroes with unique skills to master"
 #    sub_includes_6: "3500 bonus gems every month"
 #    sub_includes_7: "Private Clans"
 #    monitor_progress_title: "How do I monitor student progress?"
@@ -622,8 +625,8 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
 #    who_for_1: "We recommend CodeCombat for students aged 9 and up. No prior programming experience is needed."
 #    who_for_2: "We've designed CodeCombat to appeal to both boys and girls."
 #    material_title: "How much material is there?"
-#    material_china: "Approximately 30 hours of gameplay spread over 140+ subscriber-only levels so far, with new levels every week."
-#    material_1: "Approximately 10 hours of free content and an additional 20 hours of subscriber content, with new levels every week."
+#    material_china: "Approximately 40 hours of gameplay spread over 170+ subscriber-only levels so far."
+#    material_1: "Approximately 25 hours of free content and an additional 15 hours of subscriber content."
 #    concepts_title: "What concepts are covered?"
 #    how_much_title: "How much does a monthly subscription cost?"
 #    how_much_1: "A"
@@ -640,6 +643,34 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     sys_requirements_1: "Protože CodeCombat je hra, pro počítače je to více náročnější než přehrávání videa. Optimalizovali jsme CodeCombat, aby běžel rychle na všech moderních prohlížečích a dokonce i na starších mašinách, takže každý může hrát. Takže tady jsou naše návrhy, jak si co nejvíce užít váš Hour of Code zážitek:" # {change}
     sys_requirements_2: "Používejte nejnovější verzi Chromu nebo Firefoxu." # {change}
 
+#  teachers_survey:
+#    title: "Teacher Survey"
+#    must_be_logged: "You must be logged in first. Please create an account or log in from the menu above."
+#    retrieving: "Retrieving information..."
+#    being_reviewed_1: "Your application for a free trial subscription is being"
+#    being_reviewed_2: "reviewed."
+#    approved_1: "Your application for a free trial subscription was"
+#    approved_2: "approved."
+#    approved_3: "Further instructions have been sent to"
+#    denied_1: "Your application for a free trial subscription has been"
+#    denied_2: "denied."
+#    contact_1: "Please contact"
+#    contact_2: "if you have further questions."
+#    description_1: "We offer free subscriptions to teachers for evaluation purposes. You can find more information on our"
+#    description_2: "teachers"
+#    description_3: "page."
+#    description_4: "Please fill out this quick survey and we’ll email you setup instructions."
+#    email: "Email Address"
+#    school: "Name of School"
+#    location: "Name of City"
+#    age_students: "How old are your students?"
+#    under: "Under"
+#    other: "Other:"
+#    amount_students: "How many students do you teach?"
+#    hear_about: "How did you hear about CodeCombat?"
+#    fill_fields: "Please fill out all fields."
+#    thanks: "Thanks! We'll send you setup instructions shortly."
+
   versions:
     save_version_title: "Uložit novou verzi"
     new_major_version: "Nová hlavní verze"
@@ -648,6 +679,7 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     cla_url: "licencí"
     cla_suffix: "."
     cla_agree: "SOUHLASÍM"
+#    owner_approve: "An owner will need to approve it before your changes will become visible."
 
   contact:
     contact_us: "Konktujte CodeCombat"
@@ -675,6 +707,7 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     picture_tab: "Obrázek"
 #    delete_account_tab: "Delete Your Account"
 #    wrong_email: "Wrong Email"
+#    wrong_password: "Wrong Password"
     upload_picture: "Nahrát obrázek"
 #    delete_this_account: "Delete this account permanently"
 #    god_mode: "God Mode"
@@ -683,7 +716,8 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     admin: "Admin"
     new_password: "Nové heslo"
     new_password_verify: "Potvrdit"
-#    type_in_email: "Type in your email to confirm the deletion"
+#    type_in_email: "Type in your email to confirm account deletion."
+#    type_in_password: "Also, type in your password."
     email_subscriptions: "Odebírat emailem"
     email_subscriptions_none: "Žádné odebírání emailem."
     email_announcements: "Oznámení"
@@ -714,6 +748,7 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     keyboard_shortcuts: "Klávesové zkratky"
     space: "Mezerník"
     enter: "Enter"
+#    press_enter: "press enter"
     escape: "Escape"
     shift: "Shift"
     run_code: "Spustit současný kód."
@@ -756,6 +791,7 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
 #    make_private: "Make clan private"
 #    subs_only: "subscribers only"
 #    create_clan: "Create New Clan"
+#    private_preview: "Preview"
 #    public_clans: "Public Clans"
 #    my_clans: "My Clans"
 #    clan_name: "Clan Name"
@@ -848,6 +884,7 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     level_tab_thangs_all: "Všechny"
     level_tab_thangs_conditions: "Výchozí prostředí"
     level_tab_thangs_add: "Přidat Thangy"
+#    level_tab_thangs_search: "Search thangs"
     add_components: "Přidat součásti"
     component_configs: "Nastavení součástí"
     config_thang: "Dvoj-klik pro konfiguraci thangu"
@@ -893,6 +930,8 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     pop_i18n: "Osídlit I18N"
     tasks: "Úkoly"
 #    clear_storage: "Clear your local changes"
+#    add_system_title: "Add Systems to Level"
+#    done_adding: "Done Adding"
 
   article:
     edit_btn_preview: "Náhled"
@@ -1155,6 +1194,28 @@ module.exports = nativeDescription: "čeština", englishDescription: "Czech", tr
     campaigns: "Kampaně"
 #    poll: "Poll"
 #    user_polls_record: "Poll Voting History"
+
+#  concepts:
+#    advanced_strings: "Advanced Strings"
+#    algorithms: "Algorithms"
+#    arguments: "Arguments"
+#    arithmetic: "Arithmetic"
+#    arrays: "Arrays"
+#    basic_syntax: "Basic Syntax"
+#    boolean_logic: "Boolean Logic"
+#    break_statements: "Break Statements"
+#    classes: "Classes"
+#    for_loops: "For Loops"
+#    functions: "Functions"
+#    if_statements: "If Statements"
+#    input_handling: "Input Handling"
+#    math_operations: "Math Operations"
+#    object_literals: "Object Literals"
+#    strings: "Strings"
+#    variables: "Variables"
+#    vectors: "Vectors"
+#    while_loops: "Loops"
+#    recursion: "Recursion"
 
   delta:
     added: "Přidáno"

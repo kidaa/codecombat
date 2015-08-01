@@ -53,10 +53,10 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     players: "Játékosok" # Hover over a level on /play
     hours_played: "Játékidő" # Hover over a level on /play
     items: "Tárgyak" # Tooltip on item shop button from /play
-    unlock: "Felnyitás" # For purchasing items and heroes
+    unlock: "Feloldás" # For purchasing items and heroes
     confirm: "Megerősítés"
     owned: "Megszerzett" # For items you own
-    locked: "Lezárva"
+    locked: "Zárolva"
     purchasable: "Megvehetvő" # For a hero you unlocked but haven't purchased
     available: "Elérhető"
     skills_granted: "Elnyert képességek" # Property documentation details
@@ -92,6 +92,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     campaign_player_created_description: "...melyekben <a href=\"/contribute#artisan\">Művészi Varázsló</a> társaid ellen kűzdhetsz."
     campaign_classic_algorithms: "Klasszikus Algoritmus"
     campaign_classic_algorithms_description: "... amiben megtanulod a legnépszerűbb számítástudományi algoritmusokat."
+#    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
+#    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
 
   share_progress_modal:
     blurb: "Nagyon szépen fejlődsz! Mondd el a szüleidnek, mit tanultál a CodeCombat-ban."
@@ -301,7 +303,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     infinite_loop_reset_level: "Pálya újrakezdés"
     infinite_loop_comment_out: "Tegye a kódom kommentárba"
     tip_toggle_play: "Játék/Szünet kapcsoló Ctrl+P."
-    tip_scrub_shortcut: "Ctrl+[ és Ctrl+] visszatekerés és gyors-előre."
+    tip_scrub_shortcut: "Ctrl+[ és Ctrl+] visszatekerés és gyors-előre." # {change}
     tip_guide_exists: "Hasznos információkért kattints az oldal tetején az útmutatóra.."
     tip_open_source: "A CodeCombat 100%-osan nyitott forráskódú."
     tip_beta_launch: "CodeCombat Béta teszt 2013 Októberétől elérhető."
@@ -408,7 +410,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
   subscribe:
     comparison_blurb: "Élesítsd képességeid CodeCombat feliratkozással!"
     feature1: "60+ alap pálya, 4 világon át" # {change}
-    feature2: "7 erőteljes <strong>új hős</strong> egyedi képességekkel!"
+    feature2: "7 erőteljes <strong>új hős</strong> egyedi képességekkel!" # {change}
     feature3: "30+ bónusz pálya" # {change}
     feature4: "<strong>3500 bónusz drágakő</strong> minden hónapban!"
     feature5: "Videó oktatóanyagok"
@@ -599,14 +601,15 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     free_1: "CodeCombat Basic INGYENES! 70-nél is több pálya, amely minden tudást megad." # {change}
     free_2: "A havidíjas előfizetés hozzáférést biztosít az oktató videókhoz és az extra gyakoroló pályákhoz."
     teacher_subs_title: "Tanárok ingyenes előfizetést kapnak!"
-    teacher_subs_1: "Lépjen kapcsolatba velünk,"
-    teacher_subs_2: "hogy megkapja az ingyenes havi előfizetést."
+    teacher_subs_1: "Lépjen kapcsolatba velünk," # {change}
+    teacher_subs_2: "hogy megkapja az ingyenes havi előfizetést." # {change}
+#    teacher_subs_3: "to set up your subscription."
     sub_includes_title: "Mit tartalmaz az előfizetés?"
-    sub_includes_1: "A 80+ alap pályán kívül az előfizetéssel rendelkező tanulók az alábbi extrákhoz férnek hozzá:"
+    sub_includes_1: "A 80+ alap pályán kívül az előfizetéssel rendelkező tanulók az alábbi extrákhoz férnek hozzá:" # {change}
     sub_includes_2: "50+ gyakorló pálya" # {change}
     sub_includes_3: "Oktató videók"
     sub_includes_4: "Prémium támogatás emailen"
-    sub_includes_5: "7 új hős egyedi képességekkel"
+    sub_includes_5: "7 új hős egyedi képességekkel" # {change}
     sub_includes_6: "3500 bónusz drágakő minden hónapban"
 #    sub_includes_7: "Private Clans"
 #    monitor_progress_title: "How do I monitor student progress?"
@@ -640,6 +643,34 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     sys_requirements_1: "Egy modern web-böngésző. Újabb verziójú Chrome, Firefox, vagy Safari, illetve Internet Explorer 9 vagy újabb."
     sys_requirements_2: "CodeCombat még nem támogatott iPad-en."
 
+#  teachers_survey:
+#    title: "Teacher Survey"
+#    must_be_logged: "You must be logged in first. Please create an account or log in from the menu above."
+#    retrieving: "Retrieving information..."
+#    being_reviewed_1: "Your application for a free trial subscription is being"
+#    being_reviewed_2: "reviewed."
+#    approved_1: "Your application for a free trial subscription was"
+#    approved_2: "approved."
+#    approved_3: "Further instructions have been sent to"
+#    denied_1: "Your application for a free trial subscription has been"
+#    denied_2: "denied."
+#    contact_1: "Please contact"
+#    contact_2: "if you have further questions."
+#    description_1: "We offer free subscriptions to teachers for evaluation purposes. You can find more information on our"
+#    description_2: "teachers"
+#    description_3: "page."
+#    description_4: "Please fill out this quick survey and we’ll email you setup instructions."
+#    email: "Email Address"
+#    school: "Name of School"
+#    location: "Name of City"
+#    age_students: "How old are your students?"
+#    under: "Under"
+#    other: "Other:"
+#    amount_students: "How many students do you teach?"
+#    hear_about: "How did you hear about CodeCombat?"
+#    fill_fields: "Please fill out all fields."
+#    thanks: "Thanks! We'll send you setup instructions shortly."
+
   versions:
     save_version_title: "Új verzió mentése"
     new_major_version: "Új főverzió"
@@ -648,6 +679,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     cla_url: "CLA"
     cla_suffix: "tartalmát."
     cla_agree: "ELFOGADOM"
+#    owner_approve: "An owner will need to approve it before your changes will become visible."
 
   contact:
     contact_us: "Lépj kapcsolatba velünk"
@@ -675,6 +707,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     picture_tab: "Kép"
     delete_account_tab: "Fiók törlése"
     wrong_email: "Rossz email-cím"
+#    wrong_password: "Wrong Password"
     upload_picture: "Tölts föl egy képet"
     delete_this_account: "Fiók végleges törlése"
 #    god_mode: "God Mode"
@@ -683,7 +716,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     admin: "Adminisztrátor"
     new_password: "Új jelszó"
     new_password_verify: "Új jelszó megismétlése"
-    type_in_email: "Írd be az email-címed a törlés megerősítéséhez"
+    type_in_email: "Írd be az email-címed a törlés megerősítéséhez" # {change}
+#    type_in_password: "Also, type in your password."
     email_subscriptions: "Hírlevél feliratkozások"
     email_subscriptions_none: "Nem kérek email értesítéseket."
     email_announcements: "Bejelentések"
@@ -714,6 +748,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     keyboard_shortcuts: "Billentyűparancsok"
     space: "Szünet"
     enter: "Enter"
+#    press_enter: "press enter"
     escape: "Kilépés"
 #    shift: "Shift"
     run_code: "Aktuális kód futtatása."
@@ -733,20 +768,20 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
   community:
     main_title: "CodeCombat Közösség"
 #    introduction: "Check out the ways you can get involved below and decide what sounds the most fun. We look forward to working with you!"
-#    level_editor_prefix: "Use the CodeCombat"
-#    level_editor_suffix: "to create and edit levels. Users have created levels for their classes, friends, hackathons, students, and siblings. If create a new level sounds intimidating you can start by forking one of ours!"
+    level_editor_prefix: "Használd a CodeCombat"
+    level_editor_suffix: "-t, hogy szerkessz meglévő-, vagy készíts új pályákat. A felhasználók készítettek már pályákat az osztályiknak, hackathonokra, tanulóiknak és testvéreiknek is. Ha egy új pálya elkészítése túl nagy feladatnak tűnik, kezdhetsz egy általunk készített pálya módosításával is."
 #    thang_editor_prefix: "We call units within the game 'thangs'. Use the"
 #    thang_editor_suffix: "to modify the CodeCombat source artwork. Allow units to throw projectiles, alter the direction of an animation, change a unit's hit points, or upload your own vector sprites."
-#    article_editor_prefix: "See a mistake in some of our docs? Want to make some instructions for your own creations? Check out the"
-#    article_editor_suffix: "and help CodeCombat players get the most out of their playtime."
-#    find_us: "Find us on these sites"
-#    social_blog: "Read the CodeCombat blog on Sett"
-#    social_discource: "Join the discussion on our Discourse forum"
-#    social_facebook: "Like CodeCombat on Facebook"
-#    social_twitter: "Follow CodeCombat on Twitter"
-#    social_gplus: "Join CodeCombat on Google+"
-#    social_hipchat: "Chat with us in the public CodeCombat HipChat room"
-#    contribute_to_the_project: "Contribute to the project"
+    article_editor_prefix: "Hibát találtál valamelyik dokumentumunkban? Szeretnél útmutatót adni valamelyik alkotásodhoz? Próbáld ki a"
+    article_editor_suffix: "-t és segíts a CodeCombat játékosoknak, hogy a legtöbbet hozhassák ki a játékkal töltött idejükből."
+    find_us: "Ezeken az oldalakon is megtalálhatsz minket"
+    social_blog: "Olvasd a CodeCombat blogot a Sett-en"
+    social_discource: "Csatlakozz a beszélgetéshez a Discourse forumon"
+    social_facebook: "Like-old a CodeCombat-et a Facebookon"
+    social_twitter: "Kövesd a CodeCombat-et a Twitteren"
+    social_gplus: "Csatlakozz a CodeCombat-hez a Google+ -on"
+    social_hipchat: "Csevegj velünk a publikus CodeCombat HipChat szobában"
+    contribute_to_the_project: "Vegyél részt a projektben"
 
 #  clans:
 #    clan: "Clan"
@@ -756,6 +791,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    make_private: "Make clan private"
 #    subs_only: "subscribers only"
 #    create_clan: "Create New Clan"
+#    private_preview: "Preview"
 #    public_clans: "Public Clans"
 #    my_clans: "My Clans"
 #    clan_name: "Clan Name"
@@ -848,6 +884,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     level_tab_thangs_all: "Mind"
 #    level_tab_thangs_conditions: "Starting Conditions"
 #    level_tab_thangs_add: "Add Thangs"
+#    level_tab_thangs_search: "Search thangs"
 #    add_components: "Add Components"
 #    component_configs: "Component Configurations"
 #    config_thang: "Double click to configure a thang"
@@ -893,6 +930,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    pop_i18n: "Populate I18N"
 #    tasks: "Tasks"
 #    clear_storage: "Clear your local changes"
+#    add_system_title: "Add Systems to Level"
+#    done_adding: "Done Adding"
 
   article:
     edit_btn_preview: "Előnézet"
@@ -998,14 +1037,14 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    code_being_simulated: "Your new code is being simulated by other players for ranking. This will refresh as new matches come in."
 #    no_ranked_matches_pre: "No ranked matches for the "
 #    no_ranked_matches_post: " team! Play against some competitors and then come back here to get your game ranked."
-#    choose_opponent: "Choose an Opponent"
-#    select_your_language: "Select your language!"
+    choose_opponent: "Válassz ellenfelet!"
+    select_your_language: "Válassz nyelvet!"
     tutorial_play: "Gyakorlójáték"
 #    tutorial_recommended: "Recommended if you've never played before"
     tutorial_skip: "Gyakorlójáték átugrása"
     tutorial_not_sure: "Nem érted mi folyik?"
     tutorial_play_first: "Játssz egy gyakorlójátékot először!"
-#    simple_ai: "Simple AI"
+    simple_ai: "Egyszerű MI"
     warmup: "Bemelegítés"
 #    friends_playing: "Friends Playing"
 #    log_in_for_friends: "Log in to play with your friends!"
@@ -1016,7 +1055,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    defeat_the: "Defeat the"
 #    tournament_started: ", started"
     tournament_ends: "A torna vége"
-#    tournament_ended: "Tournament ended"
+    tournament_ended: "A torna végetért"
     tournament_rules: "A torna szabályai"
 #    tournament_blurb: "Write code, collect gold, build armies, crush foes, win prizes, and upgrade your career in our $40,000 Greed tournament! Check out the details"
 #    tournament_blurb_criss_cross: "Win bids, construct paths, outwit opponents, grab gems, and upgrade your career in our Criss-Cross tournament! Check out the details"
@@ -1068,7 +1107,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     invoices: "Számlák"
     service_apple: "Apple"
 #    service_web: "Web"
-#    paid_on: "Paid On"
+    paid_on: "Fizetve"
     service: "Szolgáltatás"
     price: "Ár"
     gems: "Drágakövek"
@@ -1156,6 +1195,28 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    poll: "Poll"
 #    user_polls_record: "Poll Voting History"
 
+#  concepts:
+#    advanced_strings: "Advanced Strings"
+#    algorithms: "Algorithms"
+#    arguments: "Arguments"
+#    arithmetic: "Arithmetic"
+#    arrays: "Arrays"
+#    basic_syntax: "Basic Syntax"
+#    boolean_logic: "Boolean Logic"
+#    break_statements: "Break Statements"
+#    classes: "Classes"
+#    for_loops: "For Loops"
+#    functions: "Functions"
+#    if_statements: "If Statements"
+#    input_handling: "Input Handling"
+#    math_operations: "Math Operations"
+#    object_literals: "Object Literals"
+#    strings: "Strings"
+#    variables: "Variables"
+#    vectors: "Vectors"
+#    while_loops: "Loops"
+#    recursion: "Recursion"
+
 #  delta:
 #    added: "Added"
 #    modified: "Modified"
@@ -1178,7 +1239,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    multiplayer_coming_soon: "More multiplayer features to come!"
 #    multiplayer_sign_in_leaderboard: "Sign in or create an account and get your solution on the leaderboard."
 
-#  legal:
+  legal:
 #    page_title: "Legal"
 #    opensource_intro: "CodeCombat is completely open source."
 #    opensource_description_prefix: "Check out "
@@ -1211,8 +1272,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    art_description_prefix: "All common content is available under the"
 #    cc_license_url: "Creative Commons Attribution 4.0 International License"
 #    art_description_suffix: "Common content is anything made generally available by CodeCombat for the purpose of creating Levels. This includes:"
-#    art_music: "Music"
-#    art_sound: "Sound"
+    art_music: "Zene"
+    art_sound: "Hang"
 #    art_artwork: "Artwork"
 #    art_sprites: "Sprites"
 #    art_other: "Any and all other non-code creative works that are made available when creating Levels."
@@ -1225,7 +1286,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    rights_desc: "All rights are reserved for Levels themselves. This includes"
 #    rights_scripts: "Scripts"
 #    rights_unit: "Unit configuration"
-#    rights_description: "Description"
+    rights_description: "Leírás"
 #    rights_writings: "Writings"
 #    rights_media: "Media (sounds, music) and any other creative content made specifically for that Level and not made generally available when creating Levels."
 #    rights_clarification: "To clarify, anything that is made available in the Level Editor for the purpose of making levels is under CC, whereas the content created with the Level Editor or uploaded in the course of creation of Levels is not."
@@ -1233,15 +1294,15 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    nutshell_description: "Any resources we provide in the Level Editor are free to use as you like for creating Levels. But we reserve the right to restrict distribution of the Levels themselves (that are created on codecombat.com) so that they may be charged for in the future, if that's what ends up happening."
 #    canonical: "The English version of this document is the definitive, canonical version. If there are any discrepancies between translations, the English document takes precedence."
 
-#  ladder_prizes:
+  ladder_prizes:
 #    title: "Tournament Prizes" # This section was for an old tournament and doesn't need new translations now.
 #    blurb_1: "These prizes will be awarded according to"
 #    blurb_2: "the tournament rules"
 #    blurb_3: "to the top human and ogre players."
 #    blurb_4: "Two teams means double the prizes!"
 #    blurb_5: "(There will be two first place winners, two second-place winners, etc.)"
-#    rank: "Rank"
-#    prizes: "Prizes"
+    rank: "Rang"
+    prizes: "Díjak"
 #    total_value: "Total Value"
 #    in_cash: "in cash"
 #    custom_wizard: "Custom CodeCombat Wizard"
@@ -1305,8 +1366,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    basics_looking_for_contracting: "Contracting"
 #    basics_looking_for_internship: "Internship"
 #    basics_looking_for_help: "What kind of developer position do you want?"
-#    name_header: "Fill in your name"
-#    name_anonymous: "Anonymous Developer"
+    name_header: "Add meg a neved"
+    name_anonymous: "Névtelen Fejlesztő"
 #    name_help: "Name you want employers to see, like 'Nick Winter'."
 #    short_description_header: "Write a short description of yourself"
 #    short_description_blurb: "Add a tagline to help an employer quickly learn more about you."

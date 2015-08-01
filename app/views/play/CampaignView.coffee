@@ -265,7 +265,6 @@ module.exports = class CampaignView extends RootView
     level.locked = false if @editorMode
     level.locked = false if @campaign?.get('name') is 'Auditions'
     level.locked = false if me.isInGodMode()
-    level.locked = false if level.slug is 'apocalypse'
     level.disabled = true if level.adminOnly and @levelStatusMap[level.slug] not in ['started', 'complete']
     level.disabled = false if me.isInGodMode()
     level.color = 'rgb(255, 80, 60)'
@@ -276,6 +275,11 @@ module.exports = class CampaignView extends RootView
     if level.unlocksHero
       level.purchasedHero = level.unlocksHero in (me.get('purchased')?.heroes or [])
     level.hidden = level.locked
+    if level.concepts?.length
+      level.displayConcepts = level.concepts
+      maxConcepts = 6
+      if level.displayConcepts.length > maxConcepts
+        level.displayConcepts = level.displayConcepts.slice -maxConcepts
     level
 
   countLevels: (levels) ->
@@ -303,10 +307,10 @@ module.exports = class CampaignView extends RootView
         for nextLevelOriginal in level.nextLevels
           nextLevel = _.find levels, original: nextLevelOriginal
           dontPointTo = ['lost-viking','kithgard-mastery']
-          if nextLevel and not nextLevel.locked and @levelStatusMap[nextLevel.slug] isnt 'complete' and nextLevel.slug not in dontPointTo and not nextLevel.replayable and (
+          if nextLevel and not nextLevel.locked and not nextLevel.disabled and @levelStatusMap[nextLevel.slug] isnt 'complete' and nextLevel.slug not in dontPointTo and not nextLevel.replayable and (
             me.isPremium() or
             not nextLevel.requiresSubscription or
-            nextLevel.slug is 'apocalypse' or
+            (nextLevel.slug is 'boom-and-bust' and not @levelStatusMap['defense-of-plainswood']) or
             (nextLevel.slug is 'favorable-odds' and not @levelStatusMap['the-raised-sword'])
           )
             nextLevel.next = true
@@ -352,9 +356,9 @@ module.exports = class CampaignView extends RootView
       particleKey.push level.type if level.type and level.type isnt 'hero'
       particleKey.push 'replayable' if level.replayable
       particleKey.push 'premium' if level.requiresSubscription
-      particleKey.push 'gate' if level.slug in ['kithgard-gates', 'siege-of-stonehold', 'clash-of-clones']
+      particleKey.push 'gate' if level.slug in ['kithgard-gates', 'siege-of-stonehold', 'clash-of-clones', 'summits-gate']
       particleKey.push 'hero' if level.unlocksHero and not level.unlockedHero
-      particleKey.push 'item' if level.slug is 'apocalypse'  # TODO: generalize
+      #particleKey.push 'item' if level.slug is 'apocalypse'  # TODO: generalize
       continue if particleKey.length is 2  # Don't show basic levels
       continue unless level.hidden or _.intersection(particleKey, ['item', 'hero-ladder', 'replayable']).length
       @particleMan.addEmitter level.position.x / 100, level.position.y / 100, particleKey.join('-')
@@ -491,7 +495,7 @@ module.exports = class CampaignView extends RootView
 
   onWindowResize: (e) =>
     mapHeight = iPadHeight = 1536
-    mapWidth = {dungeon: 2350, forest: 2500, auditions: 2500, desert: 2350, mountain: 2422}[@terrain] or 2350
+    mapWidth = {dungeon: 2350, forest: 2500, auditions: 2500, desert: 2350, mountain: 2422, glacier: 2421}[@terrain] or 2350
     aspectRatio = mapWidth / mapHeight
     pageWidth = @$el.width()
     pageHeight = @$el.height()

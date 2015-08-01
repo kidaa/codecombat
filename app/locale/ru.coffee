@@ -92,6 +92,8 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     campaign_player_created_description: "... в которых вы сражаетесь с креативностью ваших друзей <a href=\"/contribute#artisan\">Ремесленников</a>."
     campaign_classic_algorithms: "Классические принципы"
     campaign_classic_algorithms_description: "... которые чаще всего встречаются в компьютерных науках."
+#    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
+#    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
 
   share_progress_modal:
     blurb: "Вы отлично продвигаетесь! Расскажите своим родителям, как много вы уже выучили с CodeCombat."
@@ -301,7 +303,7 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     infinite_loop_reset_level: "Сбросить уровень"
     infinite_loop_comment_out: "Закомментировать мой код"
     tip_toggle_play: "Переключайте воспроизведение/паузу комбинацией Ctrl+P."
-    tip_scrub_shortcut: "Ctrl+[ и Ctrl+] - перемотка назад и вперёд."
+    tip_scrub_shortcut: "Используйте Ctrl+[ и Ctrl+] для перемотки назад и вперёд."
     tip_guide_exists: "Щёлкните руководство внутри меню (наверху страницы) для получения полезной информации."
     tip_open_source: "Исходный код CodeCombat открыт на 100%!"
     tip_beta_launch: "CodeCombat запустил бета-тестирование в октябре 2013 года."
@@ -407,9 +409,9 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
 
   subscribe:
     comparison_blurb: "Отточите свое мастерство благодаря подписке на CodeCombat!"
-    feature1: "80+ основных уровней на просторах 4-х миров"
-    feature2: "7 могущественных <strong>новых героев</strong> с уникальными способностями!"
-    feature3: "60+ дополнительных уровней"
+    feature1: "80+ основных уровней на просторах 4-х миров" # {change}
+    feature2: "7 могущественных <strong>новых героев</strong> с уникальными способностями!" # {change}
+    feature3: "60+ дополнительных уровней" # {change}
     feature4: "<strong>3500 бонусных самоцветов</strong> каждый месяц!"
     feature5: "Обучающие видеоролики"
     feature6: "Эксклюзивная поддержка по электронной почте"
@@ -596,17 +598,18 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     intro_2: "Опыт не обязателен!"
     free_title: "Сколько это стоит?"
     cost_china: "Первые 5 уровней CodeCombat бесплатны в Китае. При оплате $9.99 в месяц вы получите доступ к последующим более чем 140 уровням на наших эксклюзивных серверах в Китае."
-    free_1: "CodeCombat (его базовая часть) бесплатен! В наличии более 80 уровней, которые покрывают каждый концепт."
+    free_1: "В наличии более 80 БЕСПЛАТНЫХ уровней, которые покрывают каждый концепт." # {change}
     free_2: "Месячная подписка предоставляет доступ к видео-урокам и дополнительным уровням."
     teacher_subs_title: "Учителя получают бесплатные подписки!"
-    teacher_subs_1: "Пожалуйста, напишите на"
-    teacher_subs_2: "для получения бесплатной месячной подписки."
+    teacher_subs_1: "Пожалуйста, заполните нашу"
+    teacher_subs_2: "Анкету учителя"
+    teacher_subs_3: "для настройки вашей подписки."
     sub_includes_title: "Что включено в подписку?"
-    sub_includes_1: "В дополнение к более чем 80 бесплатным уровням ученики с месячной подпиской получат доступ к дополнительным возможностям:"
-    sub_includes_2: "Более 60 уровней для дополнительной практики"
+    sub_includes_1: "В дополнение к более чем 80 бесплатным уровням ученики с месячной подпиской получат доступ к дополнительным возможностям:" # {change}
+    sub_includes_2: "Более 60 уровней для дополнительной практики" # {change}
     sub_includes_3: "Видео-уроки"
     sub_includes_4: "Эксклюзивная поддержка по электронной почте"
-    sub_includes_5: "7 новых героев с уникальными возможностями для оттачивания мастерства"
+    sub_includes_5: "7 новых героев с уникальными возможностями для оттачивания мастерства" # {change}
     sub_includes_6: "3500 бонусных самоцветов каждый месяц"
     sub_includes_7: "Частные Кланы"
     monitor_progress_title: "Как мне следить за прогрессом студентов?"
@@ -622,8 +625,8 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     who_for_1: "Мы рекомендуем CodeCombat для учеников старше 9 лет. Какой-либо опыт программирования не требуется."
     who_for_2: "Мы разработали CodeCombat так, чтобы он подходил и мальчикам и девочкам."
     material_title: "Как много здесь материала?"
-    material_china: "Около 30 часов игрового процесса, распределенного более чем на 140 уровней для подписчиков с добавлением новых уровней каждую неделю."
-    material_1: "Около 10 часов бесплатного контента и 20 часов дополнительного контента для подписчиков с добавлением новых уровней каждую неделю."
+    material_china: "Около 30 часов игрового процесса, распределенного более чем на 140 уровней для подписчиков с добавлением новых уровней каждую неделю." # {change}
+    material_1: "Около 10 часов бесплатного контента и 20 часов дополнительного контента для подписчиков с добавлением новых уровней каждую неделю." # {change}
     concepts_title: "О каких концептах мы рассказываем?"
     how_much_title: "Сколько стоит месячная подписка?"
     how_much_1: "Цена"
@@ -640,6 +643,34 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     sys_requirements_1: "Современный веб-браузер. Последние версии Chrome, Firefox или Safari. Internet Explorer 9 или новее."
     sys_requirements_2: "CodeCombat пока не доступен на iPad."
 
+  teachers_survey:
+    title: "Анкета учителя"
+    must_be_logged: "Сначала необходимо войти в аккаунт. Пожалуйста, создайте аккаунт или войдите через меню вверху."
+    retrieving: "Получение информации..."
+    being_reviewed_1: "Ваша заявка на бесплатную пробную подписку сейчас"
+    being_reviewed_2: "на рассмотрении." # {change}
+    approved_1: "Ваша заявка на бесплатную пробную подписку была"
+    approved_2: "утверждена." # {change}
+    approved_3: "Дальнейшие инструкции были высланы на"
+    denied_1: "Ваша заявка на бесплатную пробную подписку была"
+    denied_2: "отклонена." # {change}
+    contact_1: "Пожалуйста, свяжитесь с"
+    contact_2: ", если у вас остались вопросы."
+    description_1: "Мы предлагаем бесплатные подписки учителям в целях ознакомления. Вы можете найти больше информации на нашей странице"
+    description_2: "учителей"
+    description_3: ""
+    description_4: "Пожалуйста, заполните эту маленькую анкету и мы вышлем вам инструкции по установке на email."
+    email: "Email-адрес"
+    school: "Наименование школы"
+    location: "Наименование города"
+    age_students: "Сколько лет вашим студентам?"
+    under: "Меньше"
+    other: "Другое:"
+    amount_students: "Как много студентов вы обучаете?"
+    hear_about: "Как вы узнали о CodeCombat?"
+    fill_fields: "Пожалуйста, заполните все поля."
+    thanks: "Спасибо! Скоро мы вышлем вам инструкцию по установке."
+
   versions:
     save_version_title: "Сохранить новую версию"
     new_major_version: "Новая основная версия"
@@ -648,6 +679,7 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     cla_url: "лицензионным соглашением соавторов"
     cla_suffix: "."
     cla_agree: "Я СОГЛАСЕН"
+#    owner_approve: "An owner will need to approve it before your changes will become visible."
 
   contact:
     contact_us: "Связаться с CodeCombat"
@@ -675,6 +707,7 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     picture_tab: "Аватар"
     delete_account_tab: "Удалить ваш аккаунт"
     wrong_email: "Неверный email"
+    wrong_password: "Неверный пароль"
     upload_picture: "Загрузить изображение"
     delete_this_account: "Удалить этот аккаунт навсегда"
     god_mode: "Режим бога"
@@ -683,7 +716,8 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     admin: "Админ"
     new_password: "Новый пароль"
     new_password_verify: "Подтверждение пароля"
-    type_in_email: "Введите ваш email для подтверждения удаления"
+    type_in_email: "Введите ваш email для подтверждения удаления аккаунта" # {change}
+    type_in_password: "Так же введите ваш пароль" # {change}
     email_subscriptions: "Email-подписки"
     email_subscriptions_none: "Нет активных подписок."
     email_announcements: "Оповещения"
@@ -714,6 +748,7 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     keyboard_shortcuts: "Горячие клавиши"
     space: "Пробел"
     enter: "Enter"
+    press_enter: "нажмите enter"
     escape: "Escape"
     shift: "Shift"
     run_code: "Выполнить текущий код."
@@ -756,6 +791,7 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     make_private: "Сделать клан частным"
     subs_only: "только для подписчиков"
     create_clan: "Создать новый клан"
+#    private_preview: "Preview"
     public_clans: "Публичные кланы"
     my_clans: "Мои кланы"
     clan_name: "Имя клана"
@@ -848,6 +884,7 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     level_tab_thangs_all: "Все"
     level_tab_thangs_conditions: "Начальные условия"
     level_tab_thangs_add: "Добавить объект"
+#    level_tab_thangs_search: "Search thangs"
     add_components: "Добавить компоненты"
     component_configs: "Конфигурации компонентов"
     config_thang: "Двойной клик для конфигурирования объектов"
@@ -893,6 +930,8 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     pop_i18n: "Популяризируйте I18N"
     tasks: "Задачи"
     clear_storage: "Очистить ваши локальные изменения"
+#    add_system_title: "Add Systems to Level"
+#    done_adding: "Done Adding"
 
   article:
     edit_btn_preview: "Предпросмотр"
@@ -1155,6 +1194,28 @@ module.exports = nativeDescription: "русский", englishDescription: "Russi
     campaigns: "Кампании"
     poll: "Опрос"
     user_polls_record: "История опросов"
+
+#  concepts:
+#    advanced_strings: "Advanced Strings"
+#    algorithms: "Algorithms"
+#    arguments: "Arguments"
+#    arithmetic: "Arithmetic"
+#    arrays: "Arrays"
+#    basic_syntax: "Basic Syntax"
+#    boolean_logic: "Boolean Logic"
+#    break_statements: "Break Statements"
+#    classes: "Classes"
+#    for_loops: "For Loops"
+#    functions: "Functions"
+#    if_statements: "If Statements"
+#    input_handling: "Input Handling"
+#    math_operations: "Math Operations"
+#    object_literals: "Object Literals"
+#    strings: "Strings"
+#    variables: "Variables"
+#    vectors: "Vectors"
+#    while_loops: "Loops"
+#    recursion: "Recursion"
 
   delta:
     added: "Добавлено"

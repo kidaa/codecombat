@@ -92,6 +92,8 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
     campaign_player_created_description: "... v ktorých sa popasuješ s kreativitou svojich <a href=\"/contribute#artisan\">kúzelníckych súdruhov</a>."
     campaign_classic_algorithms: "Klasické Algoritmy"
     campaign_classic_algorithms_description: "... v kterých sa naučíte najobľúbenejšie algoritmy v IT"
+#    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
+#    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
 
   share_progress_modal:
     blurb: "Postupuješ míľovými krokmi ! Povedz kamarátom, čo si sa už naučil pomocou CodeCombatu."
@@ -301,7 +303,7 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
     infinite_loop_reset_level: "Reštartuj level"
     infinite_loop_comment_out: "Zakomentovať môj kód"
     tip_toggle_play: "Prepnite prehrávanie/pauzu pomocou Ctrl+P."
-    tip_scrub_shortcut: "Ctrl+[ a Ctrl+] pre pretočenie a rychlý presun."
+    tip_scrub_shortcut: "Ctrl+[ a Ctrl+] pre pretočenie a rychlý presun." # {change}
     tip_guide_exists: "Kliknite na sprievodcu v hernom menu (hore na stránke), pre užitočné informácie."
     tip_open_source: "CodeCombat je 100% open source!"
     tip_beta_launch: "CodeCombat spustil svoju beta verziu v Októbri, 2013."
@@ -408,7 +410,7 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
   subscribe:
     comparison_blurb: "Uč sa dôkladnejšie vďaka predplatnému !"
     feature1: "60+ základných úrovní v štyroch svetoch" # {change}
-    feature2: "7 mocných <strong>new hrdinov</strong> s jedinečnými schopnosťami!"
+    feature2: "7 mocných <strong>new hrdinov</strong> s jedinečnými schopnosťami!" # {change}
     feature3: "30+ bonusových úrovní" # {change}
     feature4: "<strong>3500 bonusových diamantov</strong> každý mesiac !"
     feature5: "Video tutoriály"
@@ -599,14 +601,15 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
     free_1: "CodeCombat Basic is ZDARMA ! K dispozícii je 70+ úrovní pokrývajúcich každý koncept." # {change}
     free_2: "Mesačné predplatné poskytuje prístup k videonávodom a k úrovniam na precvičenie navyše."
     teacher_subs_title: "Pre učiteľov je predplatné zdarma !"
-    teacher_subs_1: "Napíšte na"
-    teacher_subs_2: "pre zriadenie mesačného predplatného zdarma."
+    teacher_subs_1: "Napíšte na" # {change}
+    teacher_subs_2: "pre zriadenie mesačného predplatného zdarma." # {change}
+#    teacher_subs_3: "to set up your subscription."
     sub_includes_title: "Čo zahrnuje predplatné ?"
     sub_includes_1: "Študenti s mesačným predplatným získajú ku 70+ základným úrovniam  aj :" # {change}
     sub_includes_2: "40+ tréningových úrovní" # {change}
     sub_includes_3: "Video návody"
     sub_includes_4: "Prémiovú emailovú podporu"
-    sub_includes_5: "7 nových hrdinov s jedinečnými schopnosťami"
+    sub_includes_5: "7 nových hrdinov s jedinečnými schopnosťami" # {change}
     sub_includes_6: "3500 bonusových diamantov každý mesiac"
 #    sub_includes_7: "Private Clans"
 #    monitor_progress_title: "How do I monitor student progress?"
@@ -622,7 +625,7 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
     who_for_1: "CodeCombat odporúčame pre žiakov od 9 rokov. Nie sú nutné žiadne predchádzajúce skúsenosti s programovaním."
     who_for_2: "CodeCombat sme navrhli tak, aby oslovil chlapcov aj dievčatá."
     material_title: "Aký je objem učebnej látky ?"
-#    material_china: "Approximately 30 hours of gameplay spread over 140+ subscriber-only levels so far, with new levels every week."
+#    material_china: "Approximately 40 hours of gameplay spread over 170+ subscriber-only levels so far."
     material_1: "Asi 8 hodín bezplatného obsahu a ďalších 14 hodín pre predplatiteľov. 5 nových úrovní každý týždeň." # {change}
     concepts_title: "Aké pojmy sú pokryté ?"
     how_much_title: "Koľko stojí mesačné predplatné ?"
@@ -640,6 +643,34 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
     sys_requirements_1: "Moderný webový prehliadač. Nové verzie prehliadačov Chrome, Firefox alebo Safari. Internet Explorer 9 alebo novší."
     sys_requirements_2: "CodeCombat nie je zatiaľ podprovaný pre iPad."
 
+#  teachers_survey:
+#    title: "Teacher Survey"
+#    must_be_logged: "You must be logged in first. Please create an account or log in from the menu above."
+#    retrieving: "Retrieving information..."
+#    being_reviewed_1: "Your application for a free trial subscription is being"
+#    being_reviewed_2: "reviewed."
+#    approved_1: "Your application for a free trial subscription was"
+#    approved_2: "approved."
+#    approved_3: "Further instructions have been sent to"
+#    denied_1: "Your application for a free trial subscription has been"
+#    denied_2: "denied."
+#    contact_1: "Please contact"
+#    contact_2: "if you have further questions."
+#    description_1: "We offer free subscriptions to teachers for evaluation purposes. You can find more information on our"
+#    description_2: "teachers"
+#    description_3: "page."
+#    description_4: "Please fill out this quick survey and we’ll email you setup instructions."
+#    email: "Email Address"
+#    school: "Name of School"
+#    location: "Name of City"
+#    age_students: "How old are your students?"
+#    under: "Under"
+#    other: "Other:"
+#    amount_students: "How many students do you teach?"
+#    hear_about: "How did you hear about CodeCombat?"
+#    fill_fields: "Please fill out all fields."
+#    thanks: "Thanks! We'll send you setup instructions shortly."
+
   versions:
     save_version_title: "Ulož novú verziu"
     new_major_version: "Nová primárna verzia"
@@ -648,6 +679,7 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
     cla_url: "licencia"
     cla_suffix: "."
     cla_agree: "SÚHLASÍM"
+#    owner_approve: "An owner will need to approve it before your changes will become visible."
 
   contact:
     contact_us: "Kontaktujte nás"
@@ -675,6 +707,7 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
     picture_tab: "Obrázok"
     delete_account_tab: "Zruš svoj účet"
     wrong_email: "Nesprávny email"
+#    wrong_password: "Wrong Password"
     upload_picture: "Nahraj obrázok"
     delete_this_account: "Vymaž natrvalo tento účet"
     god_mode: "Božský mód"
@@ -683,7 +716,8 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
     admin: "Spravovať"
     new_password: "Nové heslo"
     new_password_verify: "Overenie"
-    type_in_email: "Zadaj email na potvrdenie zrušenia účtu"
+    type_in_email: "Zadaj email na potvrdenie zrušenia účtu" # {change}
+#    type_in_password: "Also, type in your password."
     email_subscriptions: "Odoberať emailom"
     email_subscriptions_none: "Žiadne odoberanie emailom."
     email_announcements: "Oznámenia"
@@ -714,6 +748,7 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
 #    keyboard_shortcuts: "Keyboard Shortcuts"
 #    space: "Space"
 #    enter: "Enter"
+#    press_enter: "press enter"
 #    escape: "Escape"
 #    shift: "Shift"
 #    run_code: "Run current code."
@@ -756,6 +791,7 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
 #    make_private: "Make clan private"
 #    subs_only: "subscribers only"
 #    create_clan: "Create New Clan"
+#    private_preview: "Preview"
 #    public_clans: "Public Clans"
 #    my_clans: "My Clans"
 #    clan_name: "Clan Name"
@@ -848,6 +884,7 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
 #    level_tab_thangs_all: "All"
 #    level_tab_thangs_conditions: "Starting Conditions"
 #    level_tab_thangs_add: "Add Thangs"
+#    level_tab_thangs_search: "Search thangs"
 #    add_components: "Add Components"
 #    component_configs: "Component Configurations"
 #    config_thang: "Double click to configure a thang"
@@ -893,6 +930,8 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
 #    pop_i18n: "Populate I18N"
 #    tasks: "Tasks"
 #    clear_storage: "Clear your local changes"
+#    add_system_title: "Add Systems to Level"
+#    done_adding: "Done Adding"
 
   article:
     edit_btn_preview: "Náhľad"
@@ -1155,6 +1194,28 @@ module.exports = nativeDescription: "slovenčina", englishDescription: "Slovak",
 #    campaigns: "Campaigns"
 #    poll: "Poll"
 #    user_polls_record: "Poll Voting History"
+
+#  concepts:
+#    advanced_strings: "Advanced Strings"
+#    algorithms: "Algorithms"
+#    arguments: "Arguments"
+#    arithmetic: "Arithmetic"
+#    arrays: "Arrays"
+#    basic_syntax: "Basic Syntax"
+#    boolean_logic: "Boolean Logic"
+#    break_statements: "Break Statements"
+#    classes: "Classes"
+#    for_loops: "For Loops"
+#    functions: "Functions"
+#    if_statements: "If Statements"
+#    input_handling: "Input Handling"
+#    math_operations: "Math Operations"
+#    object_literals: "Object Literals"
+#    strings: "Strings"
+#    variables: "Variables"
+#    vectors: "Vectors"
+#    while_loops: "Loops"
+#    recursion: "Recursion"
 
 #  delta:
 #    added: "Added"
