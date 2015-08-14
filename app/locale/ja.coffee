@@ -70,7 +70,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     choose_inventory: "アイテムを装備"
     buy_gems: "ジェムを購入"
     subscription_required: "サブスクリプション必須"
-    older_campaigns: "古いキャンペーン"
     anonymous: "名無しのプレイヤー"
     level_difficulty: "難易度: "
     campaign_beginner: "初心者のキャンペーン"
@@ -78,20 +77,8 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     awaiting_levels_adventurer: "冒険者として登録すると、"
     awaiting_levels_adventurer_suffix: "新たなレベルを最初に遊ぶ事ができます"
     adjust_volume: "音量を調整する"
-    choose_your_level: "レベル選択" # The rest of this section is the old play view at /play-old and isn't very important.
-    adventurer_prefix: "別のレベルに移動することができます。レベルについて議論するにはこちら: "
-    adventurer_forum: "冒険者の掲示板"
-    adventurer_suffix: ""
-    campaign_old_beginner: "旧初級キャンペーン"
-    campaign_old_beginner_description: "プログラミングの魔法を学びましょう"
-    campaign_dev: "ランダムな難しいレベル"
-    campaign_dev_description: "遊びながらインタフェースを学ぼう"
     campaign_multiplayer: "マルチプレイ・アリーナ"
     campaign_multiplayer_description: "コーディングで他のプレイヤーに対して格闘しましょう"
-    campaign_player_created: "プレイヤー作成レベル"
-    campaign_player_created_description: "仲間のウィザード達の創造力との戦いに立ち向かいます"
-    campaign_classic_algorithms: "クラシックアルゴリズム"
-    campaign_classic_algorithms_description: "コンピュータサイエンスで最も人気のあるアルゴリズムを学ぼう"
 #    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
 #    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
 
@@ -258,8 +245,9 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     victory_return_to_ladder: "ラダーに戻る"
     victory_play_continue: "コンテニュー"
     victory_saving_progress: "セーブ中"
-    victory_go_home: "ホームに戻る" # Only in old-style levels.
-    victory_review: "フィードバック" # Only in old-style levels.
+    victory_go_home: "ホームに戻る"
+    victory_review: "フィードバック"
+#    victory_review_placeholder: "How was the level?"
     victory_hour_of_code_done: "完了してよろしいですか?"
     victory_hour_of_code_done_yes: "はい、構いません"
     victory_experience_gained: "XP獲得"
@@ -303,9 +291,10 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     infinite_loop_reset_level: "レベルをリセット"
     infinite_loop_comment_out: "マイコードをコメントアウト"
     tip_toggle_play: "Ctrl+Pで、プレイ／ポーズをトグルする"
-    tip_scrub_shortcut: "Ctrl+[ と Ctrl+] で巻き戻し、早送りする" # {change}
+    tip_scrub_shortcut: "Ctrl+[ と Ctrl+] で早戻し、早送りする"
     tip_guide_exists: "ゲームメニュー内のガイド（ページの上部）をクリックし、便利な情報 を見よう。"
     tip_open_source: "CodeCombatは、100％オープンソースです！"
+    tip_tell_friends: "コードコンバットを楽しんでますか？このことを友達にも伝えましょう！"
     tip_beta_launch: "CodeCombatは、2013年10月にベータ版を開始しました。"
     tip_think_solution: "問題より、解決策を考えろ。"
     tip_theory_practice: "理論的には、理論と実践の間には違いはない。でも実際には、ある。- ヨギ・ベラ"
@@ -349,6 +338,7 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     tip_recurse: "繰り返しは人間、再帰は神。 - L・ピーター・ドイツ"
     tip_free_your_mind: "全ての雑念を捨てろ、恐怖、疑いも不信も 心を解き放つんだ - モーフィアス"
     tip_strong_opponents: "どんな強者にも弱点というものはあるんだ… - うちは　イタチ"
+    tip_paper_and_pen: "コーディングを始める前に, 必ず紙とペンを用意して計画を立てましょう。"
 
   game_menu:
     inventory_tab: "インベントリー"
@@ -409,9 +399,9 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 
   subscribe:
     comparison_blurb: "CodeCombatへ課金してスキルを磨きましょう！"
-    feature1: "80以上の基本レベルが４つの世界に" # {change}
-    feature2: "７人のパワフルな <strong>ニューヒーロー</strong> とユニークなスキル!" # {change}
-    feature3: "60以上のボーナスレベル" # {change}
+    feature1: "100以上の基本レベルが４つの世界に"
+    feature2: "10人のパワフルな <strong>ニューヒーロー</strong> とユニークなスキル!"
+    feature3: "70以上のボーナスレベル"
     feature4: "<strong>3500のジェム</strong>が毎月ボーナス!"
     feature5: "ビデオチュートリアル"
     feature6: "プレミアムメールサポート"
@@ -598,18 +588,18 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     intro_2: "プログラミングの経験は必要ありません！"
     free_title: "価格について"
 #    cost_china: "CodeCombat in China is free for the first five levels, after which it costs $9.99 USD per month for access to our other 140+ levels on our exclusive China servers."
-    free_1: "CodeCombat は基本的に無料です！80以上のレベルが無料です。" # {change}
+    free_1: "CodeCombat は基本的に無料です！100以上のレベルが無料です。"
     free_2: "月々の課金をするとビデオのチュートリアルにアクセスでき、また追加のレベルが楽しめます。"
     teacher_subs_title: "教育関係者は無料のサブスクリプションを得ることができます！"
     teacher_subs_1: "" # {change}
     teacher_subs_2: "に連絡して無料の月々のサブスクリプションを得ましょう。" # {change}
 #    teacher_subs_3: "to set up your subscription."
     sub_includes_title: "サブスクリプションの内容について"
-    sub_includes_1: "80以上の基本レベルに加えて、生徒は月々のサブスクリプションを得て次の機能が使えます:" # {change}
-    sub_includes_2: "60以上の練習レベル" # {change}
+    sub_includes_1: "100以上の基本レベルに加えて、生徒は月々のサブスクリプションを得て次の機能が使えます:"
+    sub_includes_2: "70以上の練習レベル"
     sub_includes_3: "ビデオチュートリアル"
     sub_includes_4: "メールによるサポート"
-    sub_includes_5: "7人の新しいヒーローとマスターのユニークなスキル" # {change}
+    sub_includes_5: "10人の新しいヒーローとマスターのユニークなスキル"
     sub_includes_6: "3500のジェムが月々支給されます"
 #    sub_includes_7: "Private Clans"
 #    monitor_progress_title: "How do I monitor student progress?"
@@ -775,6 +765,7 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     article_editor_prefix: "私たちのドキュメントにミスを見つけましたか？自分の作品のチュートリアルを作りたいですか？"
     article_editor_suffix: "を使って CodeCombat のプレイヤーを助けて彼らのプレイタイムを最大限に活用できるようにしましょう。"
     find_us: "各サイトで私たちを見る"
+    social_github: "GitHubで私達のコードをチェックする"
     social_blog: "Sett の CodeCombat ブログを読む"
     social_discource: "Discourse のフォーラムで議論しよう"
     social_facebook: "Facebook で CodeCombat にいいね！する"
@@ -862,6 +853,8 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     indoor: "屋内"
     desert: "砂漠"
     grassy: "草原"
+    mountain: "山岳"
+    glacier: "氷河"
     small: "小さい"
     large: "大きい"
     fork_title: "新しいバージョンをフォークする"
@@ -1220,6 +1213,7 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #  delta:
 #    added: "Added"
 #    modified: "Modified"
+#    not_modified: "Not Modified"
 #    deleted: "Deleted"
 #    moved_index: "Moved Index"
 #    text_diff: "Text Diff"

@@ -223,6 +223,7 @@ module.exports = class SpellView extends CocoView
         disableSpaces = @options.level.get('disableSpaces') or false
         aceConfig = me.get('aceConfig') ? {}
         disableSpaces = false if aceConfig.keyBindings and aceConfig.keyBindings isnt 'default'  # Not in vim/emacs mode
+        disableSpaces = false if @spell.language in ['clojure', 'lua', 'coffeescript', 'io']  # Don't disable for more advanced/experimental languages
         if not disableSpaces or (_.isNumber(disableSpaces) and disableSpaces < me.level())
           return @ace.execCommand 'insertstring', ' '
         line = @aceDoc.getLine @ace.getCursorPosition().row
@@ -518,7 +519,7 @@ module.exports = class SpellView extends CocoView
     @createToolbarView()
 
   createDebugView: ->
-    return if @options.level.get('type', true) in ['hero', 'hero-ladder', 'hero-coop']  # We'll turn this on later, maybe, but not yet.
+    return if @options.level.get('type', true) in ['hero', 'hero-ladder', 'hero-coop', 'course', 'course-ladder']  # We'll turn this on later, maybe, but not yet.
     @debugView = new SpellDebugView ace: @ace, thang: @thang, spell:@spell
     @$el.append @debugView.render().$el.hide()
 

@@ -10,15 +10,15 @@ module.exports = class CourseDetailsView extends RootView
 
   events:
     'change .expand-progress-checkbox': 'onExpandedProgressCheckbox'
-    'change .select-session': 'onChangeSession'
     'change .student-mode-checkbox': 'onChangeStudent'
     'click .btn-play-level': 'onClickPlayLevel'
-    'click .edit-class-name-btn': 'onClickEditClassName'
-    'click .edit-description-btn': 'onClickEditClassDescription'
+    'click .btn-save-settings': 'onClickSaveSettings'
     'click .member-header': 'onClickMemberHeader'
     'click .progress-header': 'onClickProgressHeader'
+    'mouseenter .progress-level-cell': 'onMouseEnterPoint'
+    'mouseleave .progress-level-cell': 'onMouseLeavePoint'
 
-  constructor: (options, @courseID) ->
+  constructor: (options, @courseID=0, @instanceID=0) ->
     super options
     @initData()
 
@@ -38,14 +38,30 @@ module.exports = class CourseDetailsView extends RootView
     context.userConceptsMap = @userConceptsMap ? {}
     context.userLevelStateMap = @userLevelStateMap ? {}
     context.showExpandedProgress = @course.levels.length <= 30 or @showExpandedProgress
-    context.studentMode = @studentMode ? false
+    context.studentMode = @options.studentMode ? false
+
+    conceptsCompleted = {}
+    for user of context.userConceptsMap
+      for concept of context.userConceptsMap[user]
+        conceptsCompleted[concept] ?= 0
+        conceptsCompleted[concept]++
+    context.conceptsCompleted = conceptsCompleted
+
+    stats =
+      averageLevelPlaytime: _.random(30, 240)
+      averageLevelsCompleted: _.random(1, @course.levels.length)
+    stats.totalPlayTime = context.instance.students?.length * stats.averageLevelPlaytime ? 0
+    stats.totalLevelsCompleted = context.instance.students?.length * stats.averageLevelsCompleted ? 0
+    stats.lastLevelCompleted = @course.levels[@maxLastStartedIndex] ? @course.levels[@course.levels.length - 1]
+    context.stats = stats
+
     context
 
   initData: ->
     @memberSort = 'nameAsc'
     mockData = require 'views/courses/mock1/CoursesMockData'
     @course = mockData.courses[@courseID]
-    @currentInstanceIndex = 0
+    @currentInstanceIndex = @instanceID
     @instances = mockData.instances
     @updateLevelMaps()
 
@@ -60,7 +76,7 @@ module.exports = class CourseDetailsView extends RootView
     @maxLastStartedIndex = -1
     for student in @instances?[@currentInstanceIndex].students
       @userLevelStateMap[student] = {}
-      lastCompletedIndex = _.random(0, @course.levels.length)
+      lastCompletedIndex = _.random(-1, @course.levels.length)
       for i in [0..lastCompletedIndex]
         @userLevelStateMap[student][@course.levels[i]] = 'complete'
       lastStartedIndex = lastCompletedIndex + 1
@@ -101,6 +117,14 @@ module.exports = class CourseDetailsView extends RootView
     @levelConceptsMap = {}
     @levelNameSlugMap = {}
     @userConceptsMap = {}
+    # Update course levels if course has a specific campaign
+    for campaign in @campaigns.models when campaign.get('slug') is @course.campaign
+      @course.levels = []
+      for levelID, level of campaign.get('levels')
+        if campaign.get('slug') is @course.campaign
+          @course.levels.push level.name
+      @updateLevelMaps()
+
     for campaign in @campaigns.models
       continue if campaign.get('slug') is 'auditions'
       for levelID, level of campaign.get('levels')
@@ -122,30 +146,15 @@ module.exports = class CourseDetailsView extends RootView
     @render?()
 
   onChangeStudent: (e) ->
-    @studentMode = $('.student-mode-checkbox').prop('checked')
+    @options.studentMode = $('.student-mode-checkbox').prop('checked')
     @render?()
-    $('.student-mode-checkbox').attr('checked', @studentMode)
-
-  onChangeSession: (e) ->
-    @showExpandedProgress = false
-    newSessionValue = $(e.target).val()
-    for val, index in @instances when val.name is newSessionValue
-      @currentInstanceIndex = index
-    @updateLevelMaps()
-    @onCampaignSync()
-    @render?()
+    $('.student-mode-checkbox').attr('checked', @options.studentMode)
 
   onExpandedProgressCheckbox: (e) ->
     @showExpandedProgress = $('.expand-progress-checkbox').prop('checked')
     # TODO: why does render reset the checkbox to be unchecked?
     @render?()
     $('.expand-progress-checkbox').attr('checked', @showExpandedProgress)
-
-  onClickEditClassName: (e) ->
-    alert 'TODO: Popup for editing name for this course session'
-
-  onClickEditClassDescription: (e) ->
-    alert 'TODO: Popup for editing description for this course session'
 
   onClickMemberHeader: (e) ->
     @memberSort = if @memberSort is 'nameAsc' then 'nameDesc' else 'nameAsc'
@@ -165,3 +174,24 @@ module.exports = class CourseDetailsView extends RootView
       viewClass: 'views/play/level/PlayLevelView'
       viewArgs: [{}, levelSlug]
     }
+
+  onClickSaveSettings:  (e) ->
+    if name = $('.edit-name-input').val()
+      @instances[@currentInstanceIndex].name = name
+    description = $('.edit-description-input').val()
+    @instances[@currentInstanceIndex].description = description
+    $('#editSettingsModal').modal('hide')
+    @render?()
+
+  onMouseEnterPoint: (e) ->
+    $('.level-popup-container').hide()
+    container = $(e.target).find('.level-popup-container').show()
+    margin = 20
+    offset = $(e.target).offset()
+    scrollTop = $(e.target).offsetParent().scrollTop()
+    height = container.outerHeight()
+    container.css('left', offset.left + e.offsetX)
+    container.css('top', offset.top + scrollTop - height - margin)
+
+  onMouseLeavePoint: (e) ->
+    $(e.target).find('.level-popup-container').hide()

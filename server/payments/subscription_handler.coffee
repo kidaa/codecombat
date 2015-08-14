@@ -45,32 +45,8 @@ class SubscriptionHandler extends Handler
     # console.log 'subscription_handler getStripeInvoices'
     return @sendForbiddenError(res) unless req.user?.isAdmin()
 
-    # TODO: this caching mechanism doesn't work in production (multiple calls or app servers?)
-    # TODO: cache older invoices in the analytics database instead
-    # @oldInvoices ?= {}
-    # buildInvoicesFromCache = (newInvoices) =>
-    #   data = (invoice for invoiceID, invoice of @oldInvoices)
-    #   data = data.concat(newInvoices)
-    #   data.sort (a, b) -> if a.date > b.date then -1 else 1
-    #   {has_more: false, data: data}
-    # oldInvoiceCutoffDays = 16 # Dependent on Stripe subscription payment retries
-    # oldInvoiceCutoffDate = new Date()
-    # oldInvoiceCutoffDate.setUTCDate(oldInvoiceCutoffDate.getUTCDate() - oldInvoiceCutoffDays)
     stripe.invoices.list req.body.options, (err, invoices) =>
       return @sendDatabaseError(res, err) if err
-      # newInvoices = []
-      # for invoice, i in invoices.data
-      #   if new Date(invoice.date * 1000) < oldInvoiceCutoffDate
-      #     if invoice.id of @oldInvoices
-      #       # Rest of the invoices should be cached, return from cache
-      #       cachedInvoices = buildInvoicesFromCache(newInvoices)
-      #       return @sendSuccess(res, cachedInvoices)
-      #     else
-      #       # Cache older invoices
-      #       @oldInvoices[invoice.id] = invoice
-      #   else
-      #     # Keep track of new invoices for this page of invoices
-      #     newInvoices.push(invoice)
       @sendSuccess(res, invoices)
 
   getStripeSubscriptions: (req, res) ->
@@ -198,16 +174,41 @@ class SubscriptionHandler extends Handler
           return done({res: 'Database error.', code: 500})
         return done({res: 'Prepaid not found', code: 404}) unless prepaid?
         return done({res: 'Prepaid not for subscription', code: 403}) unless prepaid.get('type') is 'subscription'
-        return done({res: 'Prepaid has already been used', code: 403}) unless prepaid.get('status') is 'active'
-        return done({res: 'Database error.', code: 500}) unless prepaid.get('properties')?.couponID
-        couponID = prepaid.get('properties').couponID
+        if prepaid.get('redeemers')?.length >= prepaid.get('maxRedeemers')
+          @logSubscriptionError(user, "Prepaid #{prepaid.id} note active")
+          return done({res: 'Prepaid not active', code: 403})
+        unless couponID = prepaid.get('properties')?.couponID
+          @logSubscriptionError(user, "Prepaid #{prepaid.id} has no couponID")
+          return done({res: 'Database error.', code: 500})
 
-        # Update user
-        stripeInfo = _.cloneDeep(user.get('stripe') ? {})
-        stripeInfo.couponID = couponID
-        stripeInfo.prepaidCode = req.body.stripe.prepaidCode
-        user.set('stripe', stripeInfo)
-        @checkForExistingSubscription(req, user, customer, couponID, done)
+        redeemers = prepaid.get('redeemers') ? []
+        if _.find(redeemers, (a) -> a.userID?.equals(user.get('_id')))
+          @logSubscriptionError(user, "Prepaid code already redeemed by #{user.id}")
+          return done({res: 'Prepaid code already redeemed', code: 403})
+
+        # Redeem prepaid code
+        query = Prepaid.$where("'#{prepaid.get('_id').valueOf()}' === this._id.valueOf() && (!this.redeemers || this.redeemers.length < this.maxRedeemers)")
+        redeemers.push
+          userID: user.get('_id')
+          date: new Date()
+        update = {redeemers: redeemers}
+        Prepaid.update query, update, {}, (err, numAffected) =>
+          if err
+            @logSubscriptionError(user, 'Prepaid update error. ' + err)
+            return done({res: 'Database error.', code: 500})
+          if numAffected > 1
+            @logSubscriptionError(user, "Prepaid numAffected=#{numAffected} error.")
+            return done({res: 'Database error.', code: 500})
+          if numAffected < 1
+            return done({res: 'Prepaid not active', code: 403})
+
+          # Update user
+          stripeInfo = _.cloneDeep(user.get('stripe') ? {})
+          stripeInfo.couponID = couponID
+          stripeInfo.prepaidCode = req.body.stripe.prepaidCode
+          user.set('stripe', stripeInfo)
+          @checkForExistingSubscription(req, user, customer, couponID, done)
+
     else
       couponID = user.get('stripe')?.couponID
       # SALE LOGIC
@@ -281,25 +282,7 @@ class SubscriptionHandler extends Handler
       if err
         @logSubscriptionError(user, 'Stripe user plan saving error. ' + err)
         return done({res: 'Database error.', code: 500})
-
-      if stripeInfo.prepaidCode?
-        # Update prepaid to 'used'
-        Prepaid.findOne code: stripeInfo.prepaidCode, (err, prepaid) =>
-          if err
-            @logSubscriptionError(user, 'Prepaid find error. ' + err)
-            return done({res: 'Database error.', code: 500})
-          unless prepaid?
-            @logSubscriptionError(user, "Expected prepaid not found: #{stripeInfo.prepaidCode}")
-            return done({res: 'Database error.', code: 500})
-          prepaid.set('status', 'used')
-          prepaid.set('redeemer', user.get('_id'))
-          prepaid.save (err) =>
-            if err
-              @logSubscriptionError(user, 'Prepaid update error. ' + err)
-              return done({res: 'Database error.', code: 500})
-            done()
-      else
-        done()
+      done()
 
   updateStripeRecipientSubscriptions: (req, user, customer, done) ->
     return done({res: 'Database error.', code: 500}) unless req.body.stripe?.subscribeEmails?

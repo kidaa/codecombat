@@ -70,7 +70,6 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
     choose_inventory: "Equipar objetos"
     buy_gems: "Comprar gemas"
     subscription_required: "Requiere Suscripción"
-    older_campaigns: "Campañas antiguas"
     anonymous: "Jugador Anónimo"
     level_difficulty: "Dificultad: "
     campaign_beginner: "Campaña para principiantes"
@@ -78,22 +77,10 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
     awaiting_levels_adventurer: "Registrate como un aventurero"
     awaiting_levels_adventurer_suffix: "para ser el primero en jugar nuevos niveles."
     adjust_volume: "Ajustar el volumen"
-    choose_your_level: "Elige tu nivel" # The rest of this section is the old play view at /play-old and isn't very important.
-    adventurer_prefix: "Puedes saltar a cualquier nivel de abajo, o discutir los niveles en "
-    adventurer_forum: "el foro del aventurero"
-    adventurer_suffix: "."
-    campaign_old_beginner: "Campaña anterior de principiante"
-    campaign_old_beginner_description: "... en la que aprendes la hechicería de la programación."
-    campaign_dev: "Niveles aleatorios más difíciles"
-    campaign_dev_description: "... en los que aprendes sobre la interfaz mientras haces algo un poco más difícil."
     campaign_multiplayer: "Arenas Multijugador"
     campaign_multiplayer_description: "... en las que programas cara a cara contra otros jugadores."
-    campaign_player_created: "Creados Por Jugadores"
-    campaign_player_created_description: "... en los que luchas contra la creatividad de tus compañeros <a href=\"/contribute#artisan\">Hechiceros Artesanales</a>."
-    campaign_classic_algorithms: "Algorítmos Clásicos"
-    campaign_classic_algorithms_description: "... en la cual aprendes los algorítmos más populares de la Ciencia de la Computación."
-#    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
-#    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
+    campaign_old_multiplayer: "(Obsoleto) Antiguas Arenas Multijugador"
+    campaign_old_multiplayer_description: "Reliquias de una era más civilizada. Ninguna simulación es ejecutada para estas arenas multijugador antiguas y sin héroes."
 
   share_progress_modal:
     blurb: "¡Estás haciendo un gran progreso! Cuéntale a alguien cuánto has aprendido con CodeCombat." # {change}
@@ -258,8 +245,9 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
     victory_return_to_ladder: "Volver a la escalera"
     victory_play_continue: "Continuar"
     victory_saving_progress: "Guardando Progreso"
-    victory_go_home: "Ir al Inicio" # Only in old-style levels.
-    victory_review: "¡Cuéntanos más!" # Only in old-style levels.
+    victory_go_home: "Ir al Inicio"
+    victory_review: "¡Cuéntanos más!"
+    victory_review_placeholder: "¿Cómo estuvo el nivel?"
     victory_hour_of_code_done: "¿Has acabado?"
     victory_hour_of_code_done_yes: "¡Si, he terminado con mi Hora de Código!"
     victory_experience_gained: "XP Ganada"
@@ -296,7 +284,7 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
     time_goto: "Ir a:"
     non_user_code_problem_title: "No se puede cargar el nivel"
     infinite_loop_title: "Loop infinito detectado"
-#    infinite_loop_description: "The initial code to build the world never finished running. It's probably either really slow or has an infinite loop. Or there might be a bug. You can either try running this code again or reset the code to the default state. If that doesn't fix it, please let us know."
+    infinite_loop_description: "El código inicial para construir el mundo no terminó de ejecutarse. Probablemente es muy lento o tiene un loop infinito. O puede ser un bug. Puedes tratar ejecutando este código nuevamente o reiniciar el código a su estado por defecto. Si eso no lo arregla, haznos saber."
     check_dev_console: "Tú puedes también abrir la consola de desarrollo para ver que puede salir mal."
     check_dev_console_link: "(instrucciones)"
     infinite_loop_try_again: "Intentar nuevamente"
@@ -306,6 +294,7 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
     tip_scrub_shortcut: "Ctrl+[ y Ctrl+] rebobina y avance rápido." # {change}
     tip_guide_exists: "Haga click en la guía en la parte superior de la página para obtener información útil"
     tip_open_source: "¡CodeCombat es 100% código abierto!"
+    tip_tell_friends: "¿Disfrutando de CodeCombat? ¡Cuéntale a tus amigos acerca de nosotros!"
     tip_beta_launch: "CodeCombat lanzó su beta en Octubre del 2013."
     tip_think_solution: "Piensa en la solución, no en el problema."
     tip_theory_practice: "En teoría, no hay diferencia entre la teoría y la práctica. Pero en la práctica, si la hay. - Yogi Berra"
@@ -349,6 +338,7 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
     tip_recurse: "Iterar es humano, recursar es divino. - L. Peter Deutsch"
     tip_free_your_mind: "Tienes que dejar ir todo, Neo. Miedo, duda, e incredulidad. Libera tu mente. - Morpheus"
     tip_strong_opponents: "Hasta los oponentes mas fuertes siempre tienen una debilidad. - Itachi Uchiha"
+    tip_paper_and_pen: "Antes de comenzar a codificar, siempre puedes planear con una hoja de papel y un lapicero."
 
   game_menu:
     inventory_tab: "Inventario"
@@ -775,6 +765,7 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
     article_editor_prefix: "¿Ves algún error en nuestros documentos? ¿Quieres hacer algunas instrucciones para tus propias creaciones? Revisa el"
     article_editor_suffix: "y ayuda a los jugadores de CodeCombat conseguir lo más posible de su tiempo jugando."
     find_us: "Encuentranos en etsos sitios"
+#    social_github: "Check out all our code on GitHub"
     social_blog: "Lee el blog de CodeCombat en Sett"
     social_discource: "Unite a la discusión en nuestro foro"
     social_facebook: "Me Gusta CodeCombat en Facebook"
@@ -862,6 +853,8 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
     indoor: "Interior"
     desert: "Desierto"
     grassy: "Herboso"
+#    mountain: "Mountain"
+#    glacier: "Glacier"
     small: "Pequeño"
     large: "Grande"
     fork_title: "Fork de Nueva Versión"
@@ -1220,6 +1213,7 @@ module.exports = nativeDescription: "Español (América Latina)", englishDescrip
   delta:
     added: "Agregado"
     modified: "Modificado"
+#    not_modified: "Not Modified"
     deleted: "Borrado"
     moved_index: "Índice movido"
     text_diff: "Diferir Texto"

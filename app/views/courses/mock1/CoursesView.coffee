@@ -7,9 +7,11 @@ module.exports = class CoursesView extends RootView
   template: template
 
   events:
+    'click .btn-buy': 'onClickBuy'
+    'click .btn-continue': 'onClickContinue'
+    'click .btn-enroll': 'onClickEnroll'
     'click .btn-enter': 'onClickEnter'
-    'click .btn-have-code': 'onClickHaveCode'
-    'click .btn-more-info': 'onClickMoreInfo'
+    'hidden.bs.modal #continueModal': 'onHideContinueModal'
 
   constructor: (options) ->
     super options
@@ -18,33 +20,61 @@ module.exports = class CoursesView extends RootView
   getRenderData: ->
     context = super()
     context.courses = @courses ? []
+    context.instances = @instances ? []
+    context.praise = @praise
     context
 
   initData: ->
     mockData = require 'views/courses/mock1/CoursesMockData'
     @courses = mockData.courses
     for course, i in @courses
-      if i is 0 or _.random(0, 2) is 0
+      if _.random(0, 2) > 0
         course.unlocked = true
       else
         break
+    @instances = mockData.instances
+    @praise = mockData.praise[_.random(0, mockData.praise.length - 1)]
+
+  onClickBuy: (e) ->
+    $('#continueModal').modal('hide')
+    courseID = $(e.target).data('course-id') ? 0
+    viewClass = require 'views/courses/mock1/CourseEnrollView'
+    viewArgs = [{}, courseID]
+    navigationEvent = route: "/courses/mock1/enroll", viewClass: viewClass, viewArgs: viewArgs
+    Backbone.Mediator.publish 'router:navigate', navigationEvent
+
+  onClickContinue: (e) ->
+    courseID = $(e.target).data('course-id')
+    courseTitle = $(e.target).data('course-title')
+    $('#continueModal').find('.modal-title').text(courseTitle)
+    $('#continueModal').find('.btn-buy').data('course-id', courseID)
+    $('#continueModal').find('.btn-enroll').data('course-id', courseID)
+    $('#continueModal').find('.btn-enter').data('course-id', courseID)
+    $('#continueModal .row-pick-class').show() if @courses[courseID]?.unlocked
+    if courseTitle is 'Introduction to Computer Science'
+      $('#continueModal .btn-buy').prop('innerText', 'Get this FREE course!')
+    else
+      $('#continueModal .btn-buy').prop('innerText', 'Buy this course')
+
+  onClickEnroll: (e) ->
+    $('#continueModal').modal('hide')
+    courseID = $(e.target).data('course-id')
+    instanceID = _.random(0, @instances.length - 1)
+    viewClass = require 'views/courses/mock1/CourseDetailsView'
+    viewArgs = [{}, courseID, instanceID]
+    navigationEvent = route: "/courses/mock1/#{courseID}", viewClass: viewClass, viewArgs: viewArgs
+    Backbone.Mediator.publish 'router:navigate', navigationEvent
 
   onClickEnter: (e) ->
+    $('#continueModal').modal('hide')
     courseID = $(e.target).data('course-id')
-    app.router.navigate "/courses/mock1/#{courseID}"
-    window.location.reload()
+    instanceName = $('.select-session').val()
+    for val, index in @instances when val.name is instanceName
+      instanceID = index
+    viewClass = require 'views/courses/mock1/CourseDetailsView'
+    viewArgs = [{}, courseID, instanceID]
+    navigationEvent = route: "/courses/mock1/#{courseID}", viewClass: viewClass, viewArgs: viewArgs
+    Backbone.Mediator.publish 'router:navigate', navigationEvent
 
-  onClickHaveCode: (e) ->
-    courseID = $(e.target).data('course-id')
-    alert 'TODO: Popup for entering prepaid code to unlock this course'
-
-    # TODO: would just navigate instead of rendering unlock here in practice
-    @courses[courseID].unlocked = true
-    @render?()
-    # app.router.navigate "/courses/mock1/#{courseID}"
-    # window.location.reload()
-
-  onClickMoreInfo: (e) ->
-    courseID = $(e.target).data('course-id')
-    app.router.navigate "/courses/mock1/#{courseID}/info"
-    window.location.reload()
+  onHideContinueModal: (e) ->
+    $('#continueModal .row-pick-class').hide()

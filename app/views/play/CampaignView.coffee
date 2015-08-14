@@ -30,7 +30,7 @@ class LevelSessionsCollection extends CocoCollection
 
   constructor: (model) ->
     super()
-    @url = "/db/user/#{me.id}/level.sessions?project=state.complete,levelID,state.difficulty"
+    @url = "/db/user/#{me.id}/level.sessions?project=state.complete,levelID,state.difficulty,playtime"
 
 class CampaignsCollection extends CocoCollection
   url: '/db/campaign'
@@ -261,9 +261,11 @@ module.exports = class CampaignView extends RootView
   annotateLevel: (level) ->
     level.position ?= { x: 10, y: 10 }
     level.locked = not me.ownsLevel level.original
+    level.locked = true if level.slug is 'kithgard-mastery' and @calculateExperienceScore() is 0
     level.locked = false if @levelStatusMap[level.slug] in ['started', 'complete']
     level.locked = false if @editorMode
     level.locked = false if @campaign?.get('name') is 'Auditions'
+    level.locked = false if @campaign?.get('name') is 'Intro'
     level.locked = false if me.isInGodMode()
     level.disabled = true if level.adminOnly and @levelStatusMap[level.slug] not in ['started', 'complete']
     level.disabled = false if me.isInGodMode()
@@ -301,12 +303,22 @@ module.exports = class CampaignView extends RootView
 
   determineNextLevel: (levels) ->
     foundNext = false
+    dontPointTo = ['lost-viking', 'kithgard-mastery']  # Challenge levels we don't want most players bashing heads against
     for level in levels
+      # Iterate through all levels in order and look to find the first unlocked one that meets all our criteria for being pointed out as the next level.
       level.nextLevels = (reward.level for reward in level.rewards ? [] when reward.level)
       unless foundNext
         for nextLevelOriginal in level.nextLevels
           nextLevel = _.find levels, original: nextLevelOriginal
-          dontPointTo = ['lost-viking','kithgard-mastery']
+
+          # If it's a challenge level, we efficiently determine whether we actually do want to point it out.
+          if nextLevel and nextLevel.slug is 'kithgard-mastery' and not nextLevel.locked and not @levelStatusMap[nextLevel.slug] and @calculateExperienceScore() >= 3
+            unless (timesPointedOut = storage.load("pointed-out-#{nextLevel.slug}") or 0) > 3
+              # We may determineNextLevel more than once per render, so we can't just do this once. But we do give up after a couple highlights.
+              dontPointTo = _.without dontPointTo, nextLevel.slug
+              storage.save "pointed-out-#{nextLevel.slug}", timesPointedOut + 1
+
+          # Should we point this level out?
           if nextLevel and not nextLevel.locked and not nextLevel.disabled and @levelStatusMap[nextLevel.slug] isnt 'complete' and nextLevel.slug not in dontPointTo and not nextLevel.replayable and (
             me.isPremium() or
             not nextLevel.requiresSubscription or
@@ -318,6 +330,15 @@ module.exports = class CampaignView extends RootView
             break
     if not foundNext and levels[0] and not levels[0].locked and @levelStatusMap[levels[0].slug] isnt 'complete'
       levels[0].next = true
+
+  calculateExperienceScore: ->
+    adultPoint = me.get('ageRange') in ['18-24', '25-34', '35-44', '45-100']  # They have to have answered the poll for this, likely after Shadow Guard.
+    speedPoints = 0
+    for [levelSlug, speedThreshold] in [['dungeons-of-kithgard', 50], ['gems-in-the-deep', 55], ['shadow-guard', 55], ['forgetful-gemsmith', 40], ['true-names', 40]]
+      if _.find(@sessions.models, (session) -> session.get('levelID') is levelSlug)?.attributes.playtime <= speedThreshold
+        ++speedPoints
+    experienceScore = adultPoint + speedPoints  # 0-6 score of how likely we think they are to be experienced and ready for Kithgard Mastery
+    return experienceScore
 
   createLine: (o1, o2) ->
     p1 = x: o1.x, y: 0.66 * o1.y + 0.5
@@ -353,7 +374,7 @@ module.exports = class CampaignView extends RootView
     @particleMan.attach @$el.find('.map')
     for level in @campaign.renderedLevels ? {}
       particleKey = ['level', @terrain]
-      particleKey.push level.type if level.type and level.type isnt 'hero'
+      particleKey.push level.type if level.type and not (level.type in ['hero', 'course'])
       particleKey.push 'replayable' if level.replayable
       particleKey.push 'premium' if level.requiresSubscription
       particleKey.push 'gate' if level.slug in ['kithgard-gates', 'siege-of-stonehold', 'clash-of-clones', 'summits-gate']
@@ -473,7 +494,7 @@ module.exports = class CampaignView extends RootView
     levelElement = $(e.target).parents('.level-info-container')
     levelSlug = levelElement.data('level-slug')
     level = _.find _.values(@campaign.get('levels')), slug: levelSlug
-    if level.type is 'hero-ladder'
+    if level.type in ['hero-ladder', 'course-ladder']
       Backbone.Mediator.publish 'router:navigate', route: "/play/ladder/#{levelSlug}", viewClass: 'views/ladder/LadderView', viewArgs: [{supermodel: @supermodel}, levelSlug]
     else
       @showLeaderboard levelSlug

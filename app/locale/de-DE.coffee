@@ -70,7 +70,6 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
     choose_inventory: "Gegenstände ausrüsten"
     buy_gems: "Edelsteine kaufen"
     subscription_required: "Abonnement benötigt"
-    older_campaigns: "Ältere Kampagne"
     anonymous: "Anonymer Spieler"
     level_difficulty: "Schwierigkeit: "
     campaign_beginner: "Anfängerkampagne"
@@ -78,20 +77,8 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
     awaiting_levels_adventurer: "Registriere dich als ein Abenteurer"
     awaiting_levels_adventurer_suffix: "sei der Erste, der neue Levels spielt."
     adjust_volume: "Lautstärke anpassen"
-    choose_your_level: "Wähle dein Level" # The rest of this section is the old play view at /play-old and isn't very important.
-    adventurer_prefix: "Du kannst zu jedem Level springen oder diskutiere die Level "
-    adventurer_forum: "im Abenteurerforum"
-    adventurer_suffix: "."
-    campaign_old_beginner: "Alte Anfänger Kampagne"
-    campaign_old_beginner_description: "... in der Du die Zauberei der Programmierung lernst."
-    campaign_dev: "Beliebiges schwierigeres Level"
-    campaign_dev_description: "... in welchem Du die Bedienung erlernst, indem Du etwas Schwierigeres machst."
     campaign_multiplayer: "Mehrspieler Arena"
     campaign_multiplayer_description: "... in der Du Kopf-an-Kopf gegen andere Spieler programmierst."
-    campaign_player_created: "Von Spielern erstellt"
-    campaign_player_created_description: "... in welchem Du gegen die Kreativität eines <a href=\"/contribute#artisan\">Artisan Zauberers</a> kämpfst."
-    campaign_classic_algorithms: "Klassische Algorithmen"
-    campaign_classic_algorithms_description: "... in welchem du die populärsten Algorithmen der Informatik lernst."
 #    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
 #    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
 
@@ -258,8 +245,9 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
     victory_return_to_ladder: "Zurück zur Rangliste"
     victory_play_continue: "Fortsetzen"
     victory_saving_progress: "Fortschritt speichern"
-    victory_go_home: "Geh auf die Startseite" # Only in old-style levels.
-    victory_review: "Erzähl uns davon!" # Only in old-style levels.
+    victory_go_home: "Geh auf die Startseite"
+    victory_review: "Erzähl uns davon!"
+#    victory_review_placeholder: "How was the level?"
     victory_hour_of_code_done: "Bist Du fertig?"
     victory_hour_of_code_done_yes: "Ja, ich bin mit meiner Code-Stunde fertig!"
     victory_experience_gained: "Gewonnene XP"
@@ -306,6 +294,7 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
     tip_scrub_shortcut: "Spule vor und zurück mit Strg+[ und Strg+]" # {change}
     tip_guide_exists: "Klicke auf die Anleitung am oberen Ende der Seite für nützliche Informationen."
     tip_open_source: "CodeCombat ist 100% quelloffen!"
+#    tip_tell_friends: "Enjoying CodeCombat? Tell your friends about us!"
     tip_beta_launch: "CodeCombat startete seine Beta im Oktober 2013."
     tip_think_solution: "Denke über die Lösung nach, nicht über das Problem."
     tip_theory_practice: "In der Theorie gibt es keinen Unterschied zwischen Theorie und Praxis. In der Praxis schon. - Yogi Berra"
@@ -349,6 +338,7 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
 #    tip_recurse: "To iterate is human, to recurse divine. - L. Peter Deutsch"
 #    tip_free_your_mind: "You have to let it all go, Neo. Fear, doubt, and disbelief. Free your mind. - Morpheus"
 #    tip_strong_opponents: "Even the strongest of opponents always has a weakness. - Itachi Uchiha"
+#    tip_paper_and_pen: "Before you start coding, you can always plan with a sheet of paper and a pen."
 
   game_menu:
     inventory_tab: "Inventar"
@@ -775,6 +765,7 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
     article_editor_prefix: "Hast du einen Fehler in unseren Dokus gefunden? Willst du Anleitungen für deine Kreationen erstellen? Schau dir den"
     article_editor_suffix: "und hilf CodeCombat Spielern, das meiste aus ihrer Spielzeit herauszuholen."
     find_us: "Finde uns auf diesen Seiten"
+#    social_github: "Check out all our code on GitHub"
     social_blog: "Lese den CodeCombat Blog auf Sett"
     social_discource: "Schließe dich den Diskussionen in unserem Discourse Forum an"
     social_facebook: "Like CodeCombat auf Facebook"
@@ -862,6 +853,8 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
     indoor: "Indoor"
     desert: "Wüste"
     grassy: "Gräsern"
+#    mountain: "Mountain"
+#    glacier: "Glacier"
     small: "Klein"
     large: "Groß"
     fork_title: "Forke neue Version"
@@ -942,7 +935,7 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
 
   contribute:
     page_title: "Mitwirken"
-    intro_blurb: "CodeCombat ist zu 100% Open Source! Hunderte hingebungsvolle Spieler haben uns geholfen das Spiel zu dem zu machen was es heute ist. Tritt uns bei und schreibe das nächste Kapitel in CodeCombat' Aufgabe, der Welt das Programmieren zu lehren!"
+    intro_blurb: "CodeCombat ist zu 100% Open Source! Hunderte hingebungsvolle Spieler haben uns geholfen das Spiel zu dem zu machen, was es heute ist. Tritt uns bei und schreibe das nächste Kapitel in CodeCombats Mission, der Welt das Programmieren zu lehren!"
     alert_account_message_intro: "Hey du!"
     alert_account_message: "Um Klassen-Emails abonnieren zu können, musst du dich zuerst anmelden."
     archmage_introduction: "Einer der größten Vorteile daran ein Spiel aufzubauen, ist es, dass so viele verschiedene Aspekte eine Rolle spielen. Grafiken, Sound, Echtzeit Networking, Social Networking und natürlich viele der gewöhnlichen Aspekte des Programmierens, von low-level Datenbankmanagement und Server Administration bis hin zum Aufbau von Design und Interface. Es gibt viel zu tun und wenn du ein erfahrener Programmierer bist, mit einer Veranlagung dazu, wirklich knallhart bei CodeCombat einzutauchen, dann könnte diese Klasse etwas für dich sein. Wir würden uns wahnsinnig  über deine Hilfe dabei freuen, das beste Programmierspiel der Welt aufzubauen."
@@ -1220,6 +1213,7 @@ module.exports = nativeDescription: "Deutsch (Deutschland)", englishDescription:
   delta:
     added: "hinzugefügt"
     modified: "modifiziert"
+#    not_modified: "Not Modified"
     deleted: "gelöscht"
     moved_index: "Verschobener Index"
     text_diff: "Text Diff"
