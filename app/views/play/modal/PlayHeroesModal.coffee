@@ -78,6 +78,7 @@ module.exports = class PlayHeroesModal extends ModalView
   afterRender: ->
     super()
     return unless @supermodel.finished()
+    @playSound 'game-menu-open'
     @$el.find('.hero-avatar').addClass 'ie' if @isIE()
     heroes = @heroes.models
     @$el.find('.hero-indicator').each ->
@@ -172,7 +173,7 @@ module.exports = class PlayHeroesModal extends ModalView
       layer.on 'new-spritesheet', ->
         #- maybe put some more normalization here?
         m = multiplier
-        m *= 0.75 if fullHero.get('slug') in ['knight', 'samurai', 'librarian', 'sorcerer', 'necromancer'] # these heroes are larger for some reason, shrink 'em
+        m *= 0.75 if fullHero.get('slug') in ['knight', 'samurai', 'librarian', 'sorcerer', 'necromancer']  # These heroes are larger for some reason. Shrink 'em.
         layer.container.scaleX = layer.container.scaleY = m
         layer.container.children[0].x = 160/m
         layer.container.children[0].y = 250/m
@@ -334,7 +335,7 @@ module.exports = class PlayHeroesModal extends ModalView
 
   onHidden: ->
     super()
-    Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'game-menu-close', volume: 1
+    @playSound 'game-menu-close'
 
   destroy: ->
     clearInterval @heroAnimationInterval

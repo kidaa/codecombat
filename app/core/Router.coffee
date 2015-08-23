@@ -24,6 +24,7 @@ module.exports = class CocoRouter extends Backbone.Router
     'account/profile': go('EmployersView')  # Show the not-recruiting-now screen
     'account/payments': go('account/PaymentsView')
     'account/subscription': go('account/SubscriptionView')
+    'account/subscription/sale': go('account/SubscriptionSaleView')
     'account/invoices': go('account/InvoicesView')
 
     'admin': go('admin/MainAdminView')
@@ -59,9 +60,9 @@ module.exports = class CocoRouter extends Backbone.Router
 
     'courses': go('courses/mock1/CoursesView')
     'courses/mock1': go('courses/mock1/CoursesView')
+    'courses/mock1/enroll': go('courses/mock1/CourseEnrollView')
     'courses/mock1/:courseID': go('courses/mock1/CourseDetailsView')
     'courses/mock1/:courseID/info': go('courses/mock1/CourseInfoView')
-    'courses/mock1/:courseID/enroll': go('courses/mock1/CourseEnrollView')
 
     'db/*path': 'routeToServer'
     'demo(/*subpath)': go('DemoView')
@@ -103,8 +104,8 @@ module.exports = class CocoRouter extends Backbone.Router
 
     'multiplayer': go('MultiplayerView')
 
-    'play-old': go('play/MainPlayView')  # This used to be 'play'.
     'play': go('play/CampaignView')
+    'play/ladder/:levelID/:leagueType/:leagueID': go('ladder/LadderView')
     'play/ladder/:levelID': go('ladder/LadderView')
     'play/ladder': go('ladder/MainLadderView')
     'play/level/:levelID': go('play/level/PlayLevelView')

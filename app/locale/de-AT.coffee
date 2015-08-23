@@ -70,7 +70,6 @@ module.exports = nativeDescription: "Deutsch (Österreich)", englishDescription:
     choose_inventory: "Gegenstände ausrüsten"
     buy_gems: "Juwelen kaufen"
 #    subscription_required: "Subscription Required"
-    older_campaigns: "Ältere Kampagne"
     anonymous: "Anonymer Spieler"
     level_difficulty: "Schwierigkeit: "
     campaign_beginner: "Anfängerkampagne"
@@ -78,20 +77,8 @@ module.exports = nativeDescription: "Deutsch (Österreich)", englishDescription:
 #    awaiting_levels_adventurer: "Sign up as an Adventurer"
 #    awaiting_levels_adventurer_suffix: "to be the first to play new levels."
 #    adjust_volume: "Adjust volume"
-    choose_your_level: "Wähle dein Level" # The rest of this section is the old play view at /play-old and isn't very important.
-    adventurer_prefix: "Du kannst zu jedem Level springen oder diskutiere die Level "
-    adventurer_forum: "im Abenteurerforum"
-    adventurer_suffix: "."
-    campaign_old_beginner: "Alte Anfänger Kampagne"
-    campaign_old_beginner_description: "... in der Du die Zauberei der Programmierung lernst."
-    campaign_dev: "Beliebiges schwierigeres Level"
-    campaign_dev_description: "... in welchem Du die Bedienung erlernst, indem Du etwas schwierigeres machst."
     campaign_multiplayer: "Multiplayerarena"
     campaign_multiplayer_description: "... in der Du Kopf-an-Kopf gegen andere Spieler programmierst."
-    campaign_player_created: "Von Spielern erstellt"
-    campaign_player_created_description: "... in welchem Du gegen die Kreativität eines <a href=\"/contribute#artisan\">Artisan Zauberers</a> kämpfst."
-    campaign_classic_algorithms: "Klassiche Algorithmen"
-    campaign_classic_algorithms_description: "... in welchem du die populärsten Algorithmen der Informatik lernst."
 #    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
 #    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
 
@@ -258,8 +245,9 @@ module.exports = nativeDescription: "Deutsch (Österreich)", englishDescription:
     victory_return_to_ladder: "Zurück zur Rangliste"
     victory_play_continue: "Weiter"
     victory_saving_progress: "Speichere Fortschritt"
-    victory_go_home: "Geh auf die Startseite" # Only in old-style levels.
-    victory_review: "Erzähl uns davon!" # Only in old-style levels.
+    victory_go_home: "Geh auf die Startseite"
+    victory_review: "Erzähl uns davon!"
+#    victory_review_placeholder: "How was the level?"
     victory_hour_of_code_done: "Bist Du fertig?"
     victory_hour_of_code_done_yes: "Ja, ich bin mit meiner Code-Stunde fertig!"
     victory_experience_gained: "EP erhalten"
@@ -306,6 +294,7 @@ module.exports = nativeDescription: "Deutsch (Österreich)", englishDescription:
     tip_scrub_shortcut: "Spule vor und zurück mit Strg+[ und Strg+]" # {change}
     tip_guide_exists: "Klicke auf die Anleitung am oberen Ende der Seite für nützliche Informationen"
     tip_open_source: "CodeCombat ist 100% quelloffen!"
+#    tip_tell_friends: "Enjoying CodeCombat? Tell your friends about us!"
     tip_beta_launch: "CodeCombat startete seine Beta im Oktober 2013."
     tip_think_solution: "Denke über die Lösung nach, nicht über das Problem."
     tip_theory_practice: "In der Theorie gibt es keinen Unterschied zwischen Theorie und Praxis. In der Praxis schon. - Yogi Berra"
@@ -349,6 +338,7 @@ module.exports = nativeDescription: "Deutsch (Österreich)", englishDescription:
 #    tip_recurse: "To iterate is human, to recurse divine. - L. Peter Deutsch"
 #    tip_free_your_mind: "You have to let it all go, Neo. Fear, doubt, and disbelief. Free your mind. - Morpheus"
 #    tip_strong_opponents: "Even the strongest of opponents always has a weakness. - Itachi Uchiha"
+#    tip_paper_and_pen: "Before you start coding, you can always plan with a sheet of paper and a pen."
 
   game_menu:
     inventory_tab: "Inventar"
@@ -775,6 +765,7 @@ module.exports = nativeDescription: "Deutsch (Österreich)", englishDescription:
     article_editor_prefix: "Hast du einen Fehler in unseren Dokus gefunden? Willst du Anleitungen für deine Kreationen erstellen? Schau dir den"
     article_editor_suffix: "und hilf CodeCombat Spielern das meiste aus ihrer Spielzeit heraus zu bekommen."
     find_us: "Finde uns auf diesen Seiten"
+#    social_github: "Check out all our code on GitHub"
     social_blog: "Lese den CodeCombat Blog auf Sett"
     social_discource: "Schließe dich den Diskussionen in unserem Discourse Forum an"
     social_facebook: "Like CodeCombat auf Facebook"
@@ -862,6 +853,8 @@ module.exports = nativeDescription: "Deutsch (Österreich)", englishDescription:
 #    indoor: "Indoor"
 #    desert: "Desert"
     grassy: "Grasig"
+#    mountain: "Mountain"
+#    glacier: "Glacier"
     small: "Klein"
 #    large: "Large"
     fork_title: "Forke neue Version"
@@ -1220,6 +1213,7 @@ module.exports = nativeDescription: "Deutsch (Österreich)", englishDescription:
   delta:
     added: "hinzugefügt"
     modified: "modifiziert"
+#    not_modified: "Not Modified"
     deleted: "gelöscht"
 #    moved_index: "Moved Index"
     text_diff: "Text Diff"

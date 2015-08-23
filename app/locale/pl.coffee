@@ -70,7 +70,6 @@ module.exports = nativeDescription: "polski", englishDescription: "Polish", tran
     choose_inventory: "Załóż przedmioty"
     buy_gems: "Kup klejnoty"
     subscription_required: "Wymagana subskrypcja"
-    older_campaigns: "Starsze kampanie"
     anonymous: "Anonimowy gracz"
     level_difficulty: "Poziom trudności: "
     campaign_beginner: "Kampania dla początkujących"
@@ -78,20 +77,8 @@ module.exports = nativeDescription: "polski", englishDescription: "Polish", tran
     awaiting_levels_adventurer: "Zapisz się jako Podróżnik,"
     awaiting_levels_adventurer_suffix: "aby jako pierwszy grać w nowe poziomy."
     adjust_volume: "Dopasuj głośność"
-    choose_your_level: "Wybierz poziom" # The rest of this section is the old play view at /play-old and isn't very important.
-    adventurer_prefix: "Możesz wybrać jeden z poniższych poziomów lub omówić poziom na "
-    adventurer_forum: "forum Podróżników"
-    adventurer_suffix: "."
-    campaign_old_beginner: "Stara kampania nowicjusza"
-    campaign_old_beginner_description: "... w której nauczysz się magii programowania"
-    campaign_dev: "Losowe trudniejsze poziomy"
-    campaign_dev_description: "... w których nauczysz się interfejsu robiąc coś trudniejszego."
     campaign_multiplayer: "Kampania dla wielu graczy"
     campaign_multiplayer_description: "... w której konkurujesz z innymi graczami."
-    campaign_player_created: "Stworzone przez graczy"
-    campaign_player_created_description: "... w których walczysz przeciwko dziełom <a href=\"/contribute#artisan\">Czarodziejów Rzemieślników</a>"
-    campaign_classic_algorithms: "Algorytmy klasyczne"
-    campaign_classic_algorithms_description: "... gdzie nauczysz się najpopularniejszych alogrytmów w Informatyce."
 #    campaign_old_multiplayer: "(Deprecated) Old Multiplayer Arenas"
 #    campaign_old_multiplayer_description: "Relics of a more civilized age. No simulations are run for these older, hero-less multiplayer arenas."
 
@@ -258,8 +245,9 @@ module.exports = nativeDescription: "polski", englishDescription: "Polish", tran
     victory_return_to_ladder: "Powrót do drabinki"
     victory_play_continue: "Dalej"
     victory_saving_progress: "Zapisywanie postępów"
-    victory_go_home: "Powrót do strony głównej" # Only in old-style levels.
-    victory_review: "Powiedz nam coś więcej!" # Only in old-style levels.
+    victory_go_home: "Powrót do strony głównej"
+    victory_review: "Powiedz nam coś więcej!"
+#    victory_review_placeholder: "How was the level?"
     victory_hour_of_code_done: "Skończyłeś już?"
     victory_hour_of_code_done_yes: "Tak, skończyłem moją Godzinę Kodu."
     victory_experience_gained: "Doświadczenie zdobyte"
@@ -306,6 +294,7 @@ module.exports = nativeDescription: "polski", englishDescription: "Polish", tran
     tip_scrub_shortcut: "Ctrl+[ i Ctrl+] przesuwają czas." # {change}
     tip_guide_exists: "Klikając Przewodnik u góry strony uzyskasz przydatne informacje."
     tip_open_source: "CodeCombat ma w 100% otwarty kod!"
+#    tip_tell_friends: "Enjoying CodeCombat? Tell your friends about us!"
     tip_beta_launch: "CodeCombat uruchomił fazę beta w październiku 2013."
     tip_think_solution: "Myśl nad rozwiązaniem, nie problemem."
     tip_theory_practice: "W teorii nie ma różnicy między teorią a praktyką. W praktyce jednak, jest. - Yogi Berra"
@@ -349,6 +338,7 @@ module.exports = nativeDescription: "polski", englishDescription: "Polish", tran
 #    tip_recurse: "To iterate is human, to recurse divine. - L. Peter Deutsch"
 #    tip_free_your_mind: "You have to let it all go, Neo. Fear, doubt, and disbelief. Free your mind. - Morpheus"
 #    tip_strong_opponents: "Even the strongest of opponents always has a weakness. - Itachi Uchiha"
+#    tip_paper_and_pen: "Before you start coding, you can always plan with a sheet of paper and a pen."
 
   game_menu:
     inventory_tab: "Ekwipunek"
@@ -775,6 +765,7 @@ module.exports = nativeDescription: "polski", englishDescription: "Polish", tran
 #    article_editor_prefix: "See a mistake in some of our docs? Want to make some instructions for your own creations? Check out the"
 #    article_editor_suffix: "and help CodeCombat players get the most out of their playtime."
     find_us: "Znajdź nas na tych stronach"
+#    social_github: "Check out all our code on GitHub"
 #    social_blog: "Read the CodeCombat blog on Sett"
     social_discource: "Dołącz do dyskusji na naszym forum"
     social_facebook: "Polub CodeCombat na Facebooku"
@@ -862,6 +853,8 @@ module.exports = nativeDescription: "polski", englishDescription: "Polish", tran
     indoor: "Wnętrze"
     desert: "Pustynia"
     grassy: "Trawa"
+#    mountain: "Mountain"
+#    glacier: "Glacier"
     small: "Mały"
     large: "Duży"
 #    fork_title: "Fork New Version"
@@ -1220,6 +1213,7 @@ module.exports = nativeDescription: "polski", englishDescription: "Polish", tran
   delta:
     added: "Dodano"
     modified: "Zmieniono"
+#    not_modified: "Not Modified"
     deleted: "Usunięto"
 #    moved_index: "Moved Index"
 #    text_diff: "Text Diff"
