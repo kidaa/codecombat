@@ -28,7 +28,6 @@ ClanHandler = class ClanHandler extends Handler
     false
 
   makeNewInstance: (req) ->
-    userName = req.user.get('name') ? 'Anoner'
     instance = super(req)
     instance.set 'ownerID', req.user._id
     instance.set 'members', [req.user._id]
@@ -117,7 +116,7 @@ ClanHandler = class ClanHandler extends Handler
       return @sendDatabaseError(res, err) if err
       return @sendNotFoundError(res) unless clan
       memberIDs = clan.get('members') ? []
-      User.find {_id: {$in: memberIDs}}, 'name nameLower points', {sort: {nameLower: 1}}, (err, users) =>
+      User.find {_id: {$in: memberIDs}}, 'name nameLower points heroConfig.thangType', {sort: {nameLower: 1}}, (err, users) =>
         return @sendDatabaseError(res, err) if err
         cleandocs = (UserHandler.formatEntity(req, doc) for doc in users)
         @sendSuccess(res, cleandocs)

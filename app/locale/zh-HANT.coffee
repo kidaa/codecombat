@@ -1,4 +1,4 @@
-module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese (Traditional)", translation:
+module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese (Traditional)", translation:
   home:
     slogan: "玩遊戲學程式"
     no_ie: "抱歉！Internet Explorer 8 等舊的瀏覽器打不開此網站" # Warning that only shows up in IE8 and older
@@ -42,7 +42,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
   diplomat_suggestion:
     title: "幫我們翻譯CodeCombat" # This shows up when a player switches to a non-English language using the language selector.
     sub_heading: "我們需要您的語言技能"
-    pitch_body: "我們開發了CodeCombat的英文版，但是現在我們的玩家遍佈全球。很多人想玩中文版的，卻不會說英文，所以如果您中英文都會，請考慮一下參加我們的翻譯工作，幫忙把 CodeCombat 網站還有所有的關卡翻譯成中文（繁体）。"
+    pitch_body: "我們開發了CodeCombat的英文版，但是現在我們的玩家遍佈全球。很多人想玩中文版的，卻不會說英文，所以如果您中英文都會，請考慮一下參加我們的翻譯工作，幫忙把 CodeCombat 網站還有所有的關卡翻譯成中文（繁體）。"
     missing_translations: "直至所有正體中文的翻譯完畢，當無法提供正體中文時還會以英文顯示。"
     learn_more: "關於成為外交官"
     subscribe_as_diplomat: "註冊成為外交官"
@@ -70,7 +70,6 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     choose_inventory: "裝備物品"
     buy_gems: "購買鑽石"
     subscription_required: "需要訂購"
-    older_campaigns: "舊戰役"
     anonymous: "匿名玩家"
     level_difficulty: "難度"
     campaign_beginner: "新手指南"
@@ -78,20 +77,10 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     awaiting_levels_adventurer: "註冊成為冒險家"
     awaiting_levels_adventurer_suffix: "成為第一個挑戰新關卡的冒險家吧!"
     adjust_volume: "調整音量"
-    choose_your_level: "選取關卡" # The rest of this section is the old play view at /play-old and isn't very important.
-    adventurer_prefix: "您可以選擇以下任意關卡，或者討論以上的關卡 "
-    adventurer_forum: "冒險家論壇"
-    adventurer_suffix: "."
-    campaign_old_beginner: "舊的新手關卡"
-    campaign_old_beginner_description: "...在這裡可以學到基礎程式技巧。"
-    campaign_dev: "隨機關卡"
-    campaign_dev_description: "...在這裡您可以學到做一些較複雜的程式技巧。"
     campaign_multiplayer: "多人競技場"
     campaign_multiplayer_description: "...在這裡您可以和其他玩家進行對戰。"
-    campaign_player_created: "玩家建立的關卡"
-    campaign_player_created_description: "...挑戰同伴的創意 <a href=\"/contribute#artisan\">技術指導</a>."
-    campaign_classic_algorithms: "經典演算法"
-    campaign_classic_algorithms_description: "... 資訊科學中最著名的演算法。"
+    campaign_old_multiplayer: "（過時的）舊多人競技場"
+    campaign_old_multiplayer_description: "多個文明時代的遺跡。已沒有模擬運行這些陳舊、蕪絕英雄多人競技場。"
 
   share_progress_modal:
     blurb: "您正在建立優秀的進度! 告訴別人您已經從CodeCombat學習到多少東西." # {change}
@@ -158,7 +147,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     unwatch: "取消關注"
     submit_patch: "送出修補"
     submit_changes: "送出修改"
-#    save_changes: "Save Changes"
+    save_changes: "保存更改"
 
   general:
     and: "和"
@@ -256,15 +245,16 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     victory_return_to_ladder: "返回升級比賽模式"
     victory_play_continue: "繼續"
     victory_saving_progress: "儲存進度"
-    victory_go_home: "返回首頁" # Only in old-style levels.
-    victory_review: "給我們回饋！" # Only in old-style levels.
+    victory_go_home: "返回首頁"
+    victory_review: "給我們回饋！"
+    victory_review_placeholder: "關卡如何?"
     victory_hour_of_code_done: "您完成了嗎？"
     victory_hour_of_code_done_yes: "是的，我完成了我的程式碼！"
     victory_experience_gained: "取得經驗值"
     victory_gems_gained: "取得寶石"
-#    victory_new_item: "New Item"
-#    victory_viking_code_school: "Holy smokes, that was a hard level you just beat! If you aren't already a software developer, you should be. You just got fast-tracked for acceptance with Viking Code School, where you can take your skills to the next level and become a professional web developer in 14 weeks."
-#    victory_become_a_viking: "Become a Viking"
+    victory_new_item: "新的物品"
+    victory_viking_code_school: "太厲害了, 你剛完成了非常困難的關卡! 如果你想成為一個軟件開發人員，你就應該去試一下Viking Code School。在這裡你可以把你的知識增長到另一個台階。只需要14個星期你就能成為一個專業的網頁開發人員。"
+    victory_become_a_viking: "成為一個維京人。"
     guide_title: "指南"
     tome_minion_spells: "助手的咒語" # Only in old-style levels.
     tome_read_only_spells: "唯讀的咒語" # Only in old-style levels.
@@ -292,18 +282,19 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     time_current: "現在:"
     time_total: "最大值:"
     time_goto: "前往:"
-#    non_user_code_problem_title: "Unable to Load Level"
-#    infinite_loop_title: "Infinite Loop Detected"
-#    infinite_loop_description: "The initial code to build the world never finished running. It's probably either really slow or has an infinite loop. Or there might be a bug. You can either try running this code again or reset the code to the default state. If that doesn't fix it, please let us know."
-#    check_dev_console: "You can also open the developer console to see what might be going wrong."
-#    check_dev_console_link: "(instructions)"
+    non_user_code_problem_title: "無法加載關卡"
+    infinite_loop_title: "檢測到無限循環"
+    infinite_loop_description: "建立世界的初始代碼還沒有運行完畢。這可能是真的很慢或出現無限循環，或者存在一個bug。你可以嘗試再次運行這段代碼，或重置代碼為默認狀態。如果還是解決不了問題，請聯繫我們。."
+    check_dev_console: "你也可以打開開發者界面看一下有什麼可能出錯了。"
+    check_dev_console_link: "(說明)"
     infinite_loop_try_again: "再試一次"
     infinite_loop_reset_level: "重置關卡"
     infinite_loop_comment_out: "在我的程式碼中加入注解"
     tip_toggle_play: "使用 Ctrl+P 切換 播放/暫停."
-    tip_scrub_shortcut: "Ctrl+[ 快退; Ctrl+] 快進."
+    tip_scrub_shortcut: "Ctrl+[ 快退; Ctrl+] 快進." # {change}
     tip_guide_exists: "點擊頁面上方的指南，可獲得更多有用的訊息."
     tip_open_source: "「CodeCombat」100% 開源!"
+    tip_tell_friends: "喜歡Codecombat？那就把它介紹給朋友!"
     tip_beta_launch: "「CodeCombat」在2013年10月進入 BETA 測試。"
     tip_think_solution: "思考解決方法而不是問題."
     tip_theory_practice: "理論上, 理論和實作之間是沒有區別. 但是實作上, 這兩者是有區別的. - Yogi Berra"
@@ -344,9 +335,10 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     tip_adding_evil: "增加一個邪惡之捏."
     tip_hate_computers: "關於自我覺得恨透電腦的那群人. 其實他們真正應該恨的事情是糟糕的程序員. - Larry Niven"
     tip_open_source_contribute: "你可以幫助「CodeCombat」提高！"
-#    tip_recurse: "To iterate is human, to recurse divine. - L. Peter Deutsch"
-#    tip_free_your_mind: "You have to let it all go, Neo. Fear, doubt, and disbelief. Free your mind. - Morpheus"
+    tip_recurse: "迭代者人也，遞歸者神也 - L. Peter Deutsch"
+    tip_free_your_mind: "放下一切私心雜念，丟棄害怕、疑問和拒信，解放你的思維。 - 莫菲斯（駭客任務）"
 #    tip_strong_opponents: "Even the strongest of opponents always has a weakness. - Itachi Uchiha"
+#    tip_paper_and_pen: "Before you start coding, you can always plan with a sheet of paper and a pen."
 
   game_menu:
     inventory_tab: "倉庫"
@@ -408,7 +400,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
   subscribe:
     comparison_blurb: "訂閱 CodeCombat 來磨練您的技巧!"
     feature1: "60 個以上的基本關卡散佈在4張地圖中" # {change}
-    feature2: "7 個強壯的<strong>新英雄</strong>並每隻都有不同技巧!"
+    feature2: "7 個強壯的<strong>新英雄</strong>並每隻都有不同技巧!" # {change}
     feature3: "30 個以上的額外關卡" # {change}
     feature4: "每個月<strong>3500顆額外寶石</strong>!"
     feature5: "視頻教學"
@@ -591,22 +583,23 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
 #    retrostyle_blurb: "RetroStyle Games"
 
   teachers:
-    title: "CodeCombat致教師的說明" # {change}
+    title: "CodeCombat致教師的說明"
 #    intro_1: "CodeCombat is an online game that teaches programming. Students write code in real programming languages."
 #    intro_2: "No experience required!"
 #    free_title: "How much does it cost?"
 #    cost_china: "CodeCombat in China is free for the first five levels, after which it costs $9.99 USD per month for access to our other 140+ levels on our exclusive China servers."
-#    free_1: "CodeCombat Basic is FREE! There are 80+ free levels which cover every concept."
+#    free_1: "There are 100+ FREE levels which cover every concept."
 #    free_2: "A monthly subscription provides access to video tutorials and extra practice levels."
 #    teacher_subs_title: "Teachers get free subscriptions!"
-#    teacher_subs_1: "Please contact"
-#    teacher_subs_2: "to set up a free monthly subscription."
+#    teacher_subs_1: "Please fill out our"
+#    teacher_subs_2: "Teacher Survey"
+#    teacher_subs_3: "to set up your subscription."
 #    sub_includes_title: "What is included in the subscription?"
-#    sub_includes_1: "In addition to the 80+ basic levels, students with a monthly subscription get access to these additional features:"
-#    sub_includes_2: "60+ practice levels"
+#    sub_includes_1: "In addition to the 100+ basic levels, students with a monthly subscription get access to these additional features:"
+#    sub_includes_2: "70+ practice levels"
 #    sub_includes_3: "Video tutorials"
 #    sub_includes_4: "Premium email support"
-#    sub_includes_5: "7 new heroes with unique skills to master"
+#    sub_includes_5: "10 new heroes with unique skills to master"
 #    sub_includes_6: "3500 bonus gems every month"
 #    sub_includes_7: "Private Clans"
 #    monitor_progress_title: "How do I monitor student progress?"
@@ -622,8 +615,8 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
 #    who_for_1: "We recommend CodeCombat for students aged 9 and up. No prior programming experience is needed."
 #    who_for_2: "We've designed CodeCombat to appeal to both boys and girls."
 #    material_title: "How much material is there?"
-#    material_china: "Approximately 30 hours of gameplay spread over 140+ subscriber-only levels so far, with new levels every week."
-#    material_1: "Approximately 10 hours of free content and an additional 20 hours of subscriber content, with new levels every week."
+#    material_china: "Approximately 40 hours of gameplay spread over 170+ subscriber-only levels so far."
+#    material_1: "Approximately 25 hours of free content and an additional 15 hours of subscriber content."
 #    concepts_title: "What concepts are covered?"
 #    how_much_title: "How much does a monthly subscription cost?"
 #    how_much_1: "A"
@@ -640,6 +633,34 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     sys_requirements_1: "因為CodeCombat是遊戲, 相比播放影片它讓電腦花費更多資源去順暢的執行. 為了讓所有人都可以接觸，我們已經讓它在現在的瀏覽器和老舊的電腦上執行最佳化. 以下是我們為了讓您順暢體驗Hour of Code所給的系統建議:" # {change}
     sys_requirements_2: "使用較新的Chrome or Firefox版本." # {change}
 
+#  teachers_survey:
+#    title: "Teacher Survey"
+#    must_be_logged: "You must be logged in first. Please create an account or log in from the menu above."
+#    retrieving: "Retrieving information..."
+#    being_reviewed_1: "Your application for a free trial subscription is being"
+#    being_reviewed_2: "reviewed."
+#    approved_1: "Your application for a free trial subscription was"
+#    approved_2: "approved."
+#    approved_3: "Further instructions have been sent to"
+#    denied_1: "Your application for a free trial subscription has been"
+#    denied_2: "denied."
+#    contact_1: "Please contact"
+#    contact_2: "if you have further questions."
+#    description_1: "We offer free subscriptions to teachers for evaluation purposes. You can find more information on our"
+#    description_2: "teachers"
+#    description_3: "page."
+#    description_4: "Please fill out this quick survey and we’ll email you setup instructions."
+#    email: "Email Address"
+#    school: "Name of School"
+#    location: "Name of City"
+#    age_students: "How old are your students?"
+#    under: "Under"
+#    other: "Other:"
+#    amount_students: "How many students do you teach?"
+#    hear_about: "How did you hear about CodeCombat?"
+#    fill_fields: "Please fill out all fields."
+#    thanks: "Thanks! We'll send you setup instructions shortly."
+
   versions:
     save_version_title: "保存新版本"
     new_major_version: "新的重要版本"
@@ -648,6 +669,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     cla_url: "貢獻者許可協議"
     cla_suffix: "。"
     cla_agree: "我同意"
+#    owner_approve: "An owner will need to approve it before your changes will become visible."
 
   contact:
     contact_us: "聯繫我們"
@@ -675,6 +697,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     picture_tab: "頭像"
     delete_account_tab: "刪除您的帳戶"
     wrong_email: "錯誤的Email"
+#    wrong_password: "Wrong Password"
     upload_picture: "上傳圖片"
     delete_this_account: "永久性的刪除帳戶"
     god_mode: "上帝模式"
@@ -683,7 +706,8 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     admin: "管理員"
     new_password: "新密碼"
     new_password_verify: "確認密碼"
-    type_in_email: "輸入您的Email來確認刪除"
+    type_in_email: "輸入您的Email來確認刪除" # {change}
+#    type_in_password: "Also, type in your password."
     email_subscriptions: "訂閱"
     email_subscriptions_none: "無Email訂閱"
     email_announcements: "通知"
@@ -714,6 +738,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     keyboard_shortcuts: "鍵盤快捷鍵"
     space: "Space"
     enter: "Enter"
+#    press_enter: "press enter"
     escape: "Esc"
     shift: "Shift"
     run_code: "執行當前腳本"
@@ -740,6 +765,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     article_editor_prefix: "看到有錯誤在我們的文件中嗎? 想要自己設計指令嗎? 查看我們的"
     article_editor_suffix: "以及幫助CodeCombat玩家獲得更多知識在遊戲中."
     find_us: "通過這些網站連繫我們"
+#    social_github: "Check out all our code on GitHub"
     social_blog: "閱讀CodeCombat在Sett上的部落格"
     social_discource: "加入我們在Discourse論壇上的討論"
     social_facebook: "關注CodeCombat的Facebook"
@@ -756,6 +782,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
 #    make_private: "Make clan private"
 #    subs_only: "subscribers only"
 #    create_clan: "Create New Clan"
+#    private_preview: "Preview"
 #    public_clans: "Public Clans"
 #    my_clans: "My Clans"
 #    clan_name: "Clan Name"
@@ -826,6 +853,8 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     indoor: "室內"
     desert: "沙漠"
     grassy: "草地"
+#    mountain: "Mountain"
+#    glacier: "Glacier"
     small: "小的"
     large: "大的"
     fork_title: "產生新分支"
@@ -848,6 +877,7 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     level_tab_thangs_all: "所有的"
     level_tab_thangs_conditions: "啟動條件"
     level_tab_thangs_add: "增加物體"
+#    level_tab_thangs_search: "Search thangs"
     add_components: "增加組件"
     component_configs: "組件組態"
     config_thang: "雙擊來構建物體"
@@ -893,6 +923,8 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
     pop_i18n: "填寫 I18N"
     tasks: "任務"
     clear_storage: "清除您本機端的變更"
+#    add_system_title: "Add Systems to Level"
+#    done_adding: "Done Adding"
 
   article:
     edit_btn_preview: "預覽"
@@ -1156,9 +1188,32 @@ module.exports = nativeDescription: "繁体中文", englishDescription: "Chinese
 #    poll: "Poll"
 #    user_polls_record: "Poll Voting History"
 
+#  concepts:
+#    advanced_strings: "Advanced Strings"
+#    algorithms: "Algorithms"
+#    arguments: "Arguments"
+#    arithmetic: "Arithmetic"
+#    arrays: "Arrays"
+#    basic_syntax: "Basic Syntax"
+#    boolean_logic: "Boolean Logic"
+#    break_statements: "Break Statements"
+#    classes: "Classes"
+#    for_loops: "For Loops"
+#    functions: "Functions"
+#    if_statements: "If Statements"
+#    input_handling: "Input Handling"
+#    math_operations: "Math Operations"
+#    object_literals: "Object Literals"
+#    strings: "Strings"
+#    variables: "Variables"
+#    vectors: "Vectors"
+#    while_loops: "Loops"
+#    recursion: "Recursion"
+
   delta:
     added: "已填加"
     modified: "已修改"
+#    not_modified: "Not Modified"
     deleted: "已刪除"
     moved_index: "已移動的索引"
     text_diff: "文本變化"
