@@ -1,6 +1,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -84,6 +87,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
 end
 >>>>>>> codecombat/master
+<<<<<<< HEAD
 =======
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
@@ -115,3 +119,5 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
 end
 >>>>>>> codecombat/master
+=======
+>>>>>>> master
