@@ -1,5 +1,7 @@
+app = require 'core/application'
 RootView = require 'views/core/RootView'
 template = require 'templates/account/subscription-sale-view'
+AuthModal = require 'views/core/AuthModal'
 stripeHandler = require 'core/services/stripe'
 utils = require 'core/utils'
 
@@ -28,6 +30,7 @@ module.exports = class SubscriptionSaleView extends RootView
     c
 
   onPayButton: ->
+    return @openModalView new AuthModal() if me.isAnonymous()
     @state = undefined
     @stateMessage = undefined
     @render()
@@ -53,10 +56,8 @@ module.exports = class SubscriptionSaleView extends RootView
     jqxhr = $.post('/db/subscription/-/year_sale', data)
     jqxhr.done (data, textStatus, jqXHR) =>
       application.tracker?.trackEvent 'Finished sale landing page subscription purchase', value: @yearSaleAmount
-      me.set 'stripe', data?.stripe if data?.stripe?
-      @state = 'invoice_paid'
-      @stateMessage = undefined
-      @render?()
+      me.fetch(cache: false).always =>
+        app.router.navigate '/play', trigger: true
     jqxhr.fail (xhr, textStatus, errorThrown) =>
       console.error 'We got an error subscribing with Stripe from our server:', textStatus, errorThrown
       application.tracker?.trackEvent 'Failed to finish 1 year subscription purchase', status: textStatus
