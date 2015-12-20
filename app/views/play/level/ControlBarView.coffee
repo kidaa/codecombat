@@ -28,10 +28,13 @@ module.exports = class ControlBarView extends CocoView
     'click #control-bar-sign-up-button': 'onClickSignupButton'
 
   constructor: (options) ->
+    @courseID = options.courseID
+    @courseInstanceID = options.courseInstanceID
+
     @worldName = options.worldName
     @session = options.session
     @level = options.level
-    @levelID = @level.get('slug')
+    @levelID = @level.get('slug') or @level.id
     @spectateGame = options.spectateGame ? false
     @observing = options.session.get('creator') isnt me.id
     super options
@@ -58,6 +61,7 @@ module.exports = class ControlBarView extends CocoView
   getRenderData: (c={}) ->
     super c
     c.worldName = @worldName
+    c.campaignIndex = @level.get('campaignIndex') + 1 if @level.get('type') is 'course' and @level.get('campaignIndex')?
     c.multiplayerEnabled = @session.get('multiplayer')
     c.ladderGame = @level.get('type') in ['ladder', 'hero-ladder', 'course-ladder']
     if c.isMultiplayerLevel = @isMultiplayerLevel
@@ -72,28 +76,35 @@ module.exports = class ControlBarView extends CocoView
     c.observing = @observing
     @homeViewArgs = [{supermodel: if @hasReceivedMemoryWarning then null else @supermodel}]
     if @level.get('type', true) in ['ladder', 'ladder-tutorial', 'hero-ladder', 'course-ladder']
-      levelID = @level.get('slug').replace /\-tutorial$/, ''
+      levelID = @level.get('slug')?.replace(/\-tutorial$/, '') or @level.id
       @homeLink = '/play/ladder/' + levelID
       @homeViewClass = 'views/ladder/LadderView'
       @homeViewArgs.push levelID
+      if leagueID = @getQueryVariable 'league'
+        leagueType = if @level.get('type') is 'course-ladder' then 'course' else 'clan'
+        @homeViewArgs.push leagueType
+        @homeViewArgs.push leagueID
+        @homeLink += "/#{leagueType}/#{leagueID}"
     else if @level.get('type', true) in ['hero', 'hero-coop']
       @homeLink = '/play'
       @homeViewClass = 'views/play/CampaignView'
       campaign = @level.get 'campaign'
       @homeLink += '/' + campaign
       @homeViewArgs.push campaign
-    else if @level.get('type', true) in ['course', 'course-ladder']
-      @homeLink = '/courses/mock1'
-      @homeViewClass = 'views/courses/mock1/CourseDetailsView'
-      #campaign = @level.get 'campaign'
-      #@homeLink += '/' + campaign
-      #@homeViewArgs.push campaign
-      @homeLink += '/' + '0'
-      @homeViewArgs.push '0'
+    else if @level.get('type', true) in ['course']
+      @homeLink = '/courses'
+      @homeViewClass = 'views/courses/CoursesView'
+      if @courseID
+        @homeLink += "/#{@courseID}"
+        @homeViewArgs.push @courseID
+        @homeViewClass = 'views/courses/CourseDetailsView'
+        if @courseInstanceID
+          @homeLink += "/#{@courseInstanceID}"
+          @homeViewArgs.push @courseInstanceID
     else
       @homeLink = '/'
       @homeViewClass = 'views/HomeView'
-    c.editorLink = "/editor/level/#{@level.get('slug')}"
+    c.editorLink = "/editor/level/#{@level.get('slug') or @level.id}"
     c.homeLink = @homeLink
     c
 
@@ -102,7 +113,7 @@ module.exports = class ControlBarView extends CocoView
     @openModalView gameMenuModal
     @listenToOnce gameMenuModal, 'change-hero', ->
       @setupManager?.destroy()
-      @setupManager = new LevelSetupManager({supermodel: @supermodel, level: @level, levelID: @levelID, parent: @, session: @session})
+      @setupManager = new LevelSetupManager({supermodel: @supermodel, level: @level, levelID: @levelID, parent: @, session: @session, courseID: @courseID, courseInstanceID: @courseInstanceID})
       @setupManager.open()
 
   onClickHome: (e) ->

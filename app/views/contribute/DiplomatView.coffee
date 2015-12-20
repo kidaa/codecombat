@@ -55,18 +55,12 @@ require("locale/mk-MK")
 require("locale/eo")
 require("locale/uz")
 require("locale/my")
+require("locale/et")
 
 module.exports = class DiplomatView extends ContributeClassView
   id: 'diplomat-view'
   template: template
   contributorClassName: 'diplomat'
-
-  getRenderData: ->
-    context = super()
-    context.viewName = @viewName
-    context.user = @user unless @user?.isAnonymous()
-    context.languageStats = @calculateSpokenLanguageStats()
-    context
 
   calculateSpokenLanguageStats: ->
     @locale ?= require 'locale/locale'
@@ -106,7 +100,7 @@ module.exports = class DiplomatView extends ContributeClassView
     fr: ['Anon', 'Armaldio', 'ChrisLightman', 'Elfisen', 'Feugy', 'MartinDelille', 'Oaugereau', 'Xeonarno', 'dc55028', 'jaybi', 'pstweb', 'veritable', 'xavismeh']             # français, French
     ja: ['Coderaulic', 'g1itch', 'kengos', 'treby']             # 日本語, Japanese
     ar: ['5y', 'ahmed80dz']             # العربية, Arabic
-    'pt-BR': ['Bia41', 'Gutenberg Barros', 'Kieizroe', 'Matthew Burt', 'brunoporto', 'cassiocardoso', 'jklemm']        # português do Brasil, Portuguese (Brazil)
+    'pt-BR': ['Bia41', 'Gutenberg Barros', 'Kieizroe', 'Matthew Burt', 'brunoporto', 'cassiocardoso', 'jklemm', 'Arkhad']        # português do Brasil, Portuguese (Brazil)
     'pt-PT': ['Imperadeiro98', 'Matthew Burt', 'ProgramadorLucas', 'ReiDuKuduro', 'batista', 'gutierri']        # Português (Portugal), Portuguese (Portugal)
     pl: ['Anon', 'Kacper Ciepielewski', 'TigroTigro', 'kvasnyk']             # język polski, Polish
     it: ['AlessioPaternoster', 'flauta', 'Atomk']              # italiano, Italian
@@ -117,7 +111,7 @@ module.exports = class DiplomatView extends ContributeClassView
     cs: ['Martin005', 'Gygram', 'vanous']             # čeština, Czech
     sv: ['iamhj', 'Galaky']             # Svenska, Swedish
     id: ['mlewisno-oberlin']             # Bahasa Indonesia, Indonesian
-    el: ['Stergios']             # ελληνικά, Greek
+    el: ['Stergios', 'micman', 'zsdregas']             # ελληνικά, Greek
     ro: []             # limba română, Romanian
     vi: ['An Nguyen Hoang Thien']             # Tiếng Việt, Vietnamese
     hu: ['Anon', 'atlantisguru', 'bbeasmile', 'csuvsaregal', 'divaDseidnA', 'ferpeter', 'kinez']             # magyar, Hungarian
@@ -137,9 +131,10 @@ module.exports = class DiplomatView extends ContributeClassView
     hi: []             # मानक हिन्दी, Hindi
     ur: []             # اُردُو, Urdu
     ms: []             # Bahasa Melayu, Bahasa Malaysia
-    ca: ['ArniMcFrag']             # Català, Catalan
+    ca: ['ArniMcFrag', 'Nainufar']             # Català, Catalan
     gl: ['mcaeiror']             # Galego, Galician
     'mk-MK': ['SuperPranx']             # Македонски, Macedonian
     eo: []             # Esperanto, Esperanto
     uz: []             # O'zbekcha, Uzbek
     my: []             # မြန်မာစကား, Myanmar language
+    et: []             # Eesti, Estonian
