@@ -37,6 +37,7 @@ init = ->
   app.demoing = _.string.startsWith path, '/demo'
   setUpBackboneMediator()
   app.initialize()
+  loadOfflineFonts() unless app.isProduction()
   Backbone.history.start({ pushState: true })
   handleNormalUrls()
   setUpMoment() # Set up i18n for moment
@@ -68,6 +69,11 @@ setUpBackboneMediator = ->
   Backbone.Mediator.addDefSchemas schemas for definition, schemas of definitionSchemas
   Backbone.Mediator.addChannelSchemas schemas for channel, schemas of channelSchemas
   Backbone.Mediator.setValidationEnabled document.location.href.search(/codecombat.com/) is -1
+  if false  # Debug which events are being fired
+    originalPublish = Backbone.Mediator.publish
+    Backbone.Mediator.publish = ->
+      console.log 'Publishing event:', arguments... unless /(tick|frame-changed)/.test(arguments[0])
+      originalPublish.apply Backbone.Mediator, arguments
 
 setUpMoment = ->
   {me} = require 'core/auth'
@@ -119,6 +125,9 @@ setUpIOSLogging = ->
           webkit?.messageHandlers?.consoleLogHandler?.postMessage level: level, arguments: (a?.toString?() ? ('' + a) for a in arguments)
         catch e
           webkit?.messageHandlers?.consoleLogHandler?.postMessage level: level, arguments: ['could not post log: ' + e]
+
+loadOfflineFonts = ->
+  $('head').prepend '<link rel="stylesheet" type="text/css" href="/fonts/openSansCondensed.css">'
 
 # This is so hacky... hopefully it's restrictive enough to not be slow.
 # We could also keep a list of events we are actually subscribed for and only try to send those over.

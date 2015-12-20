@@ -93,7 +93,7 @@ module.exports = class SpectateLevelView extends RootView
 
   afterRender: ->
     window.onPlayLevelViewLoaded? @  # still a hack
-    @insertSubView @loadingView = new LoadingView {}
+    @insertSubView @loadingView = new LoadingView autoUnveil: true, level: @levelLoader?.level ? @level
     @$el.find('#level-done-button').hide()
     super()
     $('body').addClass('is-playing')
@@ -151,7 +151,7 @@ module.exports = class SpectateLevelView extends RootView
   onLevelStarted: (e) ->
     go = =>
       @loadingView?.startUnveiling()
-      @loadingView?.unveil()
+      @loadingView?.unveil true
     _.delay go, 1000
 
   onLoadingViewUnveiled: (e) ->
@@ -176,7 +176,7 @@ module.exports = class SpectateLevelView extends RootView
     ctx.fillText("Loaded #{@modelsLoaded} thingies",50,50)
 
   insertSubviews: ->
-    @insertSubView @tome = new TomeView levelID: @levelID, session: @session, otherSession: @otherSession, thangs: @world.thangs, supermodel: @supermodel, spectateView: true, spectateOpponentCodeLanguage: @otherSession?.get('submittedCodeLanguage'), level: @level
+    @insertSubView @tome = new TomeView levelID: @levelID, session: @session, otherSession: @otherSession, thangs: @world.thangs, supermodel: @supermodel, spectateView: true, spectateOpponentCodeLanguage: @otherSession?.get('submittedCodeLanguage'), level: @level, god: @god
     @insertSubView new PlaybackView session: @session, level: @level
 
     @insertSubView new GoldView {}
@@ -187,7 +187,7 @@ module.exports = class SpectateLevelView extends RootView
   # callbacks
 
   onInfiniteLoop: (e) ->
-    return unless e.firstWorld
+    return unless e.firstWorld and e.god is @god
     @openModalView new InfiniteLoopModal()
     window.tracker?.trackEvent 'Saw Initial Infinite Loop', level: @world.name, label: @world.name
 
@@ -196,7 +196,7 @@ module.exports = class SpectateLevelView extends RootView
   initSurface: ->
     webGLSurface = $('canvas#webgl-surface', @$el)
     normalSurface = $('canvas#normal-surface', @$el)
-    @surface = new Surface @world, normalSurface, webGLSurface, thangTypes: @supermodel.getModels(ThangType), playJingle: not @isEditorPreview, spectateGame: true, playerNames: @findPlayerNames()
+    @surface = new Surface @world, normalSurface, webGLSurface, thangTypes: @supermodel.getModels(ThangType), spectateGame: true, playerNames: @findPlayerNames(), levelType: @level.get('type', true)
     worldBounds = @world.getBounds()
     bounds = [{x:worldBounds.left, y:worldBounds.top}, {x:worldBounds.right, y:worldBounds.bottom}]
     @surface.camera.setBounds(bounds)
@@ -268,6 +268,7 @@ module.exports = class SpectateLevelView extends RootView
 
   onNextGamePressed: (e) ->
     @fetchRandomSessionPair (err, data) =>
+      return if @destroyed
       if err? then return console.log "There was an error fetching the random session pair: #{data}"
       @sessionOne = data[0]._id
       @sessionTwo = data[1]._id

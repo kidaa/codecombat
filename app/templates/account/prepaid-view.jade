@@ -39,7 +39,7 @@ block content
                   label.control-label.col-md-2(data-i18n="account_prepaid.purchase_total")
                   .col-md-10
                     p.form-control-static $
-                      span#total #{purchase.total.toFixed(2)}
+                      span#total #{(purchase.total/100).toFixed(2)}
                 button#purchase-btn.btn.btn-success.pull-right(data-i18n="account_prepaid.purchase_button")
     .row
       .col-md-12
@@ -66,7 +66,7 @@ block content
                   button#redeem-code-btn.btn.btn-success(data-i18n="account_prepaid.apply_account")
     .row
       .col-md-12
-        .panel.panel-default
+        #codes-panel.panel.panel-default
           .panel-heading
             .panel-title
               a(data-toggle="collapse" href="#codeslist")
@@ -80,28 +80,26 @@ block content
                       span.spr(data-i18n="[title]account_prepaid.copy_link;general.code", title="You can copy the code's link and send it to someone.")
                         span.glyphicon.glyphicon-question-sign(aria-hidden="true")
                     th(data-i18n="account_prepaid.months")
-                    th(data-i18n="account_prepaid.quantity")
+                    th Remaining Users
+                    th Total Users
                     th(data-i18n="user.status")
                   for code in codes.models
                     if code.get('type') === 'terminal_subscription'
                       - var owner = (code.get('creator') == me.id ? true : false)
                       - var properties = code.get('properties')
                       - var redeemers = code.get('redeemers')
-                      if redeemers
-                        - var redeemed = redeemers.length
-                      else
-                        - var redeemed = '0'
+                      - var redeemed = redeemers ? redeemers.length : 0
                       tr
                         td
                           a(href="/account/prepaid?_ppc=#{code.get('code')}")= code.get('code')
                         td= properties.months || '-'
                         if owner
                           td= code.get('maxRedeemers') - redeemed
-                        else
-                          td - 
-                        if owner
+                          td= code.get('maxRedeemers')
                           td(data-i18n="account.purchased")
                         else
+                          td -
+                          td -
                           td(data-i18n="account_prepaid.redeemed")
               else
                 p(data-i18n="account_prepaid.no_codes")

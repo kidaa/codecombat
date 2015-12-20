@@ -10,43 +10,49 @@ TrialRequestSchema = new mongoose.Schema {}, {strict: false, minimize: false, re
 
 TrialRequestSchema.pre 'save', (next) ->
   return next() unless @get('status') is 'approved'
-  Prepaid.generateNewCode (code) =>
-    unless code
-      log.error "Trial request pre save prepaid gen new code failure"
-      return next()
+
+  # Add 2 course headcount
+  prepaid = new Prepaid
+    creator: @get('applicant')
+    type: 'course'
+    maxRedeemers: 2
+    properties:
+      trialRequestID: @get('_id')
+  prepaid.save (err) =>
+    if err
+      log.error "Trial request prepaid creation error: #{err}"
+
+    # Special HoC trial: Add 500 course headcount with end date
+    endDate = new Date()
+    endDate.setUTCMonth(endDate.getUTCMonth() + 2)
     prepaid = new Prepaid
-      creator: @get('reviewer')
-      type: 'subscription'
-      maxRedeemers: 1
-      code: code
+      creator: @get('applicant')
+      type: 'course'
+      maxRedeemers: 500
       properties:
-        couponID: 'free'
+        endDate: endDate
+        trialRequestID: @get('_id')
     prepaid.save (err) =>
       if err
         log.error "Trial request prepaid creation error: #{err}"
-      @set('prepaidCode', code)
       next()
 
 TrialRequestSchema.post 'save', (doc) ->
-  if doc.get('status') is 'submitted'
-    msg = "<a href=\"http://codecombat.com/admin/trial-requests\">Trial Request</a> submitted by #{doc.get('properties').email}"
-    hipchat.sendHipChatMessage msg, ['tower']
-  else if doc.get('status') is 'approved'
-    ppc = doc.get('prepaidCode')
-    unless ppc
-      log.error 'Trial request post save no ppc'
-      return
+  if doc.get('status') is 'approved'
+    endDate = new Date()
+    endDate.setUTCMonth(endDate.getUTCMonth() + 2)
     emailParams =
       recipient:
         address: doc.get('properties')?.email
-      email_id: sendwithus.templates.setup_free_sub_email
+      email_id: sendwithus.templates.teacher_free_trial_hoc
       email_data:
-        url: "https://codecombat.com/account/subscription?_ppc=#{ppc}";
+        endDate: endDate.toDateString()
     sendwithus.api.send emailParams, (err, result) =>
       log.error "sendwithus trial request approved error: #{err}, result: #{result}" if err
 
 TrialRequestSchema.statics.privateProperties = []
 TrialRequestSchema.statics.editableProperties = [
+  'created'
   'prepaidCode'
   'properties'
   'reviewDate'

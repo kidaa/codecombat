@@ -21,6 +21,7 @@ UserPollsRecord = require 'models/UserPollsRecord'
 Poll = require 'models/Poll'
 PollModal = require 'views/play/modal/PollModal'
 storage = require 'core/storage'
+CourseInstance = require 'models/CourseInstance'
 
 trackedHourOfCode = false
 
@@ -33,9 +34,9 @@ class LevelSessionsCollection extends CocoCollection
     @url = "/db/user/#{me.id}/level.sessions?project=state.complete,levelID,state.difficulty,playtime"
 
 class CampaignsCollection extends CocoCollection
-  url: '/db/campaign'
+  # We don't send all of levels, just the parts needed in countLevels
+  url: '/db/campaign/-/overworld?project=slug,adjacentCampaigns,name,fullName,description,i18n,color,levels'
   model: Campaign
-  project: ['name', 'fullName', 'description', 'i18n']
 
 module.exports = class CampaignView extends RootView
   id: 'campaign-view'
@@ -50,6 +51,7 @@ module.exports = class CampaignView extends RootView
     'dblclick .level a': 'onDoubleClickLevel'
     'click .level-info-container .start-level': 'onClickStartLevel'
     'click .level-info-container .view-solutions': 'onClickViewSolutions'
+    'click .level-info-container .course-version button': 'onClickCourseVersion'
     'click #volume-button': 'onToggleVolume'
     'click #back-button': 'onClickBack'
     'click #clear-storage-button': 'onClickClearStorage'
@@ -70,7 +72,7 @@ module.exports = class CampaignView extends RootView
     @sessions = @supermodel.loadCollection(new LevelSessionsCollection(), 'your_sessions', {cache: false}, 0).model
     @listenToOnce @sessions, 'sync', @onSessionsLoaded
     unless @terrain
-      @campaigns = @supermodel.loadCollection(new CampaignsCollection(), 'campaigns', null, 0).model
+      @campaigns = @supermodel.loadCollection(new CampaignsCollection(), 'campaigns', null, 1).model
       @listenToOnce @campaigns, 'sync', @onCampaignsLoaded
       return
 
@@ -104,14 +106,6 @@ module.exports = class CampaignView extends RootView
     @listenTo me, 'change:earned', -> @renderSelectors('#gems-count')
     @listenTo me, 'change:heroConfig', -> @updateHero()
     window.tracker?.trackEvent 'Loaded World Map', category: 'World Map', label: @terrain
-
-    # If it's a new player who didn't appear to come from Hour of Code, we register her here without setting the hourOfCode property.
-    # TODO: get rid of all this sometime in November 2015 when code.org/learn updates to the new version for Hour of Code tutorials.
-    elapsed = (new Date() - new Date(me.get('dateCreated')))
-    if not trackedHourOfCode and not me.get('hourOfCode') and elapsed < 5 * 60 * 1000
-      $('body').append($('<img src="https://code.org/api/hour/begin_codecombat.png" style="visibility: hidden;">'))
-      trackedHourOfCode = true
-
     @requiresSubscription = not me.isPremium()
 
   destroy: ->
@@ -126,6 +120,15 @@ module.exports = class CampaignView extends RootView
     @particleMan?.destroy()
     clearInterval @portalScrollInterval
     super()
+
+  showLoading: ($el) ->
+    unless @campaign
+      @$el.find('.game-controls, .user-status').addClass 'hidden'
+      @$el.find('.portal .campaign-name span').text $.i18n.t 'common.loading'
+
+  hideLoading: ->
+    unless @campaign
+      @$el.find('.game-controls, .user-status').removeClass 'hidden'
 
   getLevelPlayCounts: ->
     return unless me.isAdmin()
@@ -306,10 +309,6 @@ module.exports = class CampaignView extends RootView
     foundNext = false
     dontPointTo = ['lost-viking', 'kithgard-mastery']  # Challenge levels we don't want most players bashing heads against
     subscriptionPrompts = [{slug: 'boom-and-bust', unless: 'defense-of-plainswood'}]
-    if me.getSubscriptionPromptGroup() is 'favorable-odds'
-      subscriptionPrompts.push slug: 'favorable-odds', unless: 'the-raised-sword'
-    if me.getSubscriptionPromptGroup() is 'tactical-strike'
-      subscriptionPrompts.push slug: 'tactical-strike', unless: 'a-mayhem-of-munchkins'
     for level in levels
       # Iterate through all levels in order and look to find the first unlocked one that meets all our criteria for being pointed out as the next level.
       level.nextLevels = (reward.level for reward in level.rewards ? [] when reward.level)
@@ -418,7 +417,8 @@ module.exports = class CampaignView extends RootView
   onSessionsLoaded: (e) ->
     return if @editorMode
     for session in @sessions.models
-      @levelStatusMap[session.get('levelID')] = if session.get('state')?.complete then 'complete' else 'started'
+      unless @levelStatusMap[session.get('levelID')] is 'complete'  # Don't overwrite a complete session with an incomplete one
+        @levelStatusMap[session.get('levelID')] = if session.get('state')?.complete then 'complete' else 'started'
       @levelDifficultyMap[session.get('levelID')] = session.get('state').difficulty if session.get('state')?.difficulty
     @render()
     @loadUserPollsRecord() unless me.get 'anonymous'
@@ -461,6 +461,7 @@ module.exports = class CampaignView extends RootView
     if @editorMode
       return @trigger 'level-clicked', levelOriginal
     @$levelInfo = @$el.find(".level-info-container[data-level-slug=#{levelSlug}]").show()
+    @checkForCourseOption levelOriginal
     @adjustLevelInfoPosition e
     @endHighlight()
     @preloadLevel levelSlug
@@ -486,13 +487,23 @@ module.exports = class CampaignView extends RootView
       @startLevel levelElement
       window.tracker?.trackEvent 'Clicked Start Level', category: 'World Map', levelID: levelSlug
 
+  onClickCourseVersion: (e) ->
+    levelSlug = $(e.target).parents('.level-info-container').data 'level-slug'
+    courseID = $(e.target).parents('.course-version').data 'course-id'
+    courseInstanceID = $(e.target).parents('.course-version').data 'course-instance-id'
+    url = "/play/level/#{levelSlug}?course=#{courseID}&course-instance=#{courseInstanceID}"
+    Backbone.Mediator.publish 'router:navigate', route: url
+
   startLevel: (levelElement) ->
     @setupManager?.destroy()
     levelSlug = levelElement.data 'level-slug'
     session = @preloadedSession if @preloadedSession?.loaded and @preloadedSession.levelSlug is levelSlug
     @setupManager = new LevelSetupManager supermodel: @supermodel, levelID: levelSlug, levelPath: levelElement.data('level-path'), levelName: levelElement.data('level-name'), hadEverChosenHero: @hadEverChosenHero, parent: @, session: session
+    @$levelInfo.find('.level-info, .progress').toggleClass('hide')
+    @listenToOnce @setupManager, 'open', ->
+      @$levelInfo.find('.level-info, .progress').toggleClass('hide')
+      @$levelInfo?.hide()
     @setupManager.open()
-    @$levelInfo?.hide()
 
   onClickViewSolutions: (e) ->
     levelElement = $(e.target).parents('.level-info-container')
@@ -541,6 +552,7 @@ module.exports = class CampaignView extends RootView
     @testParticles() if @particleMan
 
   playAmbientSound: ->
+    return unless me.get 'volume'
     return if @ambientSound
     return unless file = @campaign?.get('ambientSound')?[AudioPlayer.ext.substr 1]
     src = "/file/#{file}"
@@ -556,6 +568,19 @@ module.exports = class CampaignView extends RootView
     musicFile = '/music/music-menu'
     Backbone.Mediator.publish 'music-player:play-music', play: true, file: musicFile
     storage.save("loaded-menu-music", true) unless @probablyCachedMusic
+
+  checkForCourseOption: (levelOriginal) ->
+    return unless me.get('courseInstances')?.length
+    @courseOptionsChecked ?= {}
+    return if @courseOptionsChecked[levelOriginal]
+    @courseOptionsChecked[levelOriginal] = true
+    courseInstances = new CocoCollection [], url: "/db/course_instance/-/find_by_level/#{levelOriginal}", model: CourseInstance
+    courseInstances.comparator = (ci) -> return -(ci.get('members') ? []).length
+    @supermodel.loadCollection courseInstances, 'course_instances'
+    @listenToOnce courseInstances, 'sync', =>
+      return if @destroyed
+      return unless courseInstance = courseInstances.models[0]
+      @$el.find(".course-version[data-level-original='#{levelOriginal}']").removeClass('hidden').data('course-id': courseInstance.get('courseID'), 'course-instance-id': courseInstance.id)
 
   preloadTopHeroes: ->
     for heroID in ['captain', 'knight']
@@ -576,6 +601,7 @@ module.exports = class CampaignView extends RootView
     if volume isnt me.get 'volume'
       me.set 'volume', volume
       me.patch()
+      @playAmbientSound() if volume
 
   onToggleVolume: (e) ->
     button = $(e.target).closest('#volume-button')

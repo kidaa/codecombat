@@ -166,6 +166,9 @@ module.exports = class Handler
             res.end()
         if term
           filter.filter.$text = $search: term
+        else if filters.length is 1 and filters[0].filter?.index is true
+          # All we are doing is an empty text search, but that doesn't hit the index, so we'll just look for the slug.
+          filter.filter = slug: {$exists: true}
         args = [filter.filter]
         args.push projection if projection
         q = @modelClass.find(args...)
@@ -189,6 +192,9 @@ module.exports = class Handler
       hasLimit = false
       try
         for own key, val of req.query.conditions
+          numeric = parseInt val, 10
+          if not _.isNaN(numeric) and numeric + '' is val
+            val = numeric
           query = query[key](val)
           hasLimit ||= key is 'limit'
       catch e
@@ -243,7 +249,7 @@ module.exports = class Handler
         criteria = {}
         criteria[if nonVersioned then '_id' else 'original'] = mongoose.Types.ObjectId(id)
         @modelClass.findOne(criteria, project).sort(sort).exec (err, document) ->
-          return done(err) if err
+          return callback err if err
           callback(null, document?.toObject() or null)
 
     funcs = {}
@@ -345,7 +351,11 @@ module.exports = class Handler
     return @sendForbiddenError(res) if @modelClass.schema.uses_coco_versions and not req.user.isAdmin()  # Campaign editor just saves over things.
     return @sendBadInputError(res, 'No input.') if _.isEmpty(req.body)
     return @sendForbiddenError(res) unless @hasAccess(req)
-    @getDocumentForIdOrSlug req.body._id or id, (err, document) =>
+    idOrSlug = req.body._id or id
+    if not idOrSlug or idOrSlug is 'undefined'
+      console.error "Bad PUT trying to fetching the slug: #{idOrSlug} for #{@modelClass.collection?.name} from #{req.headers['x-current-path']}?"
+      return @sendBadInputError(res, 'No _id field provided.')
+    @getDocumentForIdOrSlug idOrSlug, (err, document) =>
       return @sendBadInputError(res, 'Bad id.') if err and err.name is 'CastError'
       return @sendDatabaseError(res, err) if err
       return @sendNotFoundError(res) unless document?
@@ -498,6 +508,10 @@ module.exports = class Handler
     if Handler.isID(idOrSlug)
       query = @modelClass.findById(idOrSlug)
     else
+      if not idOrSlug or idOrSlug is 'undefined'
+        console.error "Bad request trying to fetching the slug: #{idOrSlug} for #{@modelClass.collection?.name}"
+        console.trace()
+        return done null, null
       query = @modelClass.findOne {slug: idOrSlug}
     query.select projection if projection
     query.exec (err, document) ->

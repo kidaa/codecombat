@@ -28,9 +28,8 @@ module.exports = class ControlBarView extends CocoView
     'click #control-bar-sign-up-button': 'onClickSignupButton'
 
   constructor: (options) ->
-    currentCourse = me.get('currentCourse') or {}
-    @courseID = options.courseID or currentCourse.courseID
-    @courseInstanceID = options.courseInstanceID or currentCourse.courseInstanceID 
+    @courseID = options.courseID
+    @courseInstanceID = options.courseInstanceID
 
     @worldName = options.worldName
     @session = options.session
@@ -62,6 +61,7 @@ module.exports = class ControlBarView extends CocoView
   getRenderData: (c={}) ->
     super c
     c.worldName = @worldName
+    c.campaignIndex = @level.get('campaignIndex') + 1 if @level.get('type') is 'course' and @level.get('campaignIndex')?
     c.multiplayerEnabled = @session.get('multiplayer')
     c.ladderGame = @level.get('type') in ['ladder', 'hero-ladder', 'course-ladder']
     if c.isMultiplayerLevel = @isMultiplayerLevel
@@ -113,7 +113,7 @@ module.exports = class ControlBarView extends CocoView
     @openModalView gameMenuModal
     @listenToOnce gameMenuModal, 'change-hero', ->
       @setupManager?.destroy()
-      @setupManager = new LevelSetupManager({supermodel: @supermodel, level: @level, levelID: @levelID, parent: @, session: @session})
+      @setupManager = new LevelSetupManager({supermodel: @supermodel, level: @level, levelID: @levelID, parent: @, session: @session, courseID: @courseID, courseInstanceID: @courseInstanceID})
       @setupManager.open()
 
   onClickHome: (e) ->

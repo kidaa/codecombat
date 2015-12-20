@@ -244,7 +244,44 @@ module.exports.getCoursePraise = getCoursePraise = ->
   ]
   praise[_.random(0, praise.length - 1)]
 
-module.exports.getPrepaidCodeAmount = getPrepaidCodeAmount = (price=999, users=0, months=0) ->
+module.exports.getPrepaidCodeAmount = getPrepaidCodeAmount = (price=0, users=0, months=0) ->
   return 0 unless users > 0 and months > 0
   total = price * users * months
   total
+
+module.exports.filterMarkdownCodeLanguages = (text) ->
+  return '' unless text
+  currentLanguage = me.get('aceConfig')?.language or 'python'
+  excludedLanguages = _.without ['javascript', 'python', 'coffeescript', 'clojure', 'lua', 'io'], currentLanguage
+  exclusionRegex = new RegExp "```(#{excludedLanguages.join('|')})\n[^`]+```\n?", 'gm'
+  text.replace exclusionRegex, ''
+
+module.exports.aceEditModes = aceEditModes =
+  'javascript': 'ace/mode/javascript'
+  'coffeescript': 'ace/mode/coffee'
+  'python': 'ace/mode/python'
+  'clojure': 'ace/mode/clojure'
+  'lua': 'ace/mode/lua'
+  'io': 'ace/mode/text'
+
+module.exports.initializeACE = (el, codeLanguage) ->
+  contents = $(el).text().trim()
+  editor = ace.edit el
+  editor.setOptions maxLines: Infinity
+  editor.setReadOnly true
+  editor.setTheme 'ace/theme/textmate'
+  editor.setShowPrintMargin false
+  editor.setShowFoldWidgets false
+  editor.setHighlightActiveLine false
+  editor.setHighlightActiveLine false
+  editor.setBehavioursEnabled false
+  editor.renderer.setShowGutter false
+  editor.setValue contents
+  editor.clearSelection()
+  session = editor.getSession()
+  session.setUseWorker false
+  session.setMode aceEditModes[codeLanguage]
+  session.setWrapLimitRange null
+  session.setUseWrapMode true
+  session.setNewLineMode 'unix'
+  return editor

@@ -16,6 +16,14 @@ module.exports = class User extends CocoModel
   isInGodMode: -> 'godmode' in @get('permissions', true)
   isAnonymous: -> @get('anonymous', true)
   displayName: -> @get('name', true)
+  broadName: ->
+    name = @get('name')
+    return name if name
+    name = _.filter([@get('firstName'), @get('lastName')]).join('')
+    return name if name
+    email = @get('email')
+    return email if email
+    return ''
 
   getPhotoURL: (size=80, useJobProfilePhoto=false, useEmployerPageAvatar=false) ->
     photoURL = if useJobProfilePhoto then @get('jobProfile')?.photoURL else null
@@ -130,17 +138,6 @@ module.exports = class User extends CocoModel
     @fourthLevelGroup = 'signs-and-portents' if me.isAdmin()
     application.tracker.identify fourthLevelGroup: @fourthLevelGroup unless me.isAdmin()
     @fourthLevelGroup
-
-  getSubscriptionPromptGroup: ->
-    return @subscriptionPromptGroup if @subscriptionPromptGroup
-    group = me.get('testGroupNumber') % 3
-    @subscriptionPromptGroup = switch group
-      when 0 then 'favorable-odds'
-      when 1 then 'tactical-strike'
-      when 2 then 'boom-and-bust'
-    @subscriptionPromptGroup = 'favorable-odds' if me.isAdmin()
-    application.tracker.identify subscriptionPromptGroup: @subscriptionPromptGroup unless me.isAdmin()
-    @subscriptionPromptGroup
 
   getVideoTutorialStylesIndex: (numVideos=0)->
     # A/B Testing video tutorial styles

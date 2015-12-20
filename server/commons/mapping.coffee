@@ -8,6 +8,7 @@ module.exports.handlers =
   'article': 'articles/article_handler'
   'campaign': 'campaigns/campaign_handler'
   'clan': 'clans/clan_handler'
+  'classroom': 'classrooms/classroom_handler'
   'course': 'courses/course_handler'
   'course_instance': 'courses/course_instance_handler'
   'level': 'levels/level_handler'
@@ -30,6 +31,21 @@ module.exports.handlers =
   'subscription': 'payments/subscription_handler'
   'trial_request': 'trial_requests/trial_request_handler'
   'user_polls_record': 'polls/user_polls_record_handler'
+
+module.exports.handlerUrlOverrides =
+  'analytics_log_event': 'analytics.log.event'
+  'analytics_stripe_invoice': 'analytics.stripe.invoice'
+  'level_component': 'level.component'
+  'level_feedback': 'level.feedback'
+  'level_session': 'level.session'
+  'level_system': 'level.system'
+  'thang_type': 'thang.type'
+  'thang_component': 'thang.component'
+  'user_remark': 'user.remark'
+  'mail_sent': 'mail.sent'
+  'user_polls_record': 'user.polls.record'
+  'trial_request': 'trial.request'
+  'user_code_problem': 'user.code.problem'
 
 module.exports.routes =
   [

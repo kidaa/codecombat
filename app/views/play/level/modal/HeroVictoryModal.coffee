@@ -11,6 +11,7 @@ LadderSubmissionView = require 'views/play/common/LadderSubmissionView'
 AudioPlayer = require 'lib/AudioPlayer'
 User = require 'models/User'
 utils = require 'core/utils'
+Course = require 'models/Course'
 Level = require 'models/Level'
 LevelFeedback = require 'models/LevelFeedback'
 
@@ -48,7 +49,7 @@ module.exports = class HeroVictoryModal extends ModalView
     @session = options.session
     @level = options.level
     @thangTypes = {}
-    if @level.get('type', true) is 'hero'
+    if @level.get('type', true) in ['hero', 'hero-ladder', 'course', 'course-ladder']
       achievements = new CocoCollection([], {
         url: "/db/achievement?related=#{@session.get('level').original}"
         model: Achievement
@@ -62,9 +63,13 @@ module.exports = class HeroVictoryModal extends ModalView
     else
       @readyToContinue = true
     @playSound 'victory'
-    if @level.get('type', true) is 'course' and nextLevel = @level.get('nextLevel')
-      @nextLevel = new Level().setURL "/db/level/#{nextLevel.original}/version/#{nextLevel.majorVersion}"
-      @nextLevel = @supermodel.loadModel(@nextLevel, 'level').model
+    if @level.get('type', true) is 'course'
+      if nextLevel = @level.get('nextLevel')
+        @nextLevel = new Level().setURL "/db/level/#{nextLevel.original}/version/#{nextLevel.majorVersion}"
+        @nextLevel = @supermodel.loadModel(@nextLevel, 'level').model
+      if @courseID
+        @course = new Course().setURL "/db/course/#{@courseID}"
+        @course = @supermodel.loadModel(@course, 'course').model
     if @level.get('type', true) in ['course', 'course-ladder']
       @saveReviewEventually = _.debounce(@saveReviewEventually, 2000)
       @loadExistingFeedback()
@@ -101,6 +106,7 @@ module.exports = class HeroVictoryModal extends ModalView
     @showStars()
 
   onAchievementsLoaded: ->
+    @achievements.models = _.filter @achievements.models, (m) -> not m.get('query')?.ladderAchievementDifficulty  # Don't show higher AI difficulty achievements
     @$el.toggleClass 'full-achievements', @achievements.models.length is 3
     thangTypeOriginals = []
     achievementIDs = []
@@ -120,8 +126,10 @@ module.exports = class HeroVictoryModal extends ModalView
       @thangTypes[thangTypeOriginal] = @supermodel.loadModel(thangType, 'thang').model
 
     @newEarnedAchievements = []
+    hadOneCompleted = false
     for achievement in @achievements.models
       continue unless achievement.completed
+      hadOneCompleted = true
       ea = new EarnedAchievement({
         collection: achievement.get('collection')
         triggeredBy: @session.id
@@ -137,7 +145,7 @@ module.exports = class HeroVictoryModal extends ModalView
             @updateSavingProgressStatus()
           me.fetch cache: false unless me.loading
 
-    @readyToContinue = true if not @achievements.models.length
+    @readyToContinue = true unless hadOneCompleted
 
     # have to use a something resource because addModelResource doesn't handle models being upserted/fetched via POST like we're doing here
     @newEarnedAchievementsResource = @supermodel.addSomethingResource('earned achievements') if @newEarnedAchievements.length
@@ -187,10 +195,7 @@ module.exports = class HeroVictoryModal extends ModalView
     c.i18n = utils.i18n
 
     elapsed = (new Date() - new Date(me.get('dateCreated')))
-    isHourOfCode = me.get('hourOfCode') or elapsed < 120 * 60 * 1000
-    # Later we should only check me.get('hourOfCode'), but for now so much traffic comes in that we just assume it.
-    # TODO: get rid of said assumption sometime in November 2015 when code.org/learn updates to the new version for Hour of Code tutorials.
-    if isHourOfCode
+    if me.get 'hourOfCode'
       # Show the Hour of Code "I'm Done" tracking pixel after they played for 20 minutes
       lastLevel = @level.get('slug') is 'course-kithgard-gates'
       enough = elapsed >= 20 * 60 * 1000 or lastLevel
@@ -202,17 +207,21 @@ module.exports = class HeroVictoryModal extends ModalView
         me.patch()
         window.tracker?.trackEvent 'Hour of Code Finish'
       # Show the "I'm done" button between 30 - 120 minutes if they definitely came from Hour of Code
-      c.showHourOfCodeDoneButton = me.get('hourOfCode') and showDone
+      c.showHourOfCodeDoneButton = showDone
 
     c.showLeaderboard = @level.get('scoreTypes')?.length > 0 and @level.get('type', true) isnt 'course'
 
     c.showReturnToCourse = not c.showLeaderboard and not me.get('anonymous') and @level.get('type', true) in ['course', 'course-ladder']
+    c.isCourseLevel = @level.get('type', true) in ['course']
+    c.currentCourseName = @course?.get('name')
+    c.currentLevelName = @level?.get('name')
+    c.nextLevelName = @nextLevel?.get('name')
 
     return c
 
   afterRender: ->
     super()
-    @$el.toggleClass 'with-achievements', @level.get('type', true) is 'hero'
+    @$el.toggleClass 'with-achievements', @level.get('type', true) in ['hero', 'hero-ladder']
     return unless @supermodel.finished()
     @playSelectionSound hero, true for original, hero of @thangTypes  # Preload them
     @updateSavingProgressStatus()
@@ -222,8 +231,8 @@ module.exports = class HeroVictoryModal extends ModalView
       @insertSubView @ladderSubmissionView, @$el.find('.ladder-submission-view')
 
   initializeAnimations: ->
-    if @level.get('type', true) is 'hero'
-      @updateXPBars 0
+    return @endSequentialAnimations() unless @level.get('type', true) in ['hero', 'hero-ladder']
+    @updateXPBars 0
     #playVictorySound = => @playSound 'victory-title-appear'  # TODO: actually add this
     @$el.find('#victory-header').delay(250).queue(->
       $(@).removeClass('out').dequeue()
@@ -253,7 +262,7 @@ module.exports = class HeroVictoryModal extends ModalView
 
   beginSequentialAnimations: ->
     return if @destroyed
-    return unless @level.get('type', true) is 'hero'
+    return unless @level.get('type', true) in ['hero', 'hero-ladder']
     @sequentialAnimatedPanels = _.map(@animatedPanels.find('.reward-panel'), (panel) -> {
       number: $(panel).data('number')
       previousNumber: $(panel).data('previous-number')
@@ -381,12 +390,13 @@ module.exports = class HeroVictoryModal extends ModalView
   returnToLadder: ->
     # Preserve the supermodel as we navigate back to the ladder.
     viewArgs = [{supermodel: if @options.hasReceivedMemoryWarning then null else @supermodel}, @level.get('slug')]
-    ladderURL = "/play/ladder/#{@level.get('slug') || @level.id}#my-matches"
-    if leagueID = @getQueryVariable 'league'
+    ladderURL = "/play/ladder/#{@level.get('slug') || @level.id}"
+    if leagueID = (@courseInstanceID or @getQueryVariable 'league')
       leagueType = if @level.get('type') is 'course-ladder' then 'course' else 'clan'
       viewArgs.push leagueType
       viewArgs.push leagueID
       ladderURL += "/#{leagueType}/#{leagueID}"
+    ladderURL += '#my-matches'
     Backbone.Mediator.publish 'router:navigate', route: ladderURL, viewClass: 'views/ladder/LadderView', viewArgs: viewArgs
 
   playSelectionSound: (hero, preload=false) ->
@@ -406,12 +416,14 @@ module.exports = class HeroVictoryModal extends ModalView
       # need to do something more complicated to load its slug
       console.log 'have @nextLevel', @nextLevel, 'from nextLevel', nextLevel
       link = "/play/level/#{@nextLevel.get('slug')}"
+      if @courseID
+        link += "?course=#{@courseID}"
+        link += "&course-instance=#{@courseInstanceID}" if @courseInstanceID
     else if @level.get('type', true) is 'course'
       link = "/courses"
       if @courseID
         link += "/#{@courseID}"
-        if @courseInstanceID
-          link += "/#{@courseInstanceID}"
+        link += "/#{@courseInstanceID}" if @courseInstanceID
     else
       link = '/play'
       nextCampaign = @getNextLevelCampaign()
@@ -428,10 +440,8 @@ module.exports = class HeroVictoryModal extends ModalView
     _.merge options, extraOptions if extraOptions
     if @level.get('type', true) is 'course' and @nextLevel and not options.returnToCourse
       viewClass = require 'views/play/level/PlayLevelView'
-      if @courseID
-        options.courseID = @courseID
-      if @courseInstanceID
-        options.courseInstanceID = @courseInstanceID
+      options.courseID = @courseID
+      options.courseInstanceID = @courseInstanceID
       viewArgs = [options, @nextLevel.get('slug')]
     else if @level.get('type', true) is 'course'
       # TODO: shouldn't set viewClass and route in different places
@@ -440,15 +450,19 @@ module.exports = class HeroVictoryModal extends ModalView
       if @courseID
         viewClass = require 'views/courses/CourseDetailsView'
         viewArgs.push @courseID
-        if @courseInstanceID
-          viewArgs.push @courseInstanceID
+        viewArgs.push @courseInstanceID if @courseInstanceID
+    else if @level.get('type', true) is 'course-ladder'
+      leagueID = @courseInstanceID or @getQueryVariable 'league'
+      nextLevelLink = "/play/ladder/#{@level.get('slug')}"
+      nextLevelLink += "/course/#{leagueID}" if leagueID
+      viewClass = 'views/ladder/LadderView'
+      viewArgs = [options, @level.get('slug')]
+      viewArgs = viewArgs.concat ['course', leagueID] if leagueID
     else
       viewClass = require 'views/play/CampaignView'
       viewArgs = [options, @getNextLevelCampaign()]
     navigationEvent = route: nextLevelLink, viewClass: viewClass, viewArgs: viewArgs
     if @level.get('slug') is 'lost-viking' and not (me.get('age') in ['0-13', '14-17'])
-      @showOffer navigationEvent
-    else if @level.get('slug') is 'a-mayhem-of-munchkins' and not (me.get('age') in ['0-13']) and not options.showLeaderboard
       @showOffer navigationEvent
     else
       Backbone.Mediator.publish 'router:navigate', navigationEvent
@@ -476,7 +490,6 @@ module.exports = class HeroVictoryModal extends ModalView
   onClickContinueFromOffer: (e) ->
     url = {
       'lost-viking': 'http://www.vikingcodeschool.com/codecombat?utm_source=codecombat&utm_medium=viking_level&utm_campaign=affiliate&ref=Code+Combat+Elite'
-      'a-mayhem-of-munchkins': 'https://www.bloc.io/web-developer-career-track?utm_campaign=affiliate&utm_source=codecombat&utm_medium=bloc_level'
     }[@level.get('slug')]
     Backbone.Mediator.publish 'router:navigate', @navigationEventUponCompletion
     window.open url, '_blank' if url

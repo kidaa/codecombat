@@ -4,6 +4,7 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     no_ie: "CodeCombat nu merge pe Internet Explorer 8 sau mai vechi. Scuze!" # Warning that only shows up in IE8 and older
     no_mobile: "CodeCombat nu a fost proiectat pentru dispozitive mobile şi s-ar putea să nu meargă!" # Warning that shows up on mobile devices
     play: "Joacă" # The big play button that opens up the campaign view.
+#    play_campaign_version: "Play Campaign Version" # Shows up under big play button if you only play /courses
     old_browser: "Mda , browser-ul tău este prea vechi pentru CodeCombat. Scuze!" # Warning that shows up on really old Firefox/Chrome/Safari
     old_browser_suffix: "Poți să încerci oricum ,dar probabil nu o să meargă."
     ipad_browser: "Veşti rele: CodeCombat nu rulează pe iPad in browser. Veşti bune: aplicaţia noastră nativă pentru iPad e în curs de aprobare."
@@ -12,10 +13,14 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     multiplayer: "Multiplayer" # Not currently shown on home page
     for_developers: "Pentru Dezvoltatori" # Not currently shown on home page.
     or_ipad: "Sau descarcă pentru iPad"
+#    hoc_class_code: "I Have a Class Code"
+#    hoc_enter: "Enter"
+#    hoc_title: "Hour of Code?"
 
   nav:
     play: "Nivele" # The top nav bar entry where players choose which levels to play
     community: "Communitate"
+#    courses: "Courses"
     editor: "Editor"
     blog: "Blog"
     forum: "Forum"
@@ -50,6 +55,7 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 
   play:
     play_as: "Alege-ți echipa" # Ladder page
+#    compete: "Compete!" # Course details page
     spectate: "Spectator" # Ladder page
     players: "jucători" # Hover over a level on /play
     hours_played: "ore jucate" # Hover over a level on /play
@@ -68,11 +74,11 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     poll: "Sondaj" # Tooltip on poll button from /play
     next: "Următorul" # Go from choose hero to choose inventory before playing a level
     change_hero: "Schimbă eroul" # Go back from choose inventory to choose hero
-    choose_inventory: "Foloseste Itemele"
     buy_gems: "Cumpără Pietre Prețioase"
     subscription_required: "Abonament Necesar"
     anonymous: "Jucător Anonim"
     level_difficulty: "Dificultate: "
+#    play_classroom_version: "Play Classroom Version" # Choose a level in campaign version that you also can play in one of your courses
     campaign_beginner: "Campanie pentru Începători"
     awaiting_levels_adventurer_prefix: "Lansăm niveluri noi în fiecare săptămână."
     awaiting_levels_adventurer: "Înscrie-te ca un aventurier "
@@ -112,6 +118,9 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     social_signup: "Sau, te poți inregistra cu Facebook sau G+:"
     required: "Trebuie să te înregistrezi înaite să parcurgi acest drum."
     login_switch: "Ai deja un cont?"
+#    school_name: "School Name and City"
+#    optional: "optional"
+#    school_name_placeholder: "Example High School, Springfield, IL"
 
   recover:
     recover_account_title: "Recuperează Cont"
@@ -216,7 +225,10 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     years: "ani"
 
   play_level:
+#    completed_level: "Completed Level:"
+#    course: "Course:"
     done: "Gata"
+#    next_level: "Next Level:"
 #    next_game: "Next game"
 #    show_menu: "Show game menu"
     home: "Acasă" # Not used any more, will be removed soon.
@@ -245,9 +257,8 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     victory_title_suffix: " Terminat"
     victory_sign_up: "Înscrie-te pentru a salva progresul"
     victory_sign_up_poke: "Vrei să-ți salvezi codul? Crează un cont gratis!"
-    victory_rate_the_level: "Apreciază nivelul: " # Only in old-style levels.
+    victory_rate_the_level: "Apreciază nivelul: " # {change}
     victory_return_to_ladder: "Înapoi la jocurile de clasament"
-    victory_play_continue: "Continuă"
     victory_saving_progress: "Salvează Progresul"
     victory_go_home: "Acasă"
     victory_review: "Spune-ne mai multe!"
@@ -259,12 +270,7 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     victory_new_item: "Item nou"
     victory_viking_code_school: "Wow, ăla a fost un nivel greu! Daca nu ești deja un dezvoltator de software, ar trebui să fi. Tocmai ai fost selectat pentru acceptare in Viking Code School, unde poți sa iți dezvolți abilitățile la nivelul următor și să devi un dezvoltator web profesionist în 14 săptămâni."
     victory_become_a_viking: "Devino Viking"
-#    victory_bloc: "Great work! Your skills are improving, and someone's taking notice. If you've considered becoming a software developer, this may be your lucky day. Bloc is an online bootcamp that pairs you 1-on-1 with an expert mentor who will help train you into a professional developer! By beating A Mayhem of Munchkins, you're now eligible for a $500 price reduction with the code: CCRULES"
-#    victory_bloc_cta: "Meet your mentor – learn about Bloc"
     guide_title: "Ghid"
-    tome_minion_spells: "Vrăjile Minionilor tăi" # Only in old-style levels.
-    tome_read_only_spells: "Vrăji Read-Only" # Only in old-style levels.
-    tome_other_units: "Alte unități" # Only in old-style levels.
     tome_cast_button_run: "Ruleaza"
     tome_cast_button_running: "In Derulare"
     tome_cast_button_ran: "A rulat"
@@ -276,7 +282,6 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     tome_available_spells: "Vrăji disponibile"
     tome_your_skills: "Skillurile tale"
     tome_current_method: "Metoda curentă"
-    hud_continue_short: "Continuă"
     code_saved: "Cod Salvat"
     skip_tutorial: "Sari peste (esc)"
     keyboard_shortcuts: "Scurtături Keyboard"
@@ -363,7 +368,6 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     auth_caption: "Salvează progresul."
 
   leaderboard:
-    leaderboard: "Tabel Clasificare"
     view_other_solutions: "Vizualizează Tabelul de Clasificare"
     scores: "Scoruri"
     top_players: "Top Jucători"
@@ -377,7 +381,6 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     gold_collected: "Aur Colectat"
 
   inventory:
-    choose_inventory: "Echipează Iteme"
     equipped_item: "Echipat"
     required_purchase_title: "Necesar"
     available_item: "Valabil"
@@ -439,13 +442,13 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     parents_blurb3: "Fără Riscuri: Garanție 100% bani înapoi, o dezabonare ușoară cu 1-click."
     payment_methods: "Metode de plată"
     payment_methods_title: "Metode de plată acceptate"
-    payment_methods_blurb1: "Deocamdată acceptăm numai cărti de credit si Alipay."
+    payment_methods_blurb1: "Deocamdată acceptăm numai cărti de credit si Alipay." # {change}
     payment_methods_blurb2: "Dacă aveți nevoie de o formă alternativă de plată, vă rugăm să ne contactați"
 #    sale_already_subscribed: "You're already subscribed!"
-#    sale_blurb1: "Save 35%"
+#    sale_blurb1: "Save $21"
 #    sale_blurb2: "off regular subscription price of $120 for a whole year!"
 #    sale_button: "Sale!"
-#    sale_button_title: "Save 35% when you purchase a 1 year subscription"
+#    sale_button_title: "Save $21 when you purchase a 1 year subscription"
 #    sale_click_here: "Click Here"
 #    sale_ends: "Ends"
 #    sale_extended: "*Existing subscriptions will be extended by 1 year."
@@ -458,7 +461,7 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    sale_title: "Back to School Sale"
 #    sale_view_button: "Buy 1 year subscription for"
     stripe_description: "Abonament Lunar"
-#    stripe_description_year_sale: "1 Year Subscription (35% discount)"
+#    stripe_description_year_sale: "1 Year Subscription ($21 discount)"
     subscription_required_to_play: "Ai nevoie de abonament ca să joci acest nivel."
     unlock_help_videos: "Abonează-te pentru deblocarea tuturor tutorialelor video."
     personal_sub: "Abonament Personal" # Accounts Subscription View below
@@ -601,6 +604,12 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    jose_blurb: "Taking Off"
 #    retrostyle_title: "Illustration"
 #    retrostyle_blurb: "RetroStyle Games"
+#    rob_title: "Compiler Engineer"
+#    rob_blurb: "Codes things and stuff"
+#    josh_c_title: "Game Designer"
+#    josh_c_blurb: "Designs games"
+#    carlos_title: "Region Manager, Brazil"
+#    carlos_blurb: "Celery Man"
 
   teachers:
     more_info: "Info pentru Educatori"
@@ -610,11 +619,15 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    cost_premium_server: "CodeCombat is free for the first five levels, after which it costs $9.99 USD per month for access to our other 190+ levels on our exclusive country-specific servers."
     free_1: "Sunt 80+ de nivele GRATIS ce parcurg fiecare concept în programare." # {change}
     free_2: "Un abonament lunar oferă acces la tutoriale video si nivele extra pentru practică."
-    teacher_subs_title: "Educatori primesc abonamente gratuite!"
-#    teacher_subs_0: "We offer free subscriptions to teachers for evaluation purposes."
+#    free_3: "The CodeCombat content is divided into"
+#    free_4: "courses"
+#    free_5: ".  The first course is free, and about an hour of material."
+#    free_6: "Access to the additional courses can be unlocked with a one-time purchase."
+    teacher_subs_title: "Educatori primesc abonamente gratuite!" # {change}
+#    teacher_subs_0: "We offer free trials to teachers."
     teacher_subs_1: "Te rugăm sa completezi"
     teacher_subs_2: "Chestionarul Educatorului"
-    teacher_subs_3: "pentru a configura abonamentul."
+    teacher_subs_3: "pentru a configura abonamentul." # {change}
     sub_includes_title: "Ce e inclus în abonament?"
     sub_includes_1: "Pe langă 80+ de nivele de bază, studenții cu un abonament lunar au acces la aceste servicii suplimentare:" # {change}
     sub_includes_2: "60+ nivele pentru practică" # {change}
@@ -658,16 +671,19 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     title: "Chestionar Educatori"
     must_be_logged: "Mai întâi trebuie să fi logat. Te rugăm să faci un cont sau să te loghezi în meniul de mai sus."
     retrieving: "Se preiau informațiile..."
-    being_reviewed_1: "Cererea pentru un abonament trial gratis este în curs de"
+    being_reviewed_1: "Cererea pentru un abonament trial gratis este în curs de" # {change}
     being_reviewed_2: "examinare" # {change}
-    approved_1: "Cererea pentru un abonament trial gratis a fost"
+    approved_1: "Cererea pentru un abonament trial gratis a fost" # {change}
     approved_2: "aprobată." # {change}
-    approved_3: "Mai multe instrucțiuni au fost timiste la"
-    denied_1: "Cererea pentru un abonament trial gratis a fost"
+#    approved_4: "You can now enroll your students on the"
+#    approved_5: "courses"
+#    approved_6: "page."
+    denied_1: "Cererea pentru un abonament trial gratis a fost" # {change}
     denied_2: "refuzată" # {change}
     contact_1: "Contactează-ne"
     contact_2: "dacă ai alte întrebări."
     description_1: "Oferim abonamente gratis Educatorilor pentru evaluare. Poți găsi mai multe informați pe"
+#    description_1b: "You can find more information on our"
     description_2: "pagina"
     description_3: "educatorilor."
     description_4: "Te rugăm să completezi acest formular rapid si îți vom trimite un email cu instrucțiuni."
@@ -721,13 +737,17 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    wrong_password: "Wrong Password"
     upload_picture: "Uploadează o imagine"
     delete_this_account: "Ștergere permanetă a acestui cont"
+#    reset_progress_tab: "Reset All Progress"
+#    reset_your_progress: "Clear all your progress and start over"
 #    god_mode: "God Mode"
     password_tab: "Parolă"
     emails_tab: "Email-uri"
     admin: "Admin"
+#    manage_subscription: "Click here to manage your subscription."
     new_password: "Parolă nouă"
     new_password_verify: "Verifică"
-    type_in_email: "Scrie adresa de email ca să confirmi ștergerea" # {change}
+    type_in_email: "Scrie adresa de email ca să confirmi ștergerea"
+#    type_in_email_progress: "Type in your email to confirm deleting your progress."
 #    type_in_password: "Also, type in your password."
     email_subscriptions: "Subscripție Email"
     email_subscriptions_none: "Nu ai subscripții Email."
@@ -835,6 +855,7 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     started_2: "Început"
     not_started_2: "Neînceput"
     view_solution: "Click pentru a vedea soluția."
+#    view_attempt: "Click to view attempt."
     latest_achievement: "Ultimile Achievement-uri"
     playtime: "Timp Jucat"
     last_played: "Ultima oară cănd ai jucat"
@@ -856,6 +877,7 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #  courses:
 #    course: "Course"
 #    courses: "courses"
+#    create_new_class: "Create New Class"
 #    not_enrolled: "You are not enrolled in this course."
 #    visit_pref: "Please visit the"
 #    visit_suf: "page to enroll."
@@ -877,7 +899,6 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    concepts_covered: "Concepts Covered"
 #    students: "Students"
 #    students1: "students"
-#    expand_details: "Expand details"
 #    concepts: "Concepts"
 #    levels: "levels"
 #    played: "Played"
@@ -892,9 +913,6 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    send_invites: "Send Invites"
 #    title: "Title"
 #    description: "Description"
-#    languages_available: "Select programming languages available to the class:"
-#    all_lang: "All Languages"
-#    show_progress: "Show student progress to everyone in the class"
 #    creating_class: "Creating class..."
 #    purchasing_course: "Purchasing course..."
 #    buy_course: "Buy Course"
@@ -914,12 +932,6 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    free_trial: "Free trial for teachers!"
 #    get_access: "to get individual access to all courses for evalutaion purposes."
 #    questions: "Questions?"
-#    faq: "Courses FAQ"
-#    question: "Q:" # Like in 'Question'
-#    question1: "What's the difference between these courses and the single player game?"
-#    answer: "A:" # Like in 'Answer'
-#    answer1: "The single player game is designed for individuals, while the courses are designed for classes."
-#    answer2: "The single player game has items, gems, hero selection, leveling up, and in-app purchases. Courses have classroom management features and streamlined student-focused level pacing."
 #    teachers_click: "Teachers Click Here"
 #    students_click: "Students Click Here"
 #    courses_on_coco: "Courses on CodeCombat"
@@ -940,6 +952,149 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    topics: "Topics"
 #    hours_content: "Hours of content:"
 #    get_free: "Get FREE course"
+#    enroll_paid: "Enroll Students in Paid Courses"
+#    you_have1: "You have"
+#    you_have2: "unused paid enrollments"
+#    use_one: "Use 1 paid enrollment for"
+#    use_multiple: "Use paid enrollments for the following students:"
+#    already_enrolled: "already enrolled"
+#    licenses_remaining: "licenses remaining:"
+#    insufficient_enrollments: "insufficient paid enrollments"
+#    enroll_students: "Enroll Students"
+#    get_enrollments: "Get More Enrollments"
+#    change_language: "Change Course Language"
+#    keep_using: "Keep Using"
+#    switch_to: "Switch To"
+#    greetings: "Greetings!"
+#    learn_p: "Learn Python"
+#    learn_j: "Learn JavaScript"
+#    language_cannot_change: "Language cannot be changed once students join a class."
+#    back_classrooms: "Back to my classrooms"
+#    back_courses: "Back to my courses"
+#    edit_details: "Edit class details"
+#    enrolled_courses: "enrolled in paid courses:"
+#    purchase_enrollments: "Purchase Enrollments"
+#    remove_student: "remove student"
+#    assign: "Assign"
+#    to_assign: "to assign paid courses."
+#    teacher: "Teacher"
+#    complete: "Complete"
+#    none: "None"
+#    save: "Save"
+#    play_campaign_title: "Play the Campaign"
+#    play_campaign_description: "You’re ready to take the next step! Explore hundreds of challenging levels, learn advanced programming skills, and compete in multiplayer arenas!"
+#    create_account_title: "Create an Account"
+#    create_account_description: "Sign up for a FREE CodeCombat account and gain access to more levels, more programming skills, and more fun!"
+#    preview_campaign_title: "Preview Campaign"
+#    preview_campaign_description: "Take a sneak peek at all that CodeCombat has to offer before signing up for your FREE account."
+#    arena: "Arena"
+#    arena_soon_title: "Arena Coming Soon"
+#    arena_soon_description: "We are working on a multiplayer arena for classrooms at the end of"
+#    not_enrolled1: "Not enrolled"
+#    not_enrolled2: "Ask your teacher to enroll you in the next course."
+#    next_course: "Next Course"
+#    coming_soon1: "Coming soon"
+#    coming_soon2: "We are hard at work making more courses for you!"
+#    available_levels: "Available Levels"
+#    welcome_to_courses: "Adventurers, welcome to Courses!"
+#    ready_to_play: "Ready to play?"
+#    start_new_game: "Start New Game"
+#    play_now_learn_header: "Play now to learn"
+#    play_now_learn_1: "basic syntax to control your character"
+#    play_now_learn_2: "while loops to solve pesky puzzles"
+#    play_now_learn_3: "strings & variables to customize actions"
+#    play_now_learn_4: "how to defeat an ogre (important life skills!)"
+#    welcome_to_page: "Welcome to your Courses page!"
+#    completed_hoc: "Amazing! You've completed the Hour of Code course!"
+#    ready_for_more_header: "Ready for more? Play the campaign mode!"
+#    ready_for_more_1: "Use gems to unlock new items!"
+#    ready_for_more_2: "Play through brand new worlds and challenges"
+#    ready_for_more_3: "Learn even more programming!"
+#    saved_games: "Saved Games"
+#    hoc: "Hour of Code"
+#    my_classes: "My Classes"
+#    class_added: "Class successfully added!"
+#    view_class: "view class"
+#    view_levels: "view levels"
+#    join_class: "Join A Class"
+#    ask_teacher_for_code: "Ask your teacher if you have a CodeCombat class code! If so, enter it below:"
+#    enter_c_code: "<Enter Class Code>"
+#    join: "Join"
+#    joining: "Joining class"
+#    course_complete: "Course Complete"
+#    play_arena: "Play Arena"
+#    start: "Start"
+#    last_level: "Last Level"
+#    welcome_to_hoc: "Adventurers, welcome to our Hour of Code!"
+#    logged_in_as: "Logged in as:"
+#    not_you: "Not you?"
+#    welcome_back: "Hi adventurer, welcome back!"
+#    continue_playing: "Continue Playing"
+#    more_options: "More options:"
+#    option1_header: "Option 1: Invite students via email"
+#    option1_body: "Students will automatically be sent an invitation to join this class, and will need to create an account with a username and password."
+#    option2_header: "Option 2: Send URL to your students"
+#    option2_body: "Students will be asked to enter an email address, username and password to create an account."
+#    option3_header: "Option 3: Direct students to codecombat.com/courses"
+#    option3_body: "Give students the following passcode to enter along with an email address, username and password when they create an account."
+#    thank_you_pref: "Thank you for your purchase! You can now assign"
+#    thank_you_suff: "more students to paid courses."
+#    return_to_class: "Return to classroom"
+#    return_to_course_man: "Return to course management."
+#    students_not_enrolled: "students not enrolled"
+#    total_all_classes: "Total Across All Classes"
+#    how_many_enrollments: "How many additional paid enrollments do you need?"
+#    each_student_access: "Each student in a class will get access to Courses 2-4 once they are enrolled in paid courses. You may assign each course to each student individually."
+#    purchase_now: "Purchase Now"
+#    enrollments: "enrollments"
+#    remove_student1: "Remove Student"
+#    are_you_sure: "Are you sure you want to remove this student from this class?"
+#    remove_description1: "Student will lose access to this classroom and assigned classes. Progress and gameplay is NOT lost, and the student can be added back to the classroom at any time."
+#    remove_description2: "The activated paid license will not be returned."
+#    keep_student: "Keep Student"
+#    removing_user: "Removing user"
+#    to_join_ask: "To join a class, ask your teacher for an unlock code."
+#    join_this_class: "Join Class"
+#    enter_here: "<enter unlock code here>"
+#    successfully_joined: "Successfully joined"
+#    click_to_start: "Click here to start taking"
+#    my_courses: "My Courses"
+#    classroom: "Classroom"
+#    use_school_email: "use your school email if you have one"
+#    unique_name: "a unique name no one has chosen"
+#    pick_something: "pick something you can remember"
+#    class_code: "Class Code"
+#    optional_ask: "optional - ask your teacher to give you one!"
+#    optional_school: "optional - what school do you go to?"
+#    start_playing: "Start Playing"
+#    skip_this: "Skip this, I'll create an account later!"
+#    welcome: "Welcome"
+#    getting_started: "Getting Started with Courses"
+#    download_getting_started: "Download Getting Started Guide [PDF]"
+#    getting_started_1: "Create a new class by clicking the green 'Create New Class' button below."
+#    getting_started_2: "Once you've created a class, click the blue 'Add Students' button."
+#    getting_started_3: "You'll see student's progress below as they sign up and join your class."
+#    additional_resources: "Additional Resources"
+#    additional_resources_1_pref: "Download/print our"
+#    additional_resources_1_mid: "Course 1 Teacher's Guide"
+#    additional_resources_1_suff: "explanations and solutions to each level."
+#    additional_resources_2_pref: "Complete our"
+#    additional_resources_2_suff: "to get 15 more hours of content for FREE for 2 months."
+#    additional_resources_3_pref: "Visit our"
+#    additional_resources_3_mid: "Teacher Forums"
+#    additional_resources_3_suff: "to connect to fellow educators who are using CodeCombat."
+#    your_classes: "Your Classes"
+#    no_classes: "No classes yet!"
+#    create_new_class1: "create new class"
+#    available_courses: "Available Courses"
+#    unused_enrollments: "Unused enrollments available:"
+#    students_access: "All students get access to Introduction to Computer Science for free. One enrollment per student is required to assign them to paid CodeCombat courses. A single student does not need multiple enrollments to access all paid courses."
+#    active_courses: "active courses"
+#    no_students: "No students yet!"
+#    add_students1: "add students"
+#    view_edit: "view/edit"
+#    students_enrolled: "students enrolled"
+#    length: "Length:"
 
   classes:
     archmage_title: "Archmage"
@@ -1161,7 +1316,7 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     tutorial_skip: "Sări peste Tutorial"
     tutorial_not_sure: "Nu ești sigur ce se întâmplă?"
     tutorial_play_first: "Joacă Tutorial-ul mai întâi."
-    simple_ai: "AI simplu"
+    simple_ai: "AI simplu" # {change}
     warmup: "Încălzire"
     friends_playing: "Prieteni ce se Joacă"
     log_in_for_friends: "Loghează-te ca să joci cu prieteni tăi!"
@@ -1183,8 +1338,8 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     rules: "Reguli"
     winners: "Învingători"
 #    league: "League"
-#    red_ai: "Red AI" # "Red AI Wins", at end of multiplayer match playback
-#    blue_ai: "Blue AI"
+#    red_ai: "Red CPU" # "Red AI Wins", at end of multiplayer match playback
+#    blue_ai: "Blue CPU"
 #    wins: "Wins" # At end of multiplayer match playback
 #    humans: "Red" # Ladder page display team name
 #    ogres: "Blue"
@@ -1209,12 +1364,6 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     last_earned: "Ultimul câstigat"
     amount_achieved: "Sumă"
     achievement: "Achievement"
-    category_contributor: "Contribuitor"
-    category_ladder: "Ladder"
-    category_level: "Nivel"
-    category_miscellaneous: "Diverse"
-    category_levels: "Nivele"
-    category_undefined: "Necategorizate"
     current_xp_prefix: ""
     current_xp_postfix: " în total"
     new_xp_prefix: ""
@@ -1224,8 +1373,6 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     left_xp_postfix: ""
 
   account:
-    recently_played: "Recent Jucat"
-    no_recent_games: "Nici-un joc jucat de 2 săptămâni."
     payments: "Plăți"
 #    prepaid_codes: "Prepaid Codes"
     purchased: "Cumpărate"
@@ -1276,6 +1423,9 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
 #    quantity: "Quantity"
 #    redeemed: "Redeemed"
 #    no_codes: "No codes yet!"
+#    you_can1: "You can"
+#    you_can2: "purchase a prepaid code"
+#    you_can3: "that can be applied to your own account or given to others."
 
   loading_error:
     could_not_load: "Eroare la încărcarea pe server"
@@ -1341,6 +1491,16 @@ module.exports = nativeDescription: "limba română", englishDescription: "Roman
     campaigns: "Campanii"
     poll: "Sondaj"
     user_polls_record: "Istoric votări Sondaj"
+#    course: "Course"
+#    courses: "Courses"
+#    course_instance: "Course Instance"
+#    course_instances: "Course Instances"
+#    classroom: "Classroom"
+#    classrooms: "Classrooms"
+#    clan: "Clan"
+#    clans: "Clans"
+#    members: "Members"
+#    users: "Users"
 
 #  concepts:
 #    advanced_strings: "Advanced Strings"

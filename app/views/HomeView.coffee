@@ -11,15 +11,26 @@ module.exports = class HomeView extends RootView
   constructor: ->
     super()
     window.tracker?.trackEvent 'Homepage Loaded', category: 'Homepage'
-    if not me.get('hourOfCode') and @getQueryVariable 'hour_of_code'
-      @setUpHourOfCode()
-    elapsed = (new Date() - new Date(me.get('dateCreated')))
-    if me.get('hourOfCode') and elapsed < 86400 * 1000 and me.get('preferredLanguage', true) is 'en-US'
-      # Show the Hour of Code footer explanation in English until it's been more than a day
-      @explainsHourOfCode = true
+    if @getQueryVariable 'hour_of_code'
+      application.router.navigate "/hoc", trigger: true
+
+    isHourOfCodeWeek = false  # Temporary: default to /hoc flow during the main event week
+    if isHourOfCodeWeek and (@isNewPlayer() or (@justPlaysCourses() and me.isAnonymous()))
+      # Go/return straight to playing single-player HoC course on Play click
+      @playURL = '/hoc?go=true'
+      @alternatePlayURL = '/play'
+      @alternatePlayText = 'home.play_campaign_version'
+    else if @justPlaysCourses()
+      # Save players who might be in a classroom from getting into the campaign
+      @playURL = '/courses'
+      @alternatePlayURL = '/play'
+      @alternatePlayText = 'home.play_campaign_version'
+    else
+      @playURL = '/play'
 
   onClickPlayButton: (e) ->
     @playSound 'menu-button-click'
+    return if @playURL isnt '/play'
     e.preventDefault()
     e.stopImmediatePropagation()
     window.tracker?.trackEvent 'Click Play', category: 'Homepage'
@@ -27,7 +38,6 @@ module.exports = class HomeView extends RootView
 
   afterInsert: ->
     super(arguments...)
-    @$el.addClass 'hour-of-code' if @explainsHourOfCode
 
   isOldBrowser: ->
     if $.browser
@@ -39,13 +49,9 @@ module.exports = class HomeView extends RootView
       console.warn 'no more jquery browser version...'
     return false
 
-  setUpHourOfCode: ->
-    # All this HoC stuff is for the 2014-2015 year. 2015-2016 year lands at /hoc instead (the courses view).
-    # TODO: get rid of all this sometime in November 2015 when code.org/learn updates to the new version for Hour of Code tutorials.
-    elapsed = (new Date() - new Date(me.get('dateCreated')))
-    if elapsed < 5 * 60 * 1000
-      me.set 'hourOfCode', true
-      me.patch()
-    # We may also insert the tracking pixel for everyone on the CampaignView so as to count directly-linked visitors.
-    $('body').append($('<img src="https://code.org/api/hour/begin_codecombat.png" style="visibility: hidden;">'))
-    application.tracker?.trackEvent 'Hour of Code Begin'
+  justPlaysCourses: ->
+    # This heuristic could be better, but currently we don't add to me.get('courseInstances') for single-player anonymous intro courses, so they have to beat a level without choosing a hero.
+    return me.get('stats')?.gamesCompleted and not me.get('heroConfig')
+
+  isNewPlayer: ->
+    not me.get('stats')?.gamesCompleted and not me.get('heroConfig')

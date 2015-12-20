@@ -11,6 +11,28 @@ block modal-body-content
   if victoryText
     #victory-text= victoryText
 
+  if isCourseLevel
+    .course-name-container
+      if currentCourseName
+        p
+          span.spr.level-title(data-i18n="play_level.course")
+          span.level-name= currentCourseName
+    .container-fluid
+      .row
+        .col-md-6
+          if currentLevelName
+            .level-title(data-i18n="play_level.completed_level")
+            .level-name= currentLevelName.replace('Course: ', '')
+        .col-md-6
+          if nextLevelName
+            .level-title(data-i18n="play_level.next_level")
+            .level-name= nextLevelName.replace('Course: ', '')
+          else
+            .level-title(data-i18n="play_level.course")
+            .level-name(data-i18n="play_level.victory_title_suffix")
+
+    br
+
   #level-feedback
     div.rating.secret
       div.rating-label(data-i18n="play_level.victory_rate_the_level") Rate the level:
@@ -26,48 +48,49 @@ block modal-body-content
         textarea(data-i18n="[placeholder]play_level.victory_review_placeholder")
     .clearfix
 
-  for achievement in achievements
-    - var animate = achievement.completed && !achievement.completedAWhileAgo
-    .achievement-panel(class=achievement.completedAWhileAgo ? 'earned' : '' data-achievement-id=achievement.id data-animate=animate)
-      - var rewards = achievement.get('rewards') || {};
-      
-      div.achievement-description= achievement.description
-      
-      div.achievement-rewards
-        - var worth = achievement.worth;
-        - var previousWorth = achievement.previousWorth;
-        - var gems = achievement.gems;
-        - var previousGems = achievement.previousGems;
-        if worth
-          .reward-panel.numerical.xp(data-number=worth, data-number-unit='xp', data-previous-number=previousWorth || 0)
-            .reward-image-container(class=animate ? 'pending-reward-image' : 'show')
-              img(src="/images/pages/play/level/modal/reward_icon_xp.png")
-            .reward-text= animate ? '+0' : '+'+worth
+  if level.get('type', true) === 'hero' || level.get('type') == 'hero-ladder'
+    for achievement in achievements
+      - var animate = achievement.completed && !achievement.completedAWhileAgo
+      .achievement-panel(class=achievement.completedAWhileAgo ? 'earned' : '' data-achievement-id=achievement.id data-animate=animate)
+        - var rewards = achievement.get('rewards') || {};
 
-        if gems
-          .reward-panel.numerical.gems(data-number=gems, data-number-unit='gem', data-previous-number=previousGems || 0)
-            .reward-image-container(class=animate ? 'pending-reward-image' : 'show')
-              img(src="/images/pages/play/level/modal/reward_icon_gems.png")
-            .reward-text= animate ? '+0' : '+'+gems
-          
-        if rewards.heroes
-          for hero in rewards.heroes
-            - var hero = thangTypes[hero];
-            .reward-panel.hero(data-hero-thang-type=hero.get('original'))
-              .reward-image-container(class=animate ? 'pending-reward-image' : 'show')
-                img(src=hero.getPortraitURL())
-              .reward-text= animate ? 'New Hero' : hero.get('name')
+        div.achievement-description= achievement.description
 
-        if rewards.items
-          for item in rewards.items
-            - var item = thangTypes[item];
-            .reward-panel.item(data-item-thang-type=item.get('original'))
+        div.achievement-rewards
+          - var worth = achievement.worth;
+          - var previousWorth = achievement.previousWorth;
+          - var gems = achievement.gems;
+          - var previousGems = achievement.previousGems;
+          if worth
+            .reward-panel.numerical.xp(data-number=worth, data-number-unit='xp', data-previous-number=previousWorth || 0)
               .reward-image-container(class=animate ? 'pending-reward-image' : 'show')
-                img(src=item.getPortraitURL())
-              if animate
-                .reward-text(data-i18n="play_level.victory_new_item") New Item
-              else
-                .reward-text= i18n(item.attributes, 'name')
+                img(src="/images/pages/play/level/modal/reward_icon_xp.png")
+              .reward-text= animate ? '+0' : '+'+worth
+
+          if gems
+            .reward-panel.numerical.gems(data-number=gems, data-number-unit='gem', data-previous-number=previousGems || 0)
+              .reward-image-container(class=animate ? 'pending-reward-image' : 'show')
+                img(src="/images/pages/play/level/modal/reward_icon_gems.png")
+              .reward-text= animate ? '+0' : '+'+gems
+
+          if rewards.heroes
+            for hero in rewards.heroes
+              - var hero = thangTypes[hero];
+              .reward-panel.hero(data-hero-thang-type=hero.get('original'))
+                .reward-image-container(class=animate ? 'pending-reward-image' : 'show')
+                  img(src=hero.getPortraitURL())
+                .reward-text= animate ? 'New Hero' : hero.get('name')
+
+          if rewards.items
+            for item in rewards.items
+              - var item = thangTypes[item];
+              .reward-panel.item(data-item-thang-type=item.get('original'))
+                .reward-image-container(class=animate ? 'pending-reward-image' : 'show')
+                  img(src=item.getPortraitURL())
+                if animate
+                  .reward-text(data-i18n="play_level.victory_new_item") New Item
+                else
+                  .reward-text= i18n(item.attributes, 'name')
 
 block modal-footer-content
   #totals
@@ -98,7 +121,7 @@ block modal-footer-content
     else if level.get('type') === 'hero-ladder'
       button.btn.btn-illustrated.btn-primary.btn-lg.return-to-ladder-button(data-href="/play/ladder/#{level.get('slug')}#my-matches", data-dismiss="modal", data-i18n="play_level.victory_return_to_ladder") Return to Ladder
     else
-      button.btn.btn-illustrated.btn-success.btn-lg.world-map-button.next-level-button.hide#continue-button(data-i18n="play_level.victory_play_continue") Continue
+      button.btn.btn-illustrated.btn-success.btn-lg.world-map-button.next-level-button.hide#continue-button(data-i18n="common.continue") Continue
 
   if !me.get('anonymous') && !showHourOfCodeDoneButton && showLeaderboard
     button.btn.btn-illustrated.btn-success.leaderboard-button.btn-lg(data-dismiss="modal", data-i18n="leaderboard.view_other_solutions") View Other Solutions
@@ -120,10 +143,3 @@ block modal-footer-content
       img.pull-right(src="/file/db/level/55144b509f0c4854051769c1/viking_2.png")
       span(data-i18n="play_level.victory_viking_code_school")
     button.btn.btn-illustrated.btn-primary.btn-lg.world-map-button.continue-from-offer-button(data-i18n="play_level.victory_become_a_viking") Become a Viking
-  .offer.a-mayhem-of-munchkins
-    p
-      img.pull-left(src="/file/db/level/55ca29439bc1892c835b0137/bloc_warrior.png")
-      img.pull-right(src="/file/db/level/55ca29439bc1892c835b0137/bloc_logo.png")
-      span(data-i18n="play_level.victory_bloc")
-    button.btn.btn-illustrated.btn-warning.btn-lg.world-map-button.skip-offer-button(data-i18n="play_level.victory_play_continue") Continue
-    button.btn.btn-illustrated.btn-primary.btn-lg.world-map-button.continue-from-offer-button(data-i18n="play_level.victory_bloc_cta")

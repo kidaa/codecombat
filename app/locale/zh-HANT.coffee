@@ -4,6 +4,7 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     no_ie: "抱歉！Internet Explorer 8 等舊的瀏覽器打不開此網站" # Warning that only shows up in IE8 and older
     no_mobile: "CodeCombat不是針對手機設備設計的，所以可能會出問題！" # Warning that shows up on mobile devices
     play: "開始遊戲" # The big play button that opens up the campaign view.
+#    play_campaign_version: "Play Campaign Version" # Shows up under big play button if you only play /courses
     old_browser: "嗯... 您的瀏覽器太老了跑不動CodeCombat，抱歉！" # Warning that shows up on really old Firefox/Chrome/Safari
     old_browser_suffix: "您還是可以試試看，但它應該不能運行。"
     ipad_browser: "抱歉，CodeCombat不能在iPad上的瀏覽器運行，但好消息是我們的iPad App正在等待蘋果公司審核。"
@@ -12,10 +13,14 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     multiplayer: "多人連線" # Not currently shown on home page
     for_developers: "開發者專區" # Not currently shown on home page.
     or_ipad: "或下載 iPad 版"
+#    hoc_class_code: "I Have a Class Code"
+#    hoc_enter: "Enter"
+#    hoc_title: "Hour of Code?"
 
   nav:
     play: "返回地圖" # The top nav bar entry where players choose which levels to play
     community: "社群"
+#    courses: "Courses"
     editor: "編輯"
     blog: "官方部落格"
     forum: "論壇"
@@ -50,6 +55,7 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
 
   play:
     play_as: "扮演" # Ladder page
+#    compete: "Compete!" # Course details page
     spectate: "旁觀" # Ladder page
     players: "玩家" # Hover over a level on /play
     hours_played: "小時已玩" # Hover over a level on /play
@@ -68,11 +74,11 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     poll: "投票" # Tooltip on poll button from /play
     next: "下一步" # Go from choose hero to choose inventory before playing a level
     change_hero: "更換英雄" # Go back from choose inventory to choose hero
-    choose_inventory: "裝備物品"
     buy_gems: "購買鑽石"
     subscription_required: "需要訂購"
     anonymous: "匿名玩家"
     level_difficulty: "難度"
+#    play_classroom_version: "Play Classroom Version" # Choose a level in campaign version that you also can play in one of your courses
     campaign_beginner: "新手指南"
     awaiting_levels_adventurer_prefix: "我們每周將釋出新的關卡。" # {change}
     awaiting_levels_adventurer: "註冊成為冒險家"
@@ -112,6 +118,9 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     social_signup: "您也可以使用G+或Facebook帳號註冊:"
     required: "在這麼做之前必須先登入。"
     login_switch: "已經有申請帳號了嗎？"
+#    school_name: "School Name and City"
+#    optional: "optional"
+#    school_name_placeholder: "Example High School, Springfield, IL"
 
   recover:
     recover_account_title: "復原帳號"
@@ -216,7 +225,10 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     years: "年"
 
   play_level:
+#    completed_level: "Completed Level:"
+#    course: "Course:"
     done: "完成"
+#    next_level: "Next Level:"
     next_game: "下一個遊戲"
     show_menu: "顯示遊戲菜單"
     home: "首頁" # Not used any more, will be removed soon.
@@ -245,9 +257,8 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     victory_title_suffix: "完成"
     victory_sign_up: "保存進度"
     victory_sign_up_poke: "想保存您的程式碼？建立一個免費帳號吧！"
-    victory_rate_the_level: "評估關卡: " # Only in old-style levels.
+    victory_rate_the_level: "評估關卡: " # {change}
     victory_return_to_ladder: "返回升級比賽模式"
-    victory_play_continue: "繼續"
     victory_saving_progress: "儲存進度"
     victory_go_home: "返回首頁"
     victory_review: "給我們回饋！"
@@ -259,12 +270,7 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     victory_new_item: "新的物品"
     victory_viking_code_school: "太厲害了, 您剛完成了非常困難的關卡! 如果您想成為一個軟件開發人員，您就應該去試一下Viking Code School。在這裡您可以把您的知識增長到另一個台階。只需要14個星期您就能成為一個專業的網頁開發人員。"
     victory_become_a_viking: "成為一個維京人。"
-    victory_bloc: "做得好! 你的技能正在提升, 並且已經有人注意著你了. 如果你正考慮著當一名軟件工程師, 現在可能就是你的幸運日. Bloc 是個能提供在線一對一專業指導的,能鍛煉你成為專業開發者的訓練營! 通過矮人騷亂後, 你可以使用價值$500 的優惠碼: CCRULES"
-    victory_bloc_cta: "會晤你的導師 – 了解 Bloc"
     guide_title: "指南"
-    tome_minion_spells: "助手的咒語" # Only in old-style levels.
-    tome_read_only_spells: "唯讀的咒語" # Only in old-style levels.
-    tome_other_units: "其他單位" # Only in old-style levels.
     tome_cast_button_run: "運作"
     tome_cast_button_running: "運作中"
     tome_cast_button_ran: "已運作"
@@ -276,7 +282,6 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     tome_available_spells: "可用的法術"
     tome_your_skills: "您的技能"
     tome_current_method: "現在的方法"
-    hud_continue_short: "繼續"
     code_saved: "程式碼已保存"
     skip_tutorial: "跳過 (esc)"
     keyboard_shortcuts: "快捷鍵"
@@ -363,7 +368,6 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     auth_caption: "儲存進度."
 
   leaderboard:
-    leaderboard: "排行榜"
     view_other_solutions: "查看其他解法"
     scores: "分數"
     top_players: "頂級玩家由"
@@ -377,7 +381,6 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     gold_collected: "收集的黃金"
 
   inventory:
-    choose_inventory: "裝備物品"
     equipped_item: "已裝備"
     required_purchase_title: "需要的"
     available_item: "可使用"
@@ -439,13 +442,13 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     parents_blurb3: "沒有風險: 保證 100% 退費, 一步取消訂閱。"
     payment_methods: "付費方法"
     payment_methods_title: "可接受的付款方式"
-    payment_methods_blurb1: "我們現有的付費方式有信用卡和支付寶"
+    payment_methods_blurb1: "我們現有的付費方式有信用卡和支付寶" # {change}
     payment_methods_blurb2: "如果您想用其他付費方式,請聯繫我們"
     sale_already_subscribed: "您已經訂閱！"
-    sale_blurb1: "和正常一年的訂閱價格 $120 相比"
-    sale_blurb2: "年費訂閱能節省 35%!"
+    sale_blurb1: "和正常一年的訂閱價格 $120 相比" # {change}
+    sale_blurb2: "年費訂閱能節省 $21!"
     sale_button: "促銷！"
-    sale_button_title: "年費訂閱能節省 35% 的費用"
+    sale_button_title: "年費訂閱能節省 $21 的費用" # {change}
     sale_click_here: "點擊這裡"
     sale_ends: "結束"
     sale_extended: "*已訂閱用戶會續期一年。"
@@ -458,7 +461,7 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     sale_title: "開學促銷"
     sale_view_button: "購買年費訂閱："
     stripe_description: "每月訂閱"
-    stripe_description_year_sale: "年費訂閱 (35% 優惠)"
+    stripe_description_year_sale: "年費訂閱 ($21 優惠)" # {change}
     subscription_required_to_play: "您將需要訂閱來開啟這關。"
     unlock_help_videos: "訂閱來解開所有鎖住得教學影片。"
     personal_sub: "個人訂閱" # Accounts Subscription View below
@@ -601,6 +604,12 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     jose_blurb: "放輕鬆"
     retrostyle_title: "插畫師"
     retrostyle_blurb: "復古風格的遊戲"
+#    rob_title: "Compiler Engineer"
+#    rob_blurb: "Codes things and stuff"
+#    josh_c_title: "Game Designer"
+#    josh_c_blurb: "Designs games"
+#    carlos_title: "Region Manager, Brazil"
+#    carlos_blurb: "Celery Man"
 
   teachers:
     more_info: "致教師的說明"
@@ -610,11 +619,15 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     cost_premium_server: "CodeCombat的前5個關卡在中國是免費的，在這之後需花費每月9.99美元來訪問我們架設在中國專屬服務器上的190多個關卡。"
     free_1: "有110多個覆蓋了所有理論的免費關卡。"
     free_2: "包月訂閱可以訪問視頻教程和額外的練習關卡。"
-    teacher_subs_title: "教師可免費訂閱！"
-    teacher_subs_0: "我們可為教師提供用於評估的免費訂閱。"
+#    free_3: "The CodeCombat content is divided into"
+#    free_4: "courses"
+#    free_5: ".  The first course is free, and about an hour of material."
+#    free_6: "Access to the additional courses can be unlocked with a one-time purchase."
+    teacher_subs_title: "教師可免費訂閱！" # {change}
+    teacher_subs_0: "我們可為教師提供用於評估的免費訂閱。" # {change}
     teacher_subs_1: "請聯繫"
     teacher_subs_2: "教師調查"
-    teacher_subs_3: "建立您的訂閱。"
+    teacher_subs_3: "建立您的訂閱。" # {change}
     sub_includes_title: "訂閱裡包含了什麼內容？"
     sub_includes_1: "除了110＋個基礎關卡，學生包月訂閱還可以使用這些附加功能："
     sub_includes_2: "超過70個練習關卡" # {change}
@@ -658,16 +671,19 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     title: "教師調查"
     must_be_logged: "您需要先登入。請先註冊或者在上方的目錄中點擊登入。"
     retrieving: "檢索信息中..."
-    being_reviewed_1: "您的免費訂閱試用申請正在"
+    being_reviewed_1: "您的免費訂閱試用申請正在" # {change}
     being_reviewed_2: "審核。"
-    approved_1: "您的免費訂閱試用申請已被"
-    approved_2: "批准。"
-    approved_3: "進一步的說明已被送往"
-    denied_1: "您的免費訂閱試用申請已被"
+    approved_1: "您的免費訂閱試用申請已被" # {change}
+    approved_2: "批准。" # {change}
+#    approved_4: "You can now enroll your students on the"
+#    approved_5: "courses"
+#    approved_6: "page."
+    denied_1: "您的免費訂閱試用申請已被" # {change}
     denied_2: "拒絕。"
     contact_1: "請聯繫"
     contact_2: "如果您有更多的疑問。"
     description_1: "我們為教師提供免費訂閱用評估的目的。您可以找到更多的信息在我們的"
+#    description_1b: "You can find more information on our"
     description_2: "教師"
     description_3: "頁面。"
     description_4: "請填寫此簡單問卷，我們將會向您的電子郵件發送設置說明。"
@@ -721,13 +737,17 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     wrong_password: "密碼錯誤"
     upload_picture: "上傳圖片"
     delete_this_account: "永久性的刪除帳戶"
+#    reset_progress_tab: "Reset All Progress"
+#    reset_your_progress: "Clear all your progress and start over"
     god_mode: "上帝模式"
     password_tab: "密碼"
     emails_tab: "郵件"
     admin: "管理員"
+#    manage_subscription: "Click here to manage your subscription."
     new_password: "新密碼"
     new_password_verify: "確認密碼"
     type_in_email: "輸入您的Email來確認刪除"
+#    type_in_email_progress: "Type in your email to confirm deleting your progress."
     type_in_password: "還有輸入您的密碼。"
     email_subscriptions: "訂閱"
     email_subscriptions_none: "無Email訂閱"
@@ -835,6 +855,7 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     started_2: "已開始"
     not_started_2: "尚未開始"
     view_solution: "點擊查閱答案。"
+#    view_attempt: "Click to view attempt."
     latest_achievement: "最新成就"
     playtime: "遊戲時間"
     last_played: "最後玩了"
@@ -856,6 +877,7 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
   courses:
     course: "課程"
     courses: "課程"
+#    create_new_class: "Create New Class"
     not_enrolled: "您没有註冊這一節課。"
     visit_pref: "請到這個"
     visit_suf: "網頁註冊。"
@@ -877,7 +899,6 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     concepts_covered: "課目覆蓋"
     students: "學生"
     students1: "個學生。"
-    expand_details: "展開細節"
     concepts: "課目"
     levels: "關卡"
     played: "已通關"
@@ -892,9 +913,6 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     send_invites: "發送邀請"
     title: "標題"
     description: "描述"
-    languages_available: "選擇編程語言："
-    all_lang: "所有編程語言"
-    show_progress: "向所有該課堂的人展示學生的進度"
     creating_class: "課堂創建中···"
     purchasing_course: "購買課程中···"
     buy_course: "購買課程"
@@ -914,12 +932,6 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     free_trial: "老師可免費試用！"
     get_access: "獲得個人使用權在評估目的下來使用所有課程。"
     questions: "有疑問？"
-    faq: "課程FAQ"
-    question: "問：" # Like in 'Question'
-    question1: "這些課程和單人遊戲之間的有什麼區別？"
-    answer: "答：" # Like in 'Answer'
-    answer1: "單人遊戲是專為個人而設，而課程是專為課堂而設。"
-    answer2: "在單人遊戲中有物品、寶石、英雄選擇、練級、和內購應用。課程有課堂管理功能，和老師可根據學生的水平而調整教學進度。"
     teachers_click: "老師點擊這裡"
     students_click: "學生點擊這裡"
     courses_on_coco: "CodeCombat上的課程"
@@ -940,6 +952,149 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     topics: "題目"
     hours_content: "內容時間："
     get_free: "取得免費課程！"
+#    enroll_paid: "Enroll Students in Paid Courses"
+#    you_have1: "You have"
+#    you_have2: "unused paid enrollments"
+#    use_one: "Use 1 paid enrollment for"
+#    use_multiple: "Use paid enrollments for the following students:"
+#    already_enrolled: "already enrolled"
+#    licenses_remaining: "licenses remaining:"
+#    insufficient_enrollments: "insufficient paid enrollments"
+#    enroll_students: "Enroll Students"
+#    get_enrollments: "Get More Enrollments"
+#    change_language: "Change Course Language"
+#    keep_using: "Keep Using"
+#    switch_to: "Switch To"
+#    greetings: "Greetings!"
+#    learn_p: "Learn Python"
+#    learn_j: "Learn JavaScript"
+#    language_cannot_change: "Language cannot be changed once students join a class."
+#    back_classrooms: "Back to my classrooms"
+#    back_courses: "Back to my courses"
+#    edit_details: "Edit class details"
+#    enrolled_courses: "enrolled in paid courses:"
+#    purchase_enrollments: "Purchase Enrollments"
+#    remove_student: "remove student"
+#    assign: "Assign"
+#    to_assign: "to assign paid courses."
+#    teacher: "Teacher"
+#    complete: "Complete"
+#    none: "None"
+#    save: "Save"
+#    play_campaign_title: "Play the Campaign"
+#    play_campaign_description: "You’re ready to take the next step! Explore hundreds of challenging levels, learn advanced programming skills, and compete in multiplayer arenas!"
+#    create_account_title: "Create an Account"
+#    create_account_description: "Sign up for a FREE CodeCombat account and gain access to more levels, more programming skills, and more fun!"
+#    preview_campaign_title: "Preview Campaign"
+#    preview_campaign_description: "Take a sneak peek at all that CodeCombat has to offer before signing up for your FREE account."
+#    arena: "Arena"
+#    arena_soon_title: "Arena Coming Soon"
+#    arena_soon_description: "We are working on a multiplayer arena for classrooms at the end of"
+#    not_enrolled1: "Not enrolled"
+#    not_enrolled2: "Ask your teacher to enroll you in the next course."
+#    next_course: "Next Course"
+#    coming_soon1: "Coming soon"
+#    coming_soon2: "We are hard at work making more courses for you!"
+#    available_levels: "Available Levels"
+#    welcome_to_courses: "Adventurers, welcome to Courses!"
+#    ready_to_play: "Ready to play?"
+#    start_new_game: "Start New Game"
+#    play_now_learn_header: "Play now to learn"
+#    play_now_learn_1: "basic syntax to control your character"
+#    play_now_learn_2: "while loops to solve pesky puzzles"
+#    play_now_learn_3: "strings & variables to customize actions"
+#    play_now_learn_4: "how to defeat an ogre (important life skills!)"
+#    welcome_to_page: "Welcome to your Courses page!"
+#    completed_hoc: "Amazing! You've completed the Hour of Code course!"
+#    ready_for_more_header: "Ready for more? Play the campaign mode!"
+#    ready_for_more_1: "Use gems to unlock new items!"
+#    ready_for_more_2: "Play through brand new worlds and challenges"
+#    ready_for_more_3: "Learn even more programming!"
+#    saved_games: "Saved Games"
+#    hoc: "Hour of Code"
+#    my_classes: "My Classes"
+#    class_added: "Class successfully added!"
+#    view_class: "view class"
+#    view_levels: "view levels"
+#    join_class: "Join A Class"
+#    ask_teacher_for_code: "Ask your teacher if you have a CodeCombat class code! If so, enter it below:"
+#    enter_c_code: "<Enter Class Code>"
+#    join: "Join"
+#    joining: "Joining class"
+#    course_complete: "Course Complete"
+#    play_arena: "Play Arena"
+#    start: "Start"
+#    last_level: "Last Level"
+#    welcome_to_hoc: "Adventurers, welcome to our Hour of Code!"
+#    logged_in_as: "Logged in as:"
+#    not_you: "Not you?"
+#    welcome_back: "Hi adventurer, welcome back!"
+#    continue_playing: "Continue Playing"
+#    more_options: "More options:"
+#    option1_header: "Option 1: Invite students via email"
+#    option1_body: "Students will automatically be sent an invitation to join this class, and will need to create an account with a username and password."
+#    option2_header: "Option 2: Send URL to your students"
+#    option2_body: "Students will be asked to enter an email address, username and password to create an account."
+#    option3_header: "Option 3: Direct students to codecombat.com/courses"
+#    option3_body: "Give students the following passcode to enter along with an email address, username and password when they create an account."
+#    thank_you_pref: "Thank you for your purchase! You can now assign"
+#    thank_you_suff: "more students to paid courses."
+#    return_to_class: "Return to classroom"
+#    return_to_course_man: "Return to course management."
+#    students_not_enrolled: "students not enrolled"
+#    total_all_classes: "Total Across All Classes"
+#    how_many_enrollments: "How many additional paid enrollments do you need?"
+#    each_student_access: "Each student in a class will get access to Courses 2-4 once they are enrolled in paid courses. You may assign each course to each student individually."
+#    purchase_now: "Purchase Now"
+#    enrollments: "enrollments"
+#    remove_student1: "Remove Student"
+#    are_you_sure: "Are you sure you want to remove this student from this class?"
+#    remove_description1: "Student will lose access to this classroom and assigned classes. Progress and gameplay is NOT lost, and the student can be added back to the classroom at any time."
+#    remove_description2: "The activated paid license will not be returned."
+#    keep_student: "Keep Student"
+#    removing_user: "Removing user"
+#    to_join_ask: "To join a class, ask your teacher for an unlock code."
+#    join_this_class: "Join Class"
+#    enter_here: "<enter unlock code here>"
+#    successfully_joined: "Successfully joined"
+#    click_to_start: "Click here to start taking"
+#    my_courses: "My Courses"
+#    classroom: "Classroom"
+#    use_school_email: "use your school email if you have one"
+#    unique_name: "a unique name no one has chosen"
+#    pick_something: "pick something you can remember"
+#    class_code: "Class Code"
+#    optional_ask: "optional - ask your teacher to give you one!"
+#    optional_school: "optional - what school do you go to?"
+#    start_playing: "Start Playing"
+#    skip_this: "Skip this, I'll create an account later!"
+#    welcome: "Welcome"
+#    getting_started: "Getting Started with Courses"
+#    download_getting_started: "Download Getting Started Guide [PDF]"
+#    getting_started_1: "Create a new class by clicking the green 'Create New Class' button below."
+#    getting_started_2: "Once you've created a class, click the blue 'Add Students' button."
+#    getting_started_3: "You'll see student's progress below as they sign up and join your class."
+#    additional_resources: "Additional Resources"
+#    additional_resources_1_pref: "Download/print our"
+#    additional_resources_1_mid: "Course 1 Teacher's Guide"
+#    additional_resources_1_suff: "explanations and solutions to each level."
+#    additional_resources_2_pref: "Complete our"
+#    additional_resources_2_suff: "to get 15 more hours of content for FREE for 2 months."
+#    additional_resources_3_pref: "Visit our"
+#    additional_resources_3_mid: "Teacher Forums"
+#    additional_resources_3_suff: "to connect to fellow educators who are using CodeCombat."
+#    your_classes: "Your Classes"
+#    no_classes: "No classes yet!"
+#    create_new_class1: "create new class"
+#    available_courses: "Available Courses"
+#    unused_enrollments: "Unused enrollments available:"
+#    students_access: "All students get access to Introduction to Computer Science for free. One enrollment per student is required to assign them to paid CodeCombat courses. A single student does not need multiple enrollments to access all paid courses."
+#    active_courses: "active courses"
+#    no_students: "No students yet!"
+#    add_students1: "add students"
+#    view_edit: "view/edit"
+#    students_enrolled: "students enrolled"
+#    length: "Length:"
 
   classes:
     archmage_title: "大法師"
@@ -1161,7 +1316,7 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     tutorial_skip: "略過教學"
     tutorial_not_sure: "不確定發生啥事?"
     tutorial_play_first: "先嘗試教學."
-    simple_ai: "簡單人工智慧"
+    simple_ai: "簡單人工智慧" # {change}
     warmup: "熱身"
     friends_playing: "與朋友連線"
     log_in_for_friends: "登入與朋友一起玩!"
@@ -1184,7 +1339,7 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     winners: "贏家"
     league: "聯盟"
     red_ai: "紅隊 AI" # "Red AI Wins", at end of multiplayer match playback
-    blue_ai: "藍隊 AI"
+    blue_ai: "藍隊 AI" # {change}
     wins: "勝利" # At end of multiplayer match playback
     humans: "紅隊" # Ladder page display team name
     ogres: "藍隊"
@@ -1209,12 +1364,6 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     last_earned: "最近一次"
     amount_achieved: "數量"
     achievement: "成就"
-    category_contributor: "貢獻者"
-    category_ladder: "升級比賽"
-    category_level: "等級"
-    category_miscellaneous: "其他"
-    category_levels: "等級"
-    category_undefined: "未定義"
     current_xp_prefix: "當前總共"
     current_xp_postfix: "經驗"
     new_xp_prefix: "獲得"
@@ -1224,8 +1373,6 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     left_xp_postfix: "到下一個等級"
 
   account:
-    recently_played: "最近玩過"
-    no_recent_games: "在過去兩個星期沒有玩過遊戲。"
     payments: "付款"
     prepaid_codes: "充值碼"
     purchased: "已購買"
@@ -1276,6 +1423,9 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
 #    quantity: "Quantity"
 #    redeemed: "Redeemed"
 #    no_codes: "No codes yet!"
+#    you_can1: "You can"
+#    you_can2: "purchase a prepaid code"
+#    you_can3: "that can be applied to your own account or given to others."
 
   loading_error:
     could_not_load: "從伺服器載入失敗"
@@ -1341,6 +1491,16 @@ module.exports = nativeDescription: "繁體中文", englishDescription: "Chinese
     campaigns: "征戰"
     poll: "投票"
     user_polls_record: "投票結果"
+#    course: "Course"
+#    courses: "Courses"
+#    course_instance: "Course Instance"
+#    course_instances: "Course Instances"
+#    classroom: "Classroom"
+#    classrooms: "Classrooms"
+#    clan: "Clan"
+#    clans: "Clans"
+#    members: "Members"
+#    users: "Users"
 
   concepts:
     advanced_strings: "高級字符串"

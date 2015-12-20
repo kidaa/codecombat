@@ -8,6 +8,7 @@ TrialRequest = require 'models/TrialRequest'
 module.exports = class TeachersFreeTrialView extends RootView
   id: 'teachers-free-trial-view'
   template: template
+  logoutRedirectURL: false
 
   events:
     'click .submit-button': 'onClickSubmit'
@@ -30,7 +31,6 @@ module.exports = class TeachersFreeTrialView extends RootView
     $('.radio-other').prop("checked", true)
 
   onClickSubmit: (e) ->
-    email = $('.input-email-address').val()
     school = $('.input-school').val()
     location = $('.input-location').val()
     age = $('input[name=age]:checked').val()
@@ -46,10 +46,6 @@ module.exports = class TeachersFreeTrialView extends RootView
     $('.container-num-students').removeClass('has-error')
     $('.container-heard-about').removeClass('has-error')
     $('.error-message').hide()
-    unless email
-      $('.container-email-address').addClass('has-error')
-      $('.error-message').show()
-      return
     unless school
       $('.container-school').addClass('has-error')
       $('.error-message').show()
@@ -73,9 +69,9 @@ module.exports = class TeachersFreeTrialView extends RootView
 
     # Save trial request
     trialRequest = new TrialRequest
-      type: 'subscription'
+      type: 'course'
       properties:
-        email: email
+        email: @email
         school: school
         location: location
         age: age

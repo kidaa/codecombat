@@ -64,7 +64,6 @@ module.exports = class ClanDetailsView extends RootView
     @supermodel.loadModel @clan, 'clan', cache: false
     @supermodel.loadCollection(@members, 'members', {cache: false})
     @supermodel.loadCollection(@memberAchievements, 'member_achievements', {cache: false})
-    @supermodel.loadCollection(@memberSessions, 'member_sessions', {cache: false})
 
   getRenderData: ->
     context = super()
@@ -93,7 +92,7 @@ module.exports = class ClanDetailsView extends RootView
     userConceptsMap = {}
     if @campaigns.loaded
       levelCount = 0
-      for campaign in @campaigns.models
+      for campaign in @campaigns.models when campaign.get('type') is 'hero'
         campaignID = campaign.id
         lastLevelIndex = 0
         for levelID, level of campaign.get('levels')
@@ -115,7 +114,7 @@ module.exports = class ClanDetailsView extends RootView
           lastLevelIndex++
           levelCount++
 
-    @sortMembers(highestUserLevelCountMap, userConceptsMap) if @clan.get('dashboardType') is 'premium'
+    @sortMembers(highestUserLevelCountMap, userConceptsMap)# if @clan.get('dashboardType') is 'premium'
     context.members = @members?.models ? []
     context.lastUserCampaignLevelMap = lastUserCampaignLevelMap
     context.showExpandedProgress = maxLastUserCampaignLevel <= 30 or @showExpandedProgress
@@ -182,8 +181,7 @@ module.exports = class ClanDetailsView extends RootView
     @campaignLevelProgressions = []
     @conceptsProgression = []
     @arenas = []
-    for campaign in @campaigns.models
-      continue if campaign.get('slug') is 'auditions'
+    for campaign in @campaigns.models when campaign.get('type') is 'hero'
       campaignLevelProgression =
         ID: campaign.id
         slug: campaign.get('slug')
@@ -197,7 +195,7 @@ module.exports = class ClanDetailsView extends RootView
         if level.concepts?
           for concept in level.concepts
             @conceptsProgression.push concept unless concept in @conceptsProgression
-        if level.type is 'hero-ladder'
+        if level.type is 'hero-ladder' and level.slug not in ['capture-their-flag']
           @arenas.push level
       @campaignLevelProgressions.push campaignLevelProgression
     @render?()
@@ -207,6 +205,8 @@ module.exports = class ClanDetailsView extends RootView
       @owner = new User _id: @clan.get('ownerID')
       @listenTo @owner, 'sync', => @render?()
       @supermodel.loadModel @owner, 'owner', cache: false
+    if @clan.get("dashboardType") is "premium"
+      @supermodel.loadCollection(@memberSessions, 'member_sessions', {cache: false})
     @render?()
 
   onMembersSync: ->

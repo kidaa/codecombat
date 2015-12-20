@@ -18,7 +18,7 @@ module.exports = class ProblemAlertView extends CocoView
 
   events:
     'click .close': 'onRemoveClicked'
-    'click #problem-alert-help-button': 'onClickProblemAlertHelp'
+    'click': -> Backbone.Mediator.publish 'tome:focus-editor', {}
 
   constructor: (options) ->
     super options
@@ -89,13 +89,10 @@ module.exports = class ProblemAlertView extends CocoView
     return unless @$el.is(':visible')
     @onRemoveClicked()
 
-  onClickProblemAlertHelp: ->
-    application.tracker?.trackEvent 'Problem alert help clicked', {levelID: @level.get('slug'), ls: @session?.get('_id')}
-    @openModalView new GameMenuModal showTab: 'guide', level: @level, session: @session, supermodel: @supermodel
-
   onRemoveClicked: ->
     @playSound 'menu-button-click'
     @$el.hide()
+    Backbone.Mediator.publish 'tome:focus-editor', {}
 
   onWindowResize: (e) =>
     # TODO: This all seems a little hacky

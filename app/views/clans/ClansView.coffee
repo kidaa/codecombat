@@ -43,8 +43,8 @@ module.exports = class ClansView extends RootView
     @idNameMap = {}
 
     sortClanList = (a, b) ->
-      if a.get('members').length isnt b.get('members').length
-        if a.get('members').length < b.get('members').length then 1 else -1
+      if a.get('memberCount') isnt b.get('memberCount')
+        if a.get('memberCount') < b.get('memberCount') then 1 else -1
       else
         b.id.localeCompare(a.id)
     @publicClans = new CocoCollection([], { url: '/db/clan/-/public', model: Clan, comparator: sortClanList })
@@ -72,7 +72,7 @@ module.exports = class ClansView extends RootView
     @supermodel.addRequestResource('user_names', options, 0).load()
 
   setupPrivateInfoPopover: ->
-    popoverTitle = "<h3>" + $.i18n.t('teachers.sub_includes_7') + "</h3>"
+    popoverTitle = "<h3>" + $.i18n.t('clans.private_clans') + "</h3>"
     popoverContent = "<ul>"
     popoverContent += "<li><span style='font-weight:bold;'>" + $.i18n.t('clans.track_concepts1') + "</span> " + $.i18n.t('clans.track_concepts2b')
     popoverContent += "<li>" + $.i18n.t('clans.track_concepts3b')
