@@ -14,6 +14,7 @@ defaultTasks = [
   'Do basic set decoration.'
   'Adjust script camera bounds.'
   'Choose music file in Introduction script.'
+  'Choose autoplay in Introduction script.'
 
   'Add to a campaign.'
   'Publish.'
@@ -29,8 +30,8 @@ defaultTasks = [
   'Release to adventurers via MailChimp.'
 
   'Write the description.'
-  'Translate the sample code comments.'
-  'Add Io/Clojure/Lua/CoffeeScript.'
+  'Add i18n field for the sample code comments.'
+  'Add Clojure/Lua/CoffeeScript.'
   'Write the guide.'
   'Write a loading tip, if needed.'
   'Click the Populate i18n button.'
@@ -40,7 +41,6 @@ defaultTasks = [
   'Release to everyone via MailChimp.'
 
   'Check completion/engagement/problem analytics.'
-  'Do any custom scripting, if needed.'
   'Do thorough set decoration.'
   'Add a walkthrough video.'
 ]
@@ -245,7 +245,7 @@ GeneralArticleSchema = c.object {
   links: [{rel: 'db', href: '/db/article/{(original)}/version/{(majorVersion)}'}]
 },
   original: c.objectId(title: 'Original', description: 'A reference to the original Article.')#, format: 'hidden')  # hidden?
-  majorVersion: {title: 'Major Version', description: 'Which major version of the Article is being used.', type: 'integer', minimum: 0}#, format: 'hidden'}  # hidden?
+  majorVersion: {title: 'Major Version', description: 'Which major version of the Article is being used.', type: 'integer', minimum: 0} #, format: 'hidden'}  # hidden?
 
 LevelSchema = c.object {
   title: 'Level'
@@ -344,6 +344,7 @@ _.extend LevelSchema.properties,
     type: 'string', links: [{rel: 'db', href: '/db/thang.type/{($)}/version'}], format: 'latest-version-original-reference'
   }}
   campaign: c.shortString title: 'Campaign', description: 'Which campaign this level is part of (like "desert").', format: 'hidden'  # Automatically set by campaign editor.
+  campaignIndex: c.int title: 'Campaign Index', description: 'The 0-based index of this level in its campaign.', format: 'hidden'  # Automatically set by campaign editor.
   scoreTypes: c.array {title: 'Score Types', description: 'What metric to show leaderboards for.', uniqueItems: true},
      c.shortString(title: 'Score Type', 'enum': ['time', 'damage-taken', 'damage-dealt', 'gold-collected', 'difficulty'])  # TODO: good version of LoC; total gear value.
   concepts: c.array {title: 'Programming Concepts', description: 'Which programming concepts this level covers.', uniqueItems: true}, c.concept

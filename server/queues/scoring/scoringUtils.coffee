@@ -3,6 +3,7 @@ async = require 'async'
 bayes = new (require 'bayesian-battle')()
 LevelSession = require '../../levels/sessions/LevelSession'
 User = require '../../users/User'
+perfmon = require '../../commons/perfmon'
 
 SIMULATOR_VERSION = 3
 
@@ -36,7 +37,8 @@ module.exports.formatSessionInformation = (session) ->
   creatorName: session.creatorName
   creator: session.creator
   totalScore: session.totalScore
-
+  submitDate: session.submitDate
+  shouldUpdateLastOpponentSubmitDateForLeague: session.shouldUpdateLastOpponentSubmitDateForLeague
 
 module.exports.calculateSessionScores = (callback) ->
   sessionIDs = _.pluck @clientResponseObject.sessions, 'sessionID'
@@ -52,12 +54,14 @@ module.exports.calculateSessionScores = (callback) ->
 
 retrieveOldSessionData = (sessionID, callback) ->
   formatOldScoreObject = (session) =>
-    oldScoreObject = 
+    oldScoreObject =
       standardDeviation: session.standardDeviation ? 25/3
       meanStrength: session.meanStrength ? 25
       totalScore: session.totalScore ? (25 - 1.8*(25/3))
       id: sessionID
       submittedCodeLanguage: session.submittedCodeLanguage
+      ladderAchievementDifficulty: session.ladderAchievementDifficulty
+      submitDate: session.submitDate
     if session.leagues?.length
       _.find(@clientResponseObject.sessions, sessionID: sessionID).leagues = session.leagues
       oldScoreObject.leagues = []
@@ -74,7 +78,7 @@ retrieveOldSessionData = (sessionID, callback) ->
   return formatOldScoreObject @levelSession if sessionID is @levelSession?._id  # No need to fetch again
 
   query = _id: sessionID
-  selection = 'standardDeviation meanStrength totalScore submittedCodeLanguage leagues'
+  selection = 'standardDeviation meanStrength totalScore submittedCodeLanguage leagues ladderAchievementDifficulty submitDate'
   LevelSession.findOne(query).select(selection).lean().exec (err, session) ->
     return callback err, {'error': 'There was an error retrieving the session.'} if err?
     callback err, formatOldScoreObject session
@@ -114,12 +118,13 @@ createSessionScoreUpdate = (scoreObject) ->
     newTotalScore = league.stats.meanStrength - 1.8 * league.stats.standardDeviation
     scoreHistoryAddition = [scoreHistoryAddition[0], newTotalScore]
     leagueSetPrefix = "leagues.#{leagueIndex}.stats."
-    @levelSessionUpdates[scoreObject.id].$set ?= {}
-    @levelSessionUpdates[scoreObject.id].$push ?= {}
-    @levelSessionUpdates[scoreObject.id].$set[leagueSetPrefix + 'meanStrength'] = league.stats.meanStrength
-    @levelSessionUpdates[scoreObject.id].$set[leagueSetPrefix + 'standardDeviation'] = league.stats.standardDeviation
-    @levelSessionUpdates[scoreObject.id].$set[leagueSetPrefix + 'totalScore'] = newTotalScore
-    @levelSessionUpdates[scoreObject.id].$push[leagueSetPrefix + 'scoreHistory'] = {$each: [scoreHistoryAddition], $slice: -1000}
+    sessionUpdateObject = @levelSessionUpdates[scoreObject.id]
+    sessionUpdateObject.$set ?= {}
+    sessionUpdateObject.$push ?= {}
+    sessionUpdateObject.$set[leagueSetPrefix + 'meanStrength'] = league.stats.meanStrength
+    sessionUpdateObject.$set[leagueSetPrefix + 'standardDeviation'] = league.stats.standardDeviation
+    sessionUpdateObject.$set[leagueSetPrefix + 'totalScore'] = newTotalScore
+    sessionUpdateObject.$push[leagueSetPrefix + 'scoreHistory'] = {$each: [scoreHistoryAddition], $slice: -1000}
 
 
 module.exports.indexNewScoreArray = (newScoreArray, callback) ->
@@ -150,6 +155,13 @@ module.exports.addMatchToSessionsAndUpdate = (newScoreObject, callback) ->
   async.each sessionIDs, updateMatchesInSession.bind(@, matchObject), (err) ->
     callback err
 
+ladderBenchmarkAIs =
+  '564ba6cea33967be1312ae59': 0
+  '564ba830a33967be1312ae61': 1
+  '564ba91aa33967be1312ae65': 2
+  '564ba95ca33967be1312ae69': 3
+  '564ba9b7a33967be1312ae6d': 4
+
 updateMatchesInSession = (matchObject, sessionID, callback) ->
   currentMatchObject = {}
   currentMatchObject.date = matchObject.date
@@ -163,6 +175,11 @@ updateMatchesInSession = (matchObject, sessionID, callback) ->
   #currentMatchObject.randomSeed = parseInt(@clientResponseObject.randomSeed or 0, 10)  # Uncomment when actively debugging simulation mismatches
   sessionUpdateObject = @levelSessionUpdates[sessionID]
   sessionUpdateObject.$push.matches = {$each: [currentMatchObject], $slice: -200}
+  if currentMatchObject.metrics.rank is 0 and defeatedAI = ladderBenchmarkAIs[currentMatchObject.opponents[0].userID]
+    mySession = _.find @clientResponseObject.sessions, sessionID: sessionID
+    newLadderAchievementDifficulty = Math.max defeatedAI, mySession.ladderAchievementDifficulty || 0
+    if newLadderAchievementDifficulty isnt mySession.ladderAchievementDifficulty
+      sessionUpdateObject.ladderAchievementDifficulty = newLadderAchievementDifficulty
 
   myScoreObject = @newScoresObject[sessionID]
   opponentSession = _.find @clientResponseObject.sessions, (session) -> session.sessionID isnt sessionID
@@ -172,6 +189,8 @@ updateMatchesInSession = (matchObject, sessionID, callback) ->
     leagueMatch = _.cloneDeep currentMatchObject
     leagueMatch.opponents[0].totalScore = opponentLeagueTotalScore
     sessionUpdateObject.$push["leagues.#{leagueIndex}.stats.matches"] = {$each: [leagueMatch], $slice: -200}
+    if _.find(@clientResponseObject.sessions, sessionID: sessionID).shouldUpdateLastOpponentSubmitDateForLeague is league.leagueID
+      sessionUpdateObject.$set["leagues.#{leagueIndex}.lastOpponentSubmitDate"] = new Date(opponentSession.submitDate)  # TODO: somewhere, if these are already the same, don't record the match, since we likely just recorded the same match?
 
   #log.info "Update for #{sessionID} is #{JSON.stringify(sessionUpdateObject, null, 2)}"
   LevelSession.update {_id: sessionID}, sessionUpdateObject, callback
@@ -181,6 +200,7 @@ module.exports.updateUserSimulationCounts = (reqUserID, callback) ->
   incrementUserSimulationCount reqUserID, 'simulatedBy', (err) =>
     if err? then return callback err
     #console.log 'Incremented user simulation count!'
+    perfmon.client.increment 'simulations'
     unless @isRandomMatch
       incrementUserSimulationCount @levelSession.creator, 'simulatedFor', callback
     else
@@ -190,7 +210,7 @@ incrementUserSimulationCount = (userID, type, callback) =>
   return callback null unless userID
   inc = {}
   inc[type] = 1
-  User.update {_id: userID}, {$inc: inc}, (err, affected) ->
+  User.update {_id: userID}, {$inc: inc}, (err, result) ->
     log.error "Error incrementing #{type} for #{userID}: #{err}" if err
     callback err
 
