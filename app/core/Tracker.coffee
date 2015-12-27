@@ -79,6 +79,7 @@ module.exports = class Tracker
   trackPageView: ->
     name = Backbone.history.getFragment()
     console.log "Would track analytics pageview: '/#{name}'" if debugAnalytics
+    @trackEventInternal 'Pageview', url: name unless me?.isAdmin() and @isProduction
     return unless @isProduction and not me.isAdmin()
 
     # Google Analytics
@@ -128,7 +129,7 @@ module.exports = class Tracker
           console.error "Analytics post failed!"
       else
         request = @supermodel.addRequestResource 'log_event', {
-          url: '/db/analytics_log_event/-/log_event'
+          url: '/db/analytics.log.event/-/log_event'
           data: {event: event, properties: properties}
           method: 'POST'
         }, 0

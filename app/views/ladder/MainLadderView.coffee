@@ -22,6 +22,7 @@ module.exports = class LadderHomeView extends RootView
     @sessions = @supermodel.loadCollection(new LevelSessionsCollection(), 'your_sessions', {cache: false}, 0).model
     @listenToOnce @sessions, 'sync', @onSessionsLoaded
     @getLevelPlayCounts()
+    @campaigns = campaigns
 
   onSessionsLoaded: (e) ->
     for session in @sessions.models
@@ -47,14 +48,14 @@ module.exports = class LadderHomeView extends RootView
     }, 0
     levelPlayCountsRequest.load()
 
-  getRenderData: (context={}) ->
-    context = super(context)
-    context.levelStatusMap = @levelStatusMap
-    context.levelPlayCountMap = @levelPlayCountMap
-    context.campaigns = campaigns
-    context
-
 heroArenas = [
+  {
+    name: 'Ace of Coders'
+    difficulty: 3
+    id: 'ace-of-coders'
+    image: '/file/db/level/55de80407a57948705777e89/Ace-of-Coders-banner.png'
+    description: 'Battle for control over the icy treasure chests as your gigantic warrior marshals his armies against his mirror-match nemesis.'
+  }
   {
     name: 'Zero Sum'
     difficulty: 3
@@ -66,28 +67,28 @@ heroArenas = [
     name: 'Cavern Survival'
     difficulty: 1
     id: 'cavern-survival'
-    image: ''
+    image: '/file/db/level/544437e0645c0c0000c3291d/OCT30-Cavern%20Survival.png'
     description: 'Stay alive longer than your multiplayer opponent amidst hordes of ogres!'
   }
   {
     name: 'Dueling Grounds'
     difficulty: 1
     id: 'dueling-grounds'
-    image: ''
+    image: '/file/db/level/5442ba0e1e835500007eb1c7/OCT27-Dueling%20Grounds.png'
     description: 'Battle head-to-head against another hero in this basic beginner combat arena.'
   }
   {
     name: 'Multiplayer Treasure Grove'
     difficulty: 2
     id: 'multiplayer-treasure-grove'
-    image: ''
+    image: '/file/db/level/5469643c37600b40e0e09c5b/OCT27-Multiplayer%20Treasure%20Grove.png'
     description: 'Mix collection, flags, and combat in this multiplayer coin-gathering arena.'
   }
   {
     name: 'Harrowland'
     difficulty: 2
     id: 'harrowland'
-    image: ''
+    image: '/file/db/level/54b83c2629843994803c838e/OCT27-Harrowland.png'
     description: 'Go head-to-head against another player in this dueling arena--but watch out for their friends!'
   }
 ]

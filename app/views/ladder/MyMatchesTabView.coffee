@@ -14,9 +14,9 @@ module.exports = class MyMatchesTabView extends CocoView
     super(options)
     @nameMap = {}
     @previouslyRankingTeams = {}
-    @refreshMatches()
+    @refreshMatches 20
 
-  refreshMatches: ->
+  refreshMatches: (@refreshDelay) ->
     @teams = teamDataFromLevel @level
     @loadNames()
 
@@ -67,15 +67,16 @@ module.exports = class MyMatchesTabView extends CocoView
     ctx.level = @level
     ctx.levelID = @level.get('slug') or @level.id
     ctx.teams = @teams
+    ctx.league = @options.league
 
     convertMatch = (match, submitDate) =>
       opponent = match.opponents[0]
       state = 'win'
       state = 'loss' if match.metrics.rank > opponent.metrics.rank
       state = 'tie' if match.metrics.rank is opponent.metrics.rank
-      fresh = match.date > (new Date(new Date() - 20 * 1000)).toISOString()
+      fresh = match.date > (new Date(new Date() - @refreshDelay * 1000)).toISOString()
       if fresh
-        Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'chat_received'
+        @playSound 'chat_received'
       {
         state: state
         opponentName: @nameMap[opponent.userID]
@@ -85,7 +86,7 @@ module.exports = class MyMatchesTabView extends CocoView
         stale: match.date < submitDate
         fresh: fresh
         codeLanguage: match.codeLanguage
-        simulator: JSON.stringify(match.simulator) + ' | seed ' + match.randomSeed
+        simulator: if match.simulator then JSON.stringify(match.simulator) + ' | seed ' + match.randomSeed else ''
       }
 
     for team in @teams
@@ -104,7 +105,7 @@ module.exports = class MyMatchesTabView extends CocoView
         team.scoreHistory = scoreHistory
 
       if not team.isRanking and @previouslyRankingTeams[team.id]
-        Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'cast-end'
+        @playSound 'cast-end'
       @previouslyRankingTeams[team.id] = team.isRanking
 
     ctx
@@ -116,7 +117,9 @@ module.exports = class MyMatchesTabView extends CocoView
       placeholder = $(el)
       sessionID = placeholder.data('session-id')
       session = _.find @sessions.models, {id: sessionID}
-      ladderSubmissionView = new LadderSubmissionView session: session, level: @level
+      if @level.get('slug') in ['ace-of-coders']
+        mirrorSession = (s for s in @sessions.models when s.get('team') isnt session.get('team'))[0]
+      ladderSubmissionView = new LadderSubmissionView session: session, level: @level, mirrorSession: mirrorSession
       @insertSubView ladderSubmissionView, placeholder
 
     @$el.find('.score-chart-wrapper').each (i, el) =>

@@ -11,6 +11,7 @@ log = require 'winston'
 moment = require 'moment'
 AnalyticsLogEvent = require '../analytics/AnalyticsLogEvent'
 Clan = require '../clans/Clan'
+CourseInstance = require '../courses/CourseInstance'
 LevelSession = require '../levels/sessions/LevelSession'
 LevelSessionHandler = require '../levels/sessions/level_session_handler'
 Payment = require '../payments/Payment'
@@ -22,6 +23,9 @@ UserRemark = require './remarks/UserRemark'
 {isID} = require '../lib/utils'
 hipchat = require '../hipchat'
 sendwithus = require '../sendwithus'
+Prepaid = require '../prepaids/Prepaid'
+UserPollsRecord = require '../polls/UserPollsRecord'
+EarnedAchievement = require '../achievements/EarnedAchievement'
 
 serverProperties = ['passwordHash', 'emailLower', 'nameLower', 'passwordReset', 'lastIP']
 candidateProperties = [
@@ -171,7 +175,7 @@ UserHandler = class UserHandler extends Handler
 
   getById: (req, res, id) ->
     if Handler.isID(id) and req.user?._id.equals(id)
-      return @sendSuccess(res, @formatEntity(req, req.user, 256))
+      return @sendSuccess(res, @formatEntity(req, req.user))
     super(req, res, id)
 
   getByIDs: (req, res) ->
@@ -195,7 +199,7 @@ UserHandler = class UserHandler extends Handler
   getSimulatorLeaderboard: (req, res) ->
     queryParameters = @getSimulatorLeaderboardQueryParameters(req)
     leaderboardQuery = User.find(queryParameters.query).select('name simulatedBy simulatedFor').sort({'simulatedBy': queryParameters.sortOrder}).limit(queryParameters.limit)
-    leaderboardQuery.cache() if req.query.scoreOffset is -1
+    leaderboardQuery.cache(10 * 60 * 1000) if req.query.scoreOffset is -1
     leaderboardQuery.exec (err, otherUsers) ->
       otherUsers = _.reject otherUsers, _id: req.user._id if req.query.scoreOffset isnt -1 and req.user
       otherUsers ?= []
@@ -304,11 +308,13 @@ UserHandler = class UserHandler extends Handler
     return @avatar(req, res, args[0]) if args[1] is 'avatar'
     return @getByIDs(req, res) if args[1] is 'users'
     return @getNamesByIDs(req, res) if args[1] is 'names'
+    return @getPrepaidCodes(req, res) if args[1] is 'prepaid_codes'
     return @nameToID(req, res, args[0]) if args[1] is 'nameToID'
     return @getLevelSessionsForEmployer(req, res, args[0]) if args[1] is 'level.sessions' and args[2] is 'employer'
     return @getLevelSessions(req, res, args[0]) if args[1] is 'level.sessions'
     return @getCandidates(req, res) if args[1] is 'candidates'
     return @getClans(req, res, args[0]) if args[1] is 'clans'
+    return @getCourseInstances(req, res, args[0]) if args[1] is 'course_instances'
     return @getEmployers(req, res) if args[1] is 'employers'
     return @getSimulatorLeaderboard(req, res, args[0]) if args[1] is 'simulatorLeaderboard'
     return @getMySimulatorLeaderboardRank(req, res, args[0]) if args[1] is 'simulator_leaderboard_rank'
@@ -322,6 +328,7 @@ UserHandler = class UserHandler extends Handler
     return @getSubSponsor(req, res) if args[1] is 'sub_sponsor'
     return @getSubSponsors(req, res) if args[1] is 'sub_sponsors'
     return @sendOneTimeEmail(req, res, args[0]) if args[1] is 'send_one_time_email'
+    return @resetProgress(req, res, args[0]) if args[1] is 'reset_progress'
     return @sendNotFoundError(res)
     super(arguments...)
 
@@ -451,6 +458,12 @@ UserHandler = class UserHandler extends Handler
 
     sendMail emailParams
 
+  getPrepaidCodes: (req, res) ->
+    return @sendSuccess(res, []) unless req.user?
+    orQuery = [{ creator: req.user._id }, { 'redeemers.userID' :  req.user._id }]
+    Prepaid.find({}).or(orQuery).exec (err, documents) =>
+      @sendSuccess(res, documents)
+
   agreeToCLA: (req, res) ->
     return @sendForbiddenError(res) unless req.user
     doc =
@@ -508,11 +521,13 @@ UserHandler = class UserHandler extends Handler
         projection[field] = 1 for field in req.query.project.split(',') when isAuthorized or not (field in LevelSessionHandler.privateProperties)
       else unless isAuthorized
         projection[field] = 0 for field in LevelSessionHandler.privateProperties
-      sort = {}
-      sort.changed = req.query.order if req.query.order
 
-      LevelSession.find(query).select(projection).sort(sort).exec (err, documents) =>
+      LevelSession.find(query).select(projection).exec (err, documents) =>
         return @sendDatabaseError(res, err) if err
+        if req.query.order
+          documents = _.sortBy documents, 'changed'
+          if req.query.order + '' is '-1'
+            documents.reverse()
         documents = (LevelSessionHandler.formatEntity(req, doc) for doc in documents)
         @sendSuccess(res, documents)
 
@@ -605,6 +620,13 @@ UserHandler = class UserHandler extends Handler
         return @sendDatabaseError(res, err) if err
         @sendSuccess(res, documents)
 
+  getCourseInstances: (req, res, userIDOrSlug) ->
+    @getDocumentForIdOrSlug userIDOrSlug, (err, user) =>
+      return @sendNotFoundError(res) unless user
+      CourseInstance.find {members: {$in: [user.get('_id')]}}, (err, documents) =>
+        return @sendDatabaseError(res, err) if err
+        @sendSuccess(res, documents)
+
   formatCandidate: (authorized, document) ->
     fields = if authorized then ['name', 'jobProfile', 'jobProfileApproved', 'photoURL', '_id'] else ['_id','jobProfile', 'jobProfileApproved']
     obj = _.pick document.toObject(), fields
@@ -679,6 +701,21 @@ UserHandler = class UserHandler extends Handler
       return @sendDatabaseError res, err if err
       @sendSuccess res, users
 
+  resetProgress: (req, res, userID) ->
+    return @sendMethodNotAllowed res unless req.method is 'POST'
+    return @sendForbiddenError res unless userID and userID is req.user?._id + ''  # Only you can reset your own progress
+    return @sendForbiddenError res if req.user?.isAdmin()  # Protect admins from resetting their progress
+    @constructor.resetProgressForUser req.user, (err, results) =>
+      return @sendDatabaseError res, err if err
+      @sendSuccess res, result: 'success'
+
+  @resetProgressForUser: (user, cb) ->
+    async.parallel [
+      (cb) -> LevelSession.remove {creator: user._id + ''}, cb
+      (cb) -> EarnedAchievement.remove {user: user._id + ''}, cb
+      (cb) -> UserPollsRecord.remove {user: user._id + ''}, cb
+      (cb) -> user.update {points: 0, 'stats.gamesCompleted': 0, 'stats.concepts': {}, 'earned.gems': 0, 'earned.levels': [], 'earned.items': [], 'earned.heroes': [], 'purchased.items': [], 'purchased.heroes': [], spent: 0}, cb
+    ], cb
 
   countEdits = (model, done) ->
     statKey = User.statsMapping.edits[model.modelName]

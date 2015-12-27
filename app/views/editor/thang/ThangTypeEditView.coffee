@@ -20,6 +20,7 @@ VectorIconSetupModal = require 'views/editor/thang/VectorIconSetupModal'
 SaveVersionModal = require 'views/editor/modal/SaveVersionModal'
 template = require 'templates/editor/thang/thang-type-edit-view'
 storage = require 'core/storage'
+ExportThangTypeModal = require './ExportThangTypeModal'
 
 CENTER = {x: 200, y: 400}
 
@@ -157,6 +158,7 @@ module.exports = class ThangTypeEditView extends RootView
     'mousedown #canvas': 'onCanvasMouseDown'
     'mouseup #canvas': 'onCanvasMouseUp'
     'mousemove #canvas': 'onCanvasMouseMove'
+    'click #export-sprite-sheet-btn': 'onClickExportSpriteSheetButton'
 
   onClickSetVectorIcon: ->
     modal = new VectorIconSetupModal({}, @thangType)
@@ -165,7 +167,6 @@ module.exports = class ThangTypeEditView extends RootView
 
   subscriptions:
     'editor:thang-type-color-groups-changed': 'onColorGroupsChanged'
-    'editor:save-new-version': 'saveNewThangType'
 
   # init / render
 
@@ -588,7 +589,10 @@ module.exports = class ThangTypeEditView extends RootView
     _.delay((-> document.location.reload()), 500)
 
   openSaveModal: ->
-    @openModalView new SaveVersionModal model: @thangType
+    modal = new SaveVersionModal model: @thangType
+    @openModalView modal
+    @listenToOnce modal, 'save-new-version', @saveNewThangType
+    @listenToOnce modal, 'hidden', -> @stopListening(modal)
 
   startForking: (e) ->
     @openModalView new ForkModal model: @thangType, editorPath: 'thang'
@@ -650,6 +654,10 @@ module.exports = class ThangTypeEditView extends RootView
     offset.y += Math.round @canvasDragOffset.y
     @canvasDragOffset = null
     node.set '/', offset
+
+  onClickExportSpriteSheetButton: ->
+    modal = new ExportThangTypeModal({}, @thangType)
+    @openModalView(modal)
 
   destroy: ->
     @camera?.destroy()

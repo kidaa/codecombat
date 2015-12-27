@@ -20,7 +20,7 @@ MOVE_SPEED = 13
 overlappableThangTypeNames = ['Torch', 'Chains', 'Bird', 'Cloud 1', 'Cloud 2', 'Cloud 3', 'Waterfall', 'Obstacle', 'Electrowall', 'Spike Walls']
 
 class ThangTypeSearchCollection extends CocoCollection
-  url: '/db/thang.type?project=original,name,version,slug,kind,components'
+  url: '/db/thang.type?project=original,name,version,slug,kind,components,prerenderedSpriteSheetData'
   model: ThangType
 
 module.exports = class ThangsTabView extends CocoView
@@ -209,6 +209,7 @@ module.exports = class ThangsTabView extends CocoView
       thangTypes: @supermodel.getModels(ThangType)
       showInvisible: true
       frameRate: 15
+      levelType: @level.get 'type', true
     }
     @surface.playing = false
     @surface.setWorld @world
