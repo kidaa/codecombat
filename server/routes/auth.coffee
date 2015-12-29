@@ -197,12 +197,20 @@ module.exports.loginUser = loginUser = (req, res, user, send=true, next=null) ->
     )
   )
 
+module.exports.idCounter = 0
+  
 module.exports.makeNewUser = makeNewUser = (req) ->
   user = new User({anonymous: true})
+  if global.testing
+    # allows tests some control over user id creation
+    newID = _.pad((module.exports.idCounter++).toString(16), 24, '0')
+    user.set('_id', newID)
   user.set 'testGroupNumber', Math.floor(Math.random() * 256)  # also in app/core/auth
   lang = languages.languageCodeFromAcceptedLanguages req.acceptedLanguages
   user.set 'preferredLanguage', lang if lang[...2] isnt 'en'
+  user.set 'preferredLanguage', 'pt-BR' if not user.get('preferredLanguage') and /br\.codecombat\.com/.test(req.get('host'))
+  user.set 'preferredLanguage', 'zh-HANS' if not user.get('preferredLanguage') and /cn\.codecombat\.com/.test(req.get('host'))
   user.set 'lastIP', (req.headers['x-forwarded-for'] or req.connection.remoteAddress)?.split(/,? /)[0]
-  user.set 'chinaVersion', true if req.chinaVersion
-  #log.info "making new user #{user.get('_id')} with language #{user.get('preferredLanguage')} of #{req.acceptedLanguages} and chinaVersion #{req.chinaVersion} on #{if config.tokyo then 'Tokyo' else 'US'} server and lastIP #{req.connection.remoteAddress}."
+  user.set 'country', req.country if req.country
+  #log.info "making new user #{user.get('_id')} with language #{user.get('preferredLanguage')} of #{req.acceptedLanguages} and country #{req.country} on #{if config.tokyo then 'Tokyo' else (if config.saoPaulo then 'Brazil' else 'US')} server and lastIP #{user.get('lastIP')}."
   user

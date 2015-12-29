@@ -18,24 +18,27 @@ module.exports = createNewTask = (req, res) ->
     fetchAndVerifyLevelType.bind(yetiGuru, currentLevelID)
     fetchSessionObjectToSubmit.bind(yetiGuru, requestSessionID)
     updateSessionToSubmit.bind(yetiGuru, transpiledCode, req.user)
-    fetchInitialSessionsToRankAgainst.bind(yetiGuru, requestLevelMajorVersion, originalLevelID)
-    generateAndSendTaskPairsToTheQueue
+    # Because there's some bug where the chained rankings don't work, and this is super slow, let's just not do this until we fix it.
+    #fetchInitialSessionsToRankAgainst.bind(yetiGuru, requestLevelMajorVersion, originalLevelID)
+    #generateAndSendTaskPairsToTheQueue
   ], (err, successMessageObject) ->
-    if err? then return errors.serverError res, "There was an error submitting the game to the queue:#{err}"
+    if err? then return errors.serverError res, "There was an error submitting the game to the queue: #{err}"
     scoringUtils.sendResponseObject res, successMessageObject
 
 
 validatePermissions = (req, sessionID, callback) ->
-  return callback 'You are unauthorized to submit that game to the simulator' unless req.user?.get('email')
+  return callback 'You are unauthorized to submit that game to the simulator.' unless req.user?.get('email')
   return callback null if req.user?.isAdmin()
 
   findParameters = _id: sessionID
   selectString = 'creator submittedCode code'
-  LevelSession.findOne(findParameters).select(selectString).lean().exec (err, retrievedSession) ->
+  LevelSession.findOne(findParameters).select(selectString).lean().exec (err, retrievedSession) =>
     if err? then return callback err
-    userHasPermissionToSubmitCode = retrievedSession.creator is req.user?.id and
-      not _.isEqual(retrievedSession.code, retrievedSession.submittedCode)
-    unless userHasPermissionToSubmitCode then return callback 'You are unauthorized to submit that game to the simulator'
+    userHasPermissionToSubmitCode = retrievedSession.creator is req.user?.id
+    unless userHasPermissionToSubmitCode then return callback 'You are unauthorized to submit that game to the simulator.'
+    # Disabling this for now, since mirror matches submit different transpiled code for the same source code.
+    #alreadySubmitted = _.isEqual(retrievedSession.code, retrievedSession.submittedCode)
+    #unless alreadySubmitted then return callback 'You have already submitted that exact code for simulation.'
     callback null
 
 
@@ -65,17 +68,18 @@ updateSessionToSubmit = (transpiledCode, user, sessionToUpdate, callback) ->
 
   # Reset all league stats as well, and enter the session into any leagues the user is currently part of (not retroactive when joining new leagues)
   leagueIDs = user.get('clans') or []
-  #leagueIDs = leagueIDs.concat user.get('courseInstances') or []
+  leagueIDs = leagueIDs.concat user.get('courseInstances') or []
   leagueIDs = (leagueID + '' for leagueID in leagueIDs)  # Make sure to save them as strings.
   newLeagues = []
   for leagueID in leagueIDs
-    league = _.find(sessionToUpdate.leagues, leagueID: leagueID) ? leagueID: leagueID
+    league = _.clone(_.find(sessionToUpdate.leagues, leagueID: leagueID) ? leagueID: leagueID)
     league.stats ?= {}
     league.stats.standardDeviation = 25 / 3
     league.stats.numberOfWinsAndTies = 0
     league.stats.numberOfLosses = 0
     league.stats.meanStrength ?= 25
     league.stats.totalScore ?= 10
+    delete league.lastOpponentSubmitDate
     newLeagues.push(league)
   unless _.isEqual newLeagues, sessionToUpdate.leagues
     sessionUpdateObject.leagues = sessionToUpdate.leagues = newLeagues
