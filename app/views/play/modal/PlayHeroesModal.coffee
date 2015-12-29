@@ -113,7 +113,7 @@ module.exports = class PlayHeroesModal extends ModalView
         {id: 'coffeescript', name: "CoffeeScript (#{$.i18n.t('choose_hero.experimental')})"}
         {id: 'clojure', name: "Clojure (#{$.i18n.t('choose_hero.experimental')})"}
         {id: 'lua', name: 'Lua'}
-        {id: 'io', name: "Io (#{$.i18n.t('choose_hero.experimental')})"}
+        #{id: 'io', name: "Io (#{$.i18n.t('choose_hero.experimental')})"}
       ]
 
   onHeroChanged: (e) ->
@@ -174,12 +174,13 @@ module.exports = class PlayHeroesModal extends ModalView
         #- maybe put some more normalization here?
         m = multiplier
         m *= 0.75 if fullHero.get('slug') in ['knight', 'samurai', 'librarian', 'sorcerer', 'necromancer']  # These heroes are larger for some reason. Shrink 'em.
+        m *= 0.4 if fullHero.get('slug') is 'goliath'  # Just too big!
         layer.container.scaleX = layer.container.scaleY = m
         layer.container.children[0].x = 160/m
         layer.container.children[0].y = 250/m
         if fullHero.get('slug') in ['forest-archer', 'librarian', 'sorcerer', 'potion-master', 'necromancer']
           layer.container.children[0].y -= 3
-        if fullHero.get('slug') in ['librarian', 'sorcerer', 'potion-master', 'necromancer']
+        if fullHero.get('slug') in ['librarian', 'sorcerer', 'potion-master', 'necromancer', 'goliath']
           layer.container.children[0].x -= 3
 
       stage = new createjs.SpriteStage(canvas[0])
@@ -280,7 +281,6 @@ module.exports = class PlayHeroesModal extends ModalView
     popover?.$tip?.i18n()
 
   onBuyGemsPromptButtonClicked: (e) ->
-    @playSound 'menu-button-click'
     return @askToSignUp() if me.get('anonymous')
     @openModalView new BuyGemsModal()
 

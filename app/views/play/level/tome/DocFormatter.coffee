@@ -100,12 +100,15 @@ module.exports = class DocFormatter
         obj[prop] = null
 
       # Translate into chosen spoken language.
-      if val = obj[prop]
+      if val = originalVal = obj[prop]
         context = @doc.context
         obj[prop] = val = utils.i18n obj, prop
         # For multiplexed-by-both-code-and-spoken-language objects, now also get code language again.
-        if _.isObject val
-          obj[prop] = val = obj[prop]?[@options.language]
+        if _.isObject(val)
+          if valByCodeLanguage = obj[prop]?[@options.language]
+            obj[prop] = val = valByCodeLanguage
+          else
+            obj[prop] = originalVal  # Never mind, we don't have that code language for that spoken language.
         if @doc.i18n
           spokenLanguage = me.get 'preferredLanguage'
           while spokenLanguage
@@ -120,6 +123,28 @@ module.exports = class DocFormatter
           catch e
             console.error "Couldn't create docs template of", val, "\nwith context", context, "\nError:", e
         obj[prop] = @replaceSpriteName obj[prop]  # Do this before using the template, otherwise marked might get us first.
+
+    if @doc.shortName is 'loop' and @options.level.get('type', true) in ['course', 'course-ladder']
+      @replaceSimpleLoops()
+
+  replaceSimpleLoops: ->
+    # Temporary hackery to make it look like we meant while True: in our loop: docs until we can update everything
+    @doc.shortName = @doc.shorterName = @doc.title = @doc.name = switch @options.language
+      when 'coffeescript' then "loop"
+      when 'python' then "while True:"
+      when 'lua' then "while true do"
+      when 'clojure' then "(while true)"
+      when 'io' then "while(true)"
+      else "while (true)"
+    for field in ['example', 'description']
+      [simpleLoop, whileLoop] = switch @options.language
+        when 'coffeescript' then [/loop/g, "loop"]
+        when 'python' then [/loop:/g, "while True:"]
+        when 'lua' then [/loop/g, "while true do"]
+        when 'clojure' then [/\(dotimes( \[n \d+\])?/g, "(while true"]
+        when 'io' then [/loop\(/g, "while(true,"]
+        else [/loop/g, "while (true)"]
+      @doc[field] = @doc[field].replace simpleLoop, whileLoop
 
   formatPopover: ->
     [docName, args] = @getDocNameAndArguments()
@@ -190,7 +215,9 @@ module.exports = class DocFormatter
     return null unless action
     cooldowns = cooldown: action.cooldown, specificCooldown: action.specificCooldown, name: actionName, type: type
     for prop in ['range', 'radius', 'duration', 'damage']
-      cooldowns[prop] = v = owner[_.string.camelize actionName + _.string.capitalize(prop)]
+      v = owner[_.string.camelize actionName + _.string.capitalize(prop)]
+      continue if prop is 'range' and v <= 5  # Don't confuse players by showing melee ranges, they will inappropriately use distanceTo(enemy) < 3.
+      cooldowns[prop] = v
       if _.isNumber(v) and v isnt Math.round v
         cooldowns[prop] = v.toFixed 2
     cooldowns

@@ -33,10 +33,12 @@ module.exports = class LadderTabView extends CocoView
     @teams = teamDataFromLevel @level
     @leaderboards = {}
     @refreshLadder()
-    @socialNetworkRes = @supermodel.addSomethingResource('social_network_apis', 0)
-    @checkFriends()
+    # Trying not loading the FP/G+ stuff for now to see if anyone complains they were using it so we can have just two columns.
+    #@socialNetworkRes = @supermodel.addSomethingResource('social_network_apis', 0)
+    #@checkFriends()
 
   checkFriends: ->
+    return  # Skipping for now
     return if @checked or (not window.FB) or (not window.gapi)
     @checked = true
 
@@ -147,8 +149,11 @@ module.exports = class LadderTabView extends CocoView
   # LADDER LOADING
 
   refreshLadder: ->
+    # Only do this so often if not in a league; servers cache a lot of this data for a few minutes anyway.
+    return if not @options.league and (new Date() - 2 * 60 * 1000 < @lastRefreshTime)
+    @lastRefreshTime = new Date()
     @supermodel.resetProgress()
-    @ladderLimit ?= parseInt @getQueryVariable('top_players', 20)
+    @ladderLimit ?= parseInt @getQueryVariable('top_players', if @options.league then 100 else 20)
     for team in @teams
       if oldLeaderboard = @leaderboards[team.id]
         @supermodel.removeModelResource oldLeaderboard
@@ -166,9 +171,10 @@ module.exports = class LadderTabView extends CocoView
       team = _.find @teams, name: histogramWrapper.data('team-name')
       histogramData = null
       $.when(
-        url = "/db/level/#{@level.get('slug')}/histogram_data?team=#{team.name.toLowerCase()}"
+        level = "#{@level.get('original')}.#{@level.get('version').major}"
+        url = "/db/level/#{level}/histogram_data?team=#{team.name.toLowerCase()}"
         url += '&leagues.leagueID=' + @options.league.id if @options.league
-        $.get url, {cache: false}, (data) -> histogramData = data
+        $.get url, (data) -> histogramData = data
       ).then =>
         @generateHistogram(histogramWrapper, histogramData, team.name.toLowerCase()) unless @destroyed
 
@@ -185,6 +191,7 @@ module.exports = class LadderTabView extends CocoView
     ctx.capitalize = _.string.capitalize
     ctx.league = @options.league
     ctx._ = _
+    ctx.moment = moment
     ctx
 
   generateHistogram: (histogramElement, histogramData, teamName) ->
@@ -196,9 +203,9 @@ module.exports = class LadderTabView extends CocoView
       top: 20
       right: 20
       bottom: 30
-      left: 0
+      left: 15
 
-    width = 300 - margin.left - margin.right
+    width = 470 - margin.left - margin.right
     height = 125 - margin.top - margin.bottom
 
     formatCount = d3.format(',.0')
@@ -276,7 +283,10 @@ module.exports = class LadderTabView extends CocoView
   consolidateFriends: ->
     allFriendSessions = (@facebookFriendSessions or []).concat(@gplusFriendSessions or [])
     sessions = _.uniq allFriendSessions, false, (session) -> session._id
-    sessions = _.sortBy sessions, 'totalScore'
+    if @options.league
+      sessions = _.sortBy sessions, (session) -> _.find(session.leagues, leagueID: @options.league.id)?.stats.totalScore ? (session.totalScore / 2)
+    else
+      sessions = _.sortBy sessions, 'totalScore'
     sessions.reverse()
     sessions
 
@@ -304,6 +314,7 @@ module.exports = class LadderTabView extends CocoView
   onLoadMoreLadderEntries: (e) ->
     @ladderLimit ?= 100
     @ladderLimit += 100
+    @lastRefreshTime = null
     @refreshLadder()
 
 module.exports.LeaderboardData = LeaderboardData = class LeaderboardData extends CocoClass

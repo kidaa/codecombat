@@ -11,7 +11,6 @@ if config.unittest
   module.exports.api.send = ->
 module.exports.templates =
   parent_subscribe_email: 'tem_2APERafogvwKhmcnouigud'
-  setup_free_sub_email: 'tem_sqdvLCZRwoDQc6jAf5RrQE'
   share_progress_email: 'tem_VHE3ihhGmVa3727qds9zY8'
   welcome_email: 'utnGaBHuSU4Hmsi7qrAypU'
   ladder_update_email: 'JzaZxf39A4cKMxpPZUfWy4'
@@ -22,3 +21,6 @@ module.exports.templates =
   generic_email: 'tem_JhRnQ4pvTS4KdQjYoZdbei'
   plain_text_email: 'tem_85UvKDCCNPXsFckERTig6Y'
   next_steps_email: 'tem_RDHhTG5inXQi8pthyqWr5D'
+  course_invite_email: 'tem_u6D2EFWYC5Ptk38bSykjsU'
+  teacher_free_trial: 'tem_sqdvLCZRwoDQc6jAf5RrQE'
+  teacher_free_trial_hoc: 'tem_4ZSY9wsA9Qwn4wBFmZgPdc'

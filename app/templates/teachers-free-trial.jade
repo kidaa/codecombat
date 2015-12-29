@@ -4,21 +4,23 @@ block content
 
   h2(data-i18n="teachers_survey.title")
 
+  - var existingRequest = view.existingRequests.at(0)
   if me.isAnonymous()
-    p(data-i18n="teachers_survey.must_be_logged")
-  else if fetchingData
+    p.logged-out-blurb(data-i18n="teachers_survey.must_be_logged")
+  else if view.fetchingData
     h4(data-i18n="teachers_survey.retrieving")
-  else if existingRequests.length > 0
-    if existingRequests[0].get('status') === 'submitted'
+  else if existingRequest
+    if existingRequest.get('status') === 'submitted'
       p
         span.spr(data-i18n="teachers_survey.being_reviewed_1")
         strong(data-i18n="teachers_survey.being_reviewed_2")
-    else if existingRequests[0].get('status') === 'approved'
+    else if existingRequest.get('status') === 'approved'
       p
-       span.spr(data-i18n="teachers_survey.approved_1")
-       strong.spr(data-i18n="teachers_survey.approved_2")
-       span.spr(data-i18n="teachers_survey.approved_3")
-       strong= existingRequests[0].get('properties').email
+        span.spr(data-i18n="teachers_survey.approved_1")
+        strong.spr(data-i18n="teachers_survey.approved_2")
+        span.spr(data-i18n="teachers_survey.approved_4")
+        a(href='/courses/teachers', data-i18n="teachers_survey.approved_5")
+        span.spl(data-i18n="teachers_survey.approved_6")
     else
       p
         span.spr(data-i18n="teachers_survey.denied_1")
@@ -28,15 +30,20 @@ block content
       a(href='mailto:team@codecombat.com') team@codecombat.com
       span.spl(data-i18n="teachers_survey.contact_2")
   else
+    p(data-i18n="teachers_survey.description_1")
+    p 
+      strong.spr Hour of Code Special!
+      span Complete the survey by December 31st and enroll all your students in the paid courses for 2 months.
     p
-      span.spr(data-i18n="teachers_survey.description_1")
+      span.spr(data-i18n="teachers_survey.description_1b")
       a(href='/teachers', data-i18n="teachers_survey.description_2")
       span.spl(data-i18n="teachers_survey.description_3")
     p(data-i18n="teachers_survey.description_4")
     p.container-email-address
       label.control-label(data-i18n="teachers_survey.email")
       br
-      input.control-label.input-email-address(type='text', value=email)
+      span.email-address= view.email
+      a(href='/account/settings') Change
     p.container-school
       label.control-label(data-i18n="teachers_survey.school")
       br
