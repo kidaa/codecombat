@@ -55,7 +55,7 @@ $UNVEIL_TIME: 1.2s
     background-size: 100% 100%
     color: darkslategray
     font-size: 15px
-    padding: 80px 80px 40px 80px
+    padding: 4% 80px 40px 80px
     text-align: center
     // http://matthewlein.com/ceaser/  Bounce down a bit, then snap up.
     @include transition($UNVEIL_TIME cubic-bezier(0.285, -0.595, 0.670, -0.600))
@@ -157,7 +157,7 @@ $UNVEIL_TIME: 1.2s
         font-variant: small-caps
         text-transform: none
 
-      .subscription-required, .course-membership-required
+      .subscription-required, .course-membership-required, .could-not-load
         display: none
         margin-top: -160px
         color: black
@@ -181,3 +181,13 @@ $UNVEIL_TIME: 1.2s
       left: 48px
       right: 77px
       width: auto
+      
+  
+#level-view.web-dev
+  #loading-details.preview
+    @media screen and ( min-height: 900px )
+      background: transparent
+      border: 1px solid transparent
+      border-width: 124px 76px 64px 40px
+      border-image: url(/images/level/code_editor_background.png) 124 76 64 40 fill round
+      padding: 0 35px 0 15px

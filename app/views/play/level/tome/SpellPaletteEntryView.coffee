@@ -33,7 +33,7 @@ module.exports = class SpellPaletteEntryView extends CocoView
 
   afterRender: ->
     super()
-    @$el.addClass(@doc.type)
+    @$el.addClass _.string.slugify @doc.type
     placement = -> if $('body').hasClass('dialogue-view-active') then 'top' else 'left'
     @$el.popover(
       animation: false
@@ -47,21 +47,30 @@ module.exports = class SpellPaletteEntryView extends CocoView
       Backbone.Mediator.publish 'tome:palette-hovered', thang: @thang, prop: @doc.name, entry: @
       soundIndex = Math.floor(Math.random() * 4)
       @playSound "spell-palette-entry-open-#{soundIndex}", 0.75
-      popover = @$el.data('bs.popover')
-      popover?.$tip?.i18n()
-      codeLanguage = @options.language
-      oldEditor.destroy() for oldEditor in @aceEditors
-      @aceEditors = []
-      aceEditors = @aceEditors
-      popover?.$tip?.find('.docs-ace').each ->
-        aceEditor = utils.initializeACE @, codeLanguage
-        aceEditors.push aceEditor
+      @afterRenderPopover()
 
-  onMouseEnter: (e) ->
-    # Make sure the doc has the updated Thang so it can regenerate its prop value
+  # NOTE: This can't be run twice without resetting the popover content HTML
+  #       in between. If you do, Ace will break.
+  afterRenderPopover: ->
+    popover = @$el.data('bs.popover')
+    popover?.$tip?.i18n()
+    codeLanguage = @options.language
+    oldEditor.destroy() for oldEditor in @aceEditors
+    @aceEditors = []
+    aceEditors = @aceEditors
+    # Initialize Ace for each popover code snippet that still needs it
+    popover?.$tip?.find('.docs-ace').each ->
+      aceEditor = utils.initializeACE @, codeLanguage
+      aceEditors.push aceEditor
+
+  resetPopoverContent: ->
     @$el.data('bs.popover').options.content = @docFormatter.formatPopover()
     @$el.popover('setContent')
-    @$el.popover 'show' unless @popoverPinned or @otherPopoverPinned
+
+  onMouseEnter: (e) ->
+    return if @popoverPinned or @otherPopoverPinned
+    @resetPopoverContent()
+    @$el.popover 'show'
 
   onMouseLeave: (e) ->
     @$el.popover 'hide' unless @popoverPinned or @otherPopoverPinned
@@ -75,8 +84,9 @@ module.exports = class SpellPaletteEntryView extends CocoView
       @playSound 'spell-palette-entry-unpin'
     else
       @popoverPinned = true
-      @$el.popover 'show'
+      @resetPopoverContent()
       @$el.add('.spell-palette-popover.popover').addClass 'pinned'
+      @$el.popover 'show'
       x = $('<button type="button" data-dismiss="modal" aria-hidden="true" class="close">×</button>')
       $('.spell-palette-popover.popover').append x
       x.on 'click', @onClick
@@ -84,9 +94,8 @@ module.exports = class SpellPaletteEntryView extends CocoView
     Backbone.Mediator.publish 'tome:palette-pin-toggled', entry: @, pinned: @popoverPinned
 
   onClick: (e) =>
-    if true or @options.level.get('type', true) in ['hero', 'hero-ladder', 'hero-coop', 'course', 'course-ladder']
-      # Jiggle instead of pin for hero levels
-      # Actually, do it all the time, because we recently busted the pin CSS. TODO: restore pinning
+    if @options.level.isType('hero', 'hero-ladder', 'hero-coop', 'course', 'course-ladder')
+      # Jiggle instead of pin for hero/course levels
       jigglyPopover = $('.spell-palette-popover.popover')
       jigglyPopover.addClass 'jiggling'
       pauseJiggle = =>

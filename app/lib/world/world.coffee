@@ -28,6 +28,7 @@ module.exports = class World
   debugging: false  # Whether we are just rerunning to debug a world we've already cast
   headless: false  # Whether we are just simulating for goal states instead of all serialized results
   framesSerializedSoFar: 0
+  framesClearedSoFar: 0
   apiProperties: ['age', 'dt']
   realTimeBufferMax: REAL_TIME_BUFFER_MAX / 1000
   constructor: (@userCodeMap, classMap) ->
@@ -96,6 +97,7 @@ module.exports = class World
 
   loadFrames: (loadedCallback, errorCallback, loadProgressCallback, preloadedCallback, skipDeferredLoading, loadUntilFrame) ->
     return if @aborted
+    @totalFrames = 2 if @justBegin
     console.log 'Warning: loadFrames called on empty World (no thangs).' unless @thangs.length
     continueLaterFn = =>
       @loadFrames(loadedCallback, errorCallback, loadProgressCallback, preloadedCallback, skipDeferredLoading, loadUntilFrame) unless @destroyed
@@ -116,7 +118,13 @@ module.exports = class World
     @lastRealTimeUpdate ?= 0
     frameToLoadUntil = if loadUntilFrame then loadUntilFrame + 1 else @totalFrames  # Might stop early if debugging.
     i = @frames.length
-    while i < frameToLoadUntil and i < @totalFrames
+    while true
+      if @indefiniteLength
+        break if not @realTime # realtime has been stopped
+        break if @victory? # game won or lost  # TODO: give a couple seconds of buffer after victory is set instead of ending instantly
+      else
+        break if i >= frameToLoadUntil
+        break if i >= @totalFrames
       return unless @shouldContinueLoading t1, loadProgressCallback, skipDeferredLoading, continueLaterFn
       @adjustFlowSettings loadUntilFrame if @debugging
       try
@@ -162,11 +170,25 @@ module.exports = class World
 
   shouldContinueLoading: (t1, loadProgressCallback, skipDeferredLoading, continueLaterFn) ->
     t2 = now()
+    chunkSize = @frames.length - @framesSerializedSoFar
+    simedTime = @frames.length / @frameRate
+
+    chunkTime = switch
+      when simedTime > 15 then 7
+      when simedTime > 10 then 5
+      when simedTime > 5 then 3
+      when simedTime > 2 then 1
+      else 0.5
+
+    bailoutTime = Math.max(2000*chunkTime, 10000)
+
+    dt = t2 - t1
+
     if @realTime
       shouldUpdateProgress = @shouldUpdateRealTimePlayback t2
       shouldDelayRealTimeSimulation = not shouldUpdateProgress and @shouldDelayRealTimeSimulation t2
     else
-      shouldUpdateProgress = t2 - t1 > PROGRESS_UPDATE_INTERVAL
+      shouldUpdateProgress = (dt > PROGRESS_UPDATE_INTERVAL and (chunkSize / @frameRate >= chunkTime) or dt > bailoutTime)
       shouldDelayRealTimeSimulation = false
     return true unless shouldUpdateProgress or shouldDelayRealTimeSimulation
     # Stop loading frames for now; continue in a moment.
@@ -202,6 +224,9 @@ module.exports = class World
   addFlagEvent: (flagEvent) ->
     @flagHistory.push flagEvent
 
+  addRealTimeInputEvent: (realTimeInputEvent) ->
+    @realTimeInputEvents.push realTimeInputEvent
+
   loadFromLevel: (level, willSimulate=true) ->
     @levelID = level.slug
     @levelComponents = level.levelComponents
@@ -210,6 +235,9 @@ module.exports = class World
     @loadSystemsFromLevel level
     @loadThangsFromLevel level, willSimulate
     @showsCountdown = @levelID in COUNTDOWN_LEVELS or _.any(@thangs, (t) -> (t.programmableProperties and 'findFlags' in t.programmableProperties) or t.inventory?.flag)
+    @picoCTFProblem = level.picoCTFProblem if level.picoCTFProblem
+    if @picoCTFProblem?.instances and not @picoCTFProblem.flag_sha1
+      @picoCTFProblem = _.merge @picoCTFProblem, @picoCTFProblem.instances[0]
     system.start @thangs for system in @systems
 
   loadSystemsFromLevel: (level) ->
@@ -359,10 +387,15 @@ module.exports = class World
     @freeMemoryBeforeFinalSerialization() if @ended
     startFrame = @framesSerializedSoFar
     endFrame = @frames.length
+    if @indefiniteLength
+      toClear = Math.max(@framesSerializedSoFar-10, 0)
+      for i in _.range(@framesClearedSoFar, toClear)
+        @frames[i] = null
+      @framesClearedSoFar = @framesSerializedSoFar
     #console.log "... world serializing frames from", startFrame, "to", endFrame, "of", @totalFrames
     [transferableObjects, nontransferableObjects] = [0, 0]
-    delete flag.processed for flag in @flagHistory
-    o = {totalFrames: @totalFrames, maxTotalFrames: @maxTotalFrames, frameRate: @frameRate, dt: @dt, victory: @victory, userCodeMap: {}, trackedProperties: {}, flagHistory: @flagHistory, difficulty: @difficulty, scores: @getScores(), randomSeed: @randomSeed}
+    serializedFlagHistory = (_.omit(_.clone(flag), 'processed') for flag in @flagHistory)
+    o = {totalFrames: @totalFrames, maxTotalFrames: @maxTotalFrames, frameRate: @frameRate, dt: @dt, victory: @victory, userCodeMap: {}, trackedProperties: {}, flagHistory: serializedFlagHistory, difficulty: @difficulty, scores: @getScores(), randomSeed: @randomSeed, picoCTFFlag: @picoCTFFlag}
     o.trackedProperties[prop] = @[prop] for prop in @trackedProperties or []
 
     for thangID, methods of @userCodeMap
@@ -469,7 +502,7 @@ module.exports = class World
             w.userCodeMap[thangID][methodName][aetherStateKey] = serializedAether[aetherStateKey]
     else
       w = new World o.userCodeMap, classMap
-    [w.totalFrames, w.maxTotalFrames, w.frameRate, w.dt, w.scriptNotes, w.victory, w.flagHistory, w.difficulty, w.scores, w.randomSeed] = [o.totalFrames, o.maxTotalFrames, o.frameRate, o.dt, o.scriptNotes ? [], o.victory, o.flagHistory, o.difficulty, o.scores, o.randomSeed]
+    [w.totalFrames, w.maxTotalFrames, w.frameRate, w.dt, w.scriptNotes, w.victory, w.flagHistory, w.difficulty, w.scores, w.randomSeed, w.picoCTFFlag] = [o.totalFrames, o.maxTotalFrames, o.frameRate, o.dt, o.scriptNotes ? [], o.victory, o.flagHistory, o.difficulty, o.scores, o.randomSeed, o.picoCTFFlag]
     w[prop] = val for prop, val of o.trackedProperties
 
     perf.t1 = now()
@@ -505,6 +538,14 @@ module.exports = class World
     perf.framesCPUTime = 0
     w.frames = [] unless streamingWorld
     clearTimeout @deserializationTimeout if @deserializationTimeout
+
+    if w.indefiniteLength
+      clearTo = Math.max(w.frames.length - 100, 0)
+      if clearTo > w.framesClearedSoFar
+        for i in _.range(w.framesClearedSoFar, clearTo)
+          w.frames[i] = null
+      w.framesClearedSoFar = clearTo
+
     @deserializationTimeout = _.delay @deserializeSomeFrames, 1, o, w, finishedWorldCallback, perf, startFrame, endFrame
     w  # Return in-progress deserializing world
 
@@ -568,6 +609,7 @@ module.exports = class World
       lastPos = x: null, y: null
       for frameIndex in [lastFrameIndex .. 0] by -1
         frame = @frames[frameIndex]
+        continue unless frame # may have been evicted for game dev levels
         if pos = frame.thangStateMap[thangID]?.getStateForProp 'pos'
           pos = camera.worldToSurface {x: pos.x, y: pos.y} if camera  # without z
           if not lastPos.x? or (Math.abs(lastPos.x - pos.x) + Math.abs(lastPos.y - pos.y)) > 1

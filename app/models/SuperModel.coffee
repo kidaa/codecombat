@@ -23,11 +23,15 @@ module.exports = class SuperModel extends Backbone.Model
     console.info "#{_.values(@resources).length} resources."
     unfinished = []
     for resource in _.values(@resources) when resource
-      console.info "\t", resource.name, 'loaded', resource.isLoaded
+      console.info "\t", resource.name, 'loaded', resource.isLoaded, resource.model
       unfinished.push resource unless resource.isLoaded
     unfinished
 
   loadModel: (model, name, fetchOptions, value=1) ->
+    # Deprecating name. Handle if name is not included
+    value = fetchOptions if _.isNumber(fetchOptions)
+    fetchOptions = name if _.isObject(name)
+      
     # hero-ladder levels need remote opponent_session for latest session data (e.g. code)
     # Can't apply to everything since other features rely on cached models being more recent (E.g. level_session)
     # E.g.#2 heroConfig isn't necessarily saved to db in world map inventory modal, so we need to load the cached session on level start
@@ -48,6 +52,10 @@ module.exports = class SuperModel extends Backbone.Model
       return res
 
   loadCollection: (collection, name, fetchOptions, value=1) ->
+    # Deprecating name. Handle if name is not included
+    value = fetchOptions if _.isNumber(fetchOptions)
+    fetchOptions = name if _.isObject(name)
+    
     url = collection.getURL()
     if cachedCollection = @collections[url]
       console.debug 'Collection cache hit', url, 'already loaded', cachedCollection.loaded
@@ -72,6 +80,25 @@ module.exports = class SuperModel extends Backbone.Model
       res = @addModelResource(collection, name, fetchOptions, value)
       res.load() if not (res.isLoading or res.isLoaded)
       return res
+      
+  # Eventually should use only these functions. Use SuperModel just to track progress.
+  trackModel: (model, value) ->
+    res = @addModelResource(model, '', {}, value)
+    res.listen()
+
+  trackCollection: (collection, value) ->
+    res = @addModelResource(collection, '', {}, value)
+    res.listen()
+    
+  trackRequest: (jqxhr, value=1) ->
+    res = new Resource('', value)
+    res.jqxhr = jqxhr
+    jqxhr.done -> res.markLoaded()
+    jqxhr.fail -> res.markFailed()
+    @storeResource(res, value)
+    return jqxhr
+    
+  trackRequests: (jqxhrs, value=1) -> @trackRequest(jqxhr, value) for jqxhr in jqxhrs
 
   # replace or overwrite
   shouldSaveBackups: (model) -> false
@@ -132,9 +159,13 @@ module.exports = class SuperModel extends Backbone.Model
   # Tracking resources being loaded for this supermodel
 
   finished: ->
-    return @progress is 1.0 or not @denom
+    return (@progress is 1.0) or (not @denom) or @failed
 
   addModelResource: (modelOrCollection, name, fetchOptions, value=1) ->
+    # Deprecating name. Handle if name is not included
+    value = fetchOptions if _.isNumber(fetchOptions)
+    fetchOptions = name if _.isObject(name)
+    
     modelOrCollection.saveBackups = modelOrCollection.saveBackups or @shouldSaveBackups(modelOrCollection)
     @checkName(name)
     res = new ModelResource(modelOrCollection, name, fetchOptions, value)
@@ -145,20 +176,25 @@ module.exports = class SuperModel extends Backbone.Model
     @removeResource _.find(@resources, (resource) -> resource?.model is modelOrCollection)
 
   addRequestResource: (name, jqxhrOptions, value=1) ->
+    # Deprecating name. Handle if name is not included
+    value = jqxhrOptions if _.isNumber(jqxhrOptions)
+    jqxhrOptions = name if _.isObject(name)
+    
     @checkName(name)
     res = new RequestResource(name, jqxhrOptions, value)
     @storeResource(res, value)
     return res
 
   addSomethingResource: (name, value=1) ->
+    value = name if _.isNumber(name)
     @checkName(name)
     res = new SomethingResource(name, value)
     @storeResource(res, value)
     return res
 
   checkName: (name) ->
-    if not name
-      throw new Error('Resource name should not be empty.')
+    #if _.isString(name)
+    #  console.warn("SuperModel name property deprecated. Remove '#{name}' from code.")
 
   storeResource: (resource, value) ->
     @rid++
@@ -186,6 +222,7 @@ module.exports = class SuperModel extends Backbone.Model
 
   onResourceFailed: (r) ->
     return unless @resources[r.rid]
+    @failed = true
     @trigger('failed', resource: r)
     r.clean()
 
@@ -210,6 +247,15 @@ module.exports = class SuperModel extends Backbone.Model
 
   getResource: (rid) ->
     return @resources[rid]
+    
+  # Promises
+  finishLoading: ->
+    new Promise (resolve, reject) =>
+      return resolve(@) if @finished()
+      @once 'failed', ({resource}) ->
+        jqxhr = resource.jqxhr
+        reject({message: jqxhr.responseJSON?.message or jqxhr.responseText or 'Unknown Error'})
+      @once 'loaded-all', => resolve(@)
 
 class Resource extends Backbone.Model
   constructor: (name, value=1) ->
@@ -249,14 +295,45 @@ class ModelResource extends Resource
     @model = modelOrCollection
     @fetchOptions = fetchOptions
     @jqxhr = @model.jqxhr
+    @loadsAttempted = 0
 
   load: ->
     @markLoading()
     @fetchModel()
     @
 
+#    # TODO: Track progress on requests and don't retry if progress was made recently.
+#    # Probably use _.debounce and attach event listeners to xhr objects.
+#    
+#    # This logic is for handling failed responses for level loading.
+#    timeToWait = 5000
+#    tryLoad = =>
+#      return if this.isLoaded
+#      if @loadsAttempted > 4
+#        @markFailed()
+#        return @
+#      @markLoading()
+#      @model.loading = false # So fetchModel can run again
+#      if @loadsAttempted > 0
+#        console.log "Didn't load model in #{timeToWait}ms (attempt ##{@loadsAttempted}), trying again: ", _.result(@model, 'url')
+#      @fetchModel()
+#      @listenTo @model, 'error', (levelComponent, request) ->
+#        if request.status not in [408, 504, 522, 524]
+#          clearTimeout(@timeoutID)
+#      clearTimeout(@timeoutID) if @timeoutID
+#      @timeoutID = setTimeout(tryLoad, timeToWait)
+#      if application.testing
+#        application.timeoutsToClear?.push(@timeoutID)
+#      @loadsAttempted += 1
+#      timeToWait *= 1.5
+#    tryLoad()
+#    @
+
   fetchModel: ->
     @jqxhr = @model.fetch(@fetchOptions) unless @model.loading
+    @listen()
+
+  listen: ->
     @listenToOnce @model, 'sync', -> @markLoaded()
     @listenToOnce @model, 'error', -> @markFailed()
 

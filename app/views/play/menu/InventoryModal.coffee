@@ -9,7 +9,7 @@ SpriteBuilder = require 'lib/sprites/SpriteBuilder'
 ItemDetailsView = require 'views/play/modal/ItemDetailsView'
 Purchase = require 'models/Purchase'
 BuyGemsModal = require 'views/play/modal/BuyGemsModal'
-AuthModal = require 'views/core/AuthModal'
+CreateAccountModal = require 'views/core/CreateAccountModal'
 
 hasGoneFullScreenOnce = false
 
@@ -538,7 +538,7 @@ module.exports = class InventoryModal extends ModalView
     affordable = item.affordable
     if not affordable
       @playSound 'menu-button-click'
-      @askToBuyGems button
+      @askToBuyGems button unless me.isOnFreeOnlyServer()
     else if button.hasClass('confirm')
       @playSound 'menu-button-unlock-end'
       purchase = Purchase.makeFor(item)
@@ -574,9 +574,8 @@ module.exports = class InventoryModal extends ModalView
         button.removeClass('confirm').text($.i18n.t('play.unlock')) if e.target isnt button[0]
 
   askToSignUp: ->
-    authModal = new AuthModal supermodel: @supermodel
-    authModal.mode = 'signup'
-    return @openModalView authModal
+    createAccountModal = new CreateAccountModal supermodel: @supermodel
+    return @openModalView createAccountModal
 
   askToBuyGems: (unlockButton) ->
     @$el.find('.unlock-button').popover 'destroy'
@@ -677,8 +676,8 @@ module.exports = class InventoryModal extends ModalView
 
 
 heroGenders =
-  male: ['knight', 'samurai', 'trapper', 'potion-master', 'goliath', 'assassin', 'necromancer']
-  female: ['captain', 'ninja', 'forest-archer', 'librarian', 'sorcerer', 'raider', 'guardian', 'pixie', 'dark-wizard']
+  male: ['knight', 'samurai', 'trapper', 'potion-master', 'goliath', 'assassin', 'necromancer', 'duelist']
+  female: ['captain', 'ninja', 'forest-archer', 'librarian', 'sorcerer', 'raider', 'guardian', 'pixie', 'master-wizard', 'champion']
 
 gear =
   'simple-boots': '53e237bf53457600003e3f05'

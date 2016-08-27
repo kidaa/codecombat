@@ -18,6 +18,17 @@ module.exports.combineAncestralObject = (obj, propertyName) ->
       obj = Object.getPrototypeOf(obj)
   combined
 
+module.exports.courseIDs = courseIDs =
+  INTRODUCTION_TO_COMPUTER_SCIENCE: '560f1a9f22961295f9427742'
+  COMPUTER_SCIENCE_2: '5632661322961295f9428638'
+  GAME_DEVELOPMENT_1: '5789587aad86a6efb573701e'
+  WEB_DEVELOPMENT_1: '5789587aad86a6efb573701f'
+  COMPUTER_SCIENCE_3: '56462f935afde0c6fd30fc8c'
+  GAME_DEVELOPMENT_2: '57b621e7ad86a6efb5737e64'
+  WEB_DEVELOPMENT_2: '5789587aad86a6efb5737020'
+  COMPUTER_SCIENCE_4: '56462f935afde0c6fd30fc8d'
+  COMPUTER_SCIENCE_5: '569ed916efa72b0ced971447'
+
 module.exports.normalizeFunc = (func_thing, object) ->
   # func could be a string to a function in this class
   # or a function in its own right
@@ -29,6 +40,9 @@ module.exports.normalizeFunc = (func_thing, object) ->
       return => null # always return a func, or Mediator will go boom
     func_thing = func
   return func_thing
+
+module.exports.objectIdToDate = (objectID) ->
+  new Date(parseInt(objectID.toString().slice(0,8), 16)*1000)
 
 module.exports.hexToHSL = (hex) ->
   rgbToHsl(hexToR(hex), hexToG(hex), hexToB(hex))
@@ -46,10 +60,15 @@ toHex = (n) ->
   h = '0'+h if h.length is 1
   h
 
+module.exports.pathToUrl = (path) ->
+  base = location.protocol + '//' + location.hostname + (location.port && ":" + location.port)
+  base + path
+
 module.exports.i18n = (say, target, language=me.get('preferredLanguage', true), fallback='en') ->
   generalResult = null
-  fallbackResult = null
-  fallforwardResult = null # If a general language isn't available, the first specific one will do
+  fallBackResult = null
+  fallForwardResult = null  # If a general language isn't available, the first specific one will do.
+  fallSidewaysResult = null  # If a specific language isn't available, its sibling specific language will do.
   matches = (/\w+/gi).exec(language)
   generalName = matches[0] if matches
 
@@ -60,12 +79,14 @@ module.exports.i18n = (say, target, language=me.get('preferredLanguage', true), 
     else continue
     return result if localeName is language
     generalResult = result if localeName is generalName
-    fallbackResult = result if localeName is fallback
-    fallforwardResult = result if localeName.indexOf(language) is 0 and not fallforwardResult?
+    fallBackResult = result if localeName is fallback
+    fallForwardResult = result if localeName.indexOf(language) is 0 and not fallForwardResult?
+    fallSidewaysResult = result if localeName.indexOf(generalName) is 0 and not fallSidewaysResult?
 
   return generalResult if generalResult?
-  return fallforwardResult if fallforwardResult?
-  return fallbackResult if fallbackResult?
+  return fallForwardResult if fallForwardResult?
+  return fallSidewaysResult if fallSidewaysResult?
+  return fallBackResult if fallBackResult?
   return say[target] if target of say
   null
 
@@ -178,6 +199,10 @@ if document?.createElement
       return
   )(document)
 
+# So that we can stub out userAgent in tests
+module.exports.userAgent = ->
+  window.navigator.userAgent
+
 module.exports.getQueryVariable = getQueryVariable = (param, defaultValue) ->
   query = document.location.search.substring 1
   pairs = (pair.split('=') for pair in query.split '&')
@@ -249,21 +274,50 @@ module.exports.getPrepaidCodeAmount = getPrepaidCodeAmount = (price=0, users=0, 
   total = price * users * months
   total
 
-module.exports.filterMarkdownCodeLanguages = (text) ->
+startsWithVowel = (s) -> s[0] in 'aeiouAEIOU'
+module.exports.filterMarkdownCodeLanguages = (text, language) ->
   return '' unless text
-  currentLanguage = me.get('aceConfig')?.language or 'python'
-  excludedLanguages = _.without ['javascript', 'python', 'coffeescript', 'clojure', 'lua', 'io'], currentLanguage
-  exclusionRegex = new RegExp "```(#{excludedLanguages.join('|')})\n[^`]+```\n?", 'gm'
-  text.replace exclusionRegex, ''
+  currentLanguage = language or me.get('aceConfig')?.language or 'python'
+  excludedLanguages = _.without ['javascript', 'python', 'coffeescript', 'clojure', 'lua', 'java', 'io', 'html'], currentLanguage
+  # Exclude language-specific code blocks like ```python (... code ...)``` for each non-target language.
+  codeBlockExclusionRegex = new RegExp "```(#{excludedLanguages.join('|')})\n[^`]+```\n?", 'gm'
+  # Exclude language-specific images like ![python - image description](image url) for each non-target language.
+  imageExclusionRegex = new RegExp "!\\[(#{excludedLanguages.join('|')}) - .+?\\]\\(.+?\\)\n?", 'gm'
+  text = text.replace(codeBlockExclusionRegex, '').replace(imageExclusionRegex, '')
+
+  commonLanguageReplacements =
+    python: [
+      ['true', 'True'], ['false', 'False'], ['null', 'None'],
+      ['object', 'dictionary'], ['Object', 'Dictionary'],
+      ['array', 'list'], ['Array', 'List'],
+    ]
+    lua: [
+      ['null', 'nil'],
+      ['object', 'table'], ['Object', 'Table'],
+      ['array', 'table'], ['Array', 'Table'],
+    ]
+  for [from, to] in commonLanguageReplacements[currentLanguage] ? []
+    # Convert JS-specific keywords and types to Python ones, if in simple `code` tags.
+    # This won't cover it when it's not in an inline code tag by itself or when it's not in English.
+    text = text.replace ///`#{from}`///g, "`#{to}`"
+    # Now change "An `dictionary`" to "A `dictionary`", etc.
+    if startsWithVowel(from) and not startsWithVowel(to)
+      text = text.replace ///(\ a|A)n(\ `#{to}`)///g, "$1$2"
+    if not startsWithVowel(from) and startsWithVowel(to)
+      text = text.replace ///(\ a|A)(\ `#{to}`)///g, "$1n$2"
+
+  return text
 
 module.exports.aceEditModes = aceEditModes =
-  'javascript': 'ace/mode/javascript'
-  'coffeescript': 'ace/mode/coffee'
-  'python': 'ace/mode/python'
-  'clojure': 'ace/mode/clojure'
-  'lua': 'ace/mode/lua'
-  'io': 'ace/mode/text'
+  javascript: 'ace/mode/javascript'
+  coffeescript: 'ace/mode/coffee'
+  python: 'ace/mode/python'
+  lua: 'ace/mode/lua'
+  java: 'ace/mode/java'
+  html: 'ace/mode/html'
 
+# These ACEs are used for displaying code snippets statically, like in SpellPaletteEntryView popovers
+# and have short lifespans
 module.exports.initializeACE = (el, codeLanguage) ->
   contents = $(el).text().trim()
   editor = ace.edit el
@@ -285,3 +339,175 @@ module.exports.initializeACE = (el, codeLanguage) ->
   session.setUseWrapMode true
   session.setNewLineMode 'unix'
   return editor
+
+module.exports.capitalLanguages = capitalLanguages =
+  'javascript': 'JavaScript'
+  'coffeescript': 'CoffeeScript'
+  'python': 'Python'
+  'java': 'Java'
+  'lua': 'Lua'
+  'html': 'HTML'
+
+module.exports.createLevelNumberMap = (levels) ->
+  levelNumberMap = {}
+  practiceLevelTotalCount = 0
+  practiceLevelCurrentCount = 0
+  for level, i in levels
+    levelNumber = i - practiceLevelTotalCount + 1
+    if level.practice
+      levelNumber = i - practiceLevelTotalCount + String.fromCharCode('a'.charCodeAt(0) + practiceLevelCurrentCount)
+      practiceLevelTotalCount++
+      practiceLevelCurrentCount++
+    else
+      practiceLevelCurrentCount = 0
+    levelNumberMap[level.key] = levelNumber
+  levelNumberMap
+
+module.exports.findNextLevel = (levels, currentIndex, needsPractice) ->
+  # levels = [{practice: true/false, complete: true/false}]
+  index = currentIndex
+  index++
+  if needsPractice
+    if levels[currentIndex].practice or index < levels.length and levels[index].practice
+      # Needs practice, on practice or next practice, choose next incomplete level
+      # May leave earlier practice levels incomplete and reach end of course
+      index++ while index < levels.length and levels[index].complete
+    else
+      # Needs practice, on required, next required, choose first incomplete level of previous practice chain
+      index--
+      index-- while index >= 0 and not levels[index].practice
+      if index >= 0
+        index-- while index >= 0 and levels[index].practice
+        if index >= 0
+          index++
+          index++ while index < levels.length and levels[index].practice and levels[index].complete
+          if levels[index].practice and not levels[index].complete
+            return index
+      index = currentIndex + 1
+      index++ while index < levels.length and levels[index].complete
+  else
+    # No practice needed, next required incomplete level
+    index++ while index < levels.length and (levels[index].practice or levels[index].complete)
+  index
+
+module.exports.needsPractice = (playtime=0, threshold=2) ->
+  playtime / 60 > threshold
+
+module.exports.sortCourses = (courses) ->
+  orderedIDs = [
+    courseIDs.INTRODUCTION_TO_COMPUTER_SCIENCE
+    courseIDs.COMPUTER_SCIENCE_2
+    courseIDs.GAME_DEVELOPMENT_1
+    courseIDs.WEB_DEVELOPMENT_1
+    courseIDs.COMPUTER_SCIENCE_3
+    courseIDs.GAME_DEVELOPMENT_2
+    courseIDs.WEB_DEVELOPMENT_2
+    courseIDs.COMPUTER_SCIENCE_4
+    courseIDs.COMPUTER_SCIENCE_5
+  ]
+  _.sortBy courses, (course) ->
+    # ._id can be from classroom.courses, otherwise it's probably .id
+    index = orderedIDs.indexOf(course.id ? course._id)
+    index = 9001 if index is -1
+    index
+
+module.exports.usStateCodes =
+  # https://github.com/mdzhang/us-state-codes
+  # generated by js2coffee 2.2.0
+  (->
+    stateNamesByCode =
+      'AL': 'Alabama'
+      'AK': 'Alaska'
+      'AZ': 'Arizona'
+      'AR': 'Arkansas'
+      'CA': 'California'
+      'CO': 'Colorado'
+      'CT': 'Connecticut'
+      'DE': 'Delaware'
+      'DC': 'District of Columbia'
+      'FL': 'Florida'
+      'GA': 'Georgia'
+      'HI': 'Hawaii'
+      'ID': 'Idaho'
+      'IL': 'Illinois'
+      'IN': 'Indiana'
+      'IA': 'Iowa'
+      'KS': 'Kansas'
+      'KY': 'Kentucky'
+      'LA': 'Louisiana'
+      'ME': 'Maine'
+      'MD': 'Maryland'
+      'MA': 'Massachusetts'
+      'MI': 'Michigan'
+      'MN': 'Minnesota'
+      'MS': 'Mississippi'
+      'MO': 'Missouri'
+      'MT': 'Montana'
+      'NE': 'Nebraska'
+      'NV': 'Nevada'
+      'NH': 'New Hampshire'
+      'NJ': 'New Jersey'
+      'NM': 'New Mexico'
+      'NY': 'New York'
+      'NC': 'North Carolina'
+      'ND': 'North Dakota'
+      'OH': 'Ohio'
+      'OK': 'Oklahoma'
+      'OR': 'Oregon'
+      'PA': 'Pennsylvania'
+      'RI': 'Rhode Island'
+      'SC': 'South Carolina'
+      'SD': 'South Dakota'
+      'TN': 'Tennessee'
+      'TX': 'Texas'
+      'UT': 'Utah'
+      'VT': 'Vermont'
+      'VA': 'Virginia'
+      'WA': 'Washington'
+      'WV': 'West Virginia'
+      'WI': 'Wisconsin'
+      'WY': 'Wyoming'
+    stateCodesByName = _.invert(stateNamesByCode)
+    # normalizes case and removes invalid characters
+    # returns null if can't find sanitized code in the state map
+
+    sanitizeStateCode = (code) ->
+      code = if _.isString(code) then code.trim().toUpperCase().replace(/[^A-Z]/g, '') else null
+      if stateNamesByCode[code] then code else null
+
+    # returns a valid state name else null
+
+    getStateNameByStateCode = (code) ->
+      stateNamesByCode[sanitizeStateCode(code)] or null
+
+    # normalizes case and removes invalid characters
+    # returns null if can't find sanitized name in the state map
+
+    sanitizeStateName = (name) ->
+      if !_.isString(name)
+        return null
+      # bad whitespace remains bad whitespace e.g. "O  hi o" is not valid
+      name = name.trim().toLowerCase().replace(/[^a-z\s]/g, '').replace(/\s+/g, ' ')
+      tokens = name.split(/\s+/)
+      tokens = _.map(tokens, (token) ->
+        token.charAt(0).toUpperCase() + token.slice(1)
+      )
+      # account for District of Columbia
+      if tokens.length > 2
+        tokens[1] = tokens[1].toLowerCase()
+      name = tokens.join(' ')
+      if stateCodesByName[name] then name else null
+
+    # returns a valid state code else null
+
+    getStateCodeByStateName = (name) ->
+      stateCodesByName[sanitizeStateName(name)] or null
+
+    return {
+      sanitizeStateCode: sanitizeStateCode
+      getStateNameByStateCode: getStateNameByStateCode
+      sanitizeStateName: sanitizeStateName
+      getStateCodeByStateName: getStateCodeByStateName
+    }
+  )()
+

@@ -6,7 +6,7 @@ UserSchema = c.object
   default:
     visa: 'Authorized to work in the US'
     music: true
-    name: 'Anoner'
+    name: 'Anonymous'
     autocastDelay: 5000
     emails: {}
     permissions: []
@@ -50,12 +50,14 @@ visa = c.shortString
 
 _.extend UserSchema.properties,
   email: c.shortString({title: 'Email', format: 'email'})
+  emailVerified: { type: 'boolean' }
   iosIdentifierForVendor: c.shortString({format: 'hidden'})
   firstName: c.shortString({title: 'First Name'})
   lastName: c.shortString({title: 'Last Name'})
-  gender: {type: 'string', 'enum': ['male', 'female', 'secret', 'trans']}
-  ageRange: {type: 'string'}  # 'enum': ['0-13', '14-17', '18-24', '25-34', '35-44', '45-100']
-  password: {type: 'string', maxLength: 256, minLength: 2, title: 'Password'}
+  gender: {type: 'string'} # , 'enum': ['male', 'female', 'secret', 'trans', 'other']
+  # NOTE: ageRange enum changed on 4/27/16 from ['0-13', '14-17', '18-24', '25-34', '35-44', '45-100']
+  ageRange: {type: 'string'}  # 'enum': ['13-15', '16-17', '18-24', '25-34', '35-44', '45-100']
+  password: c.passwordString
   passwordReset: {type: 'string'}
   photoURL: {type: 'string', format: 'image-file', title: 'Profile Picture', description: 'Upload a 256x256px or larger image to serve as your profile picture.'}
 
@@ -79,6 +81,7 @@ _.extend UserSchema.properties,
     archmageNews: {$ref: '#/definitions/emailSubscription'}
     artisanNews: {$ref: '#/definitions/emailSubscription'}
     diplomatNews: {$ref: '#/definitions/emailSubscription'}
+    teacherNews: {$ref: '#/definitions/emailSubscription'}
     scribeNews: {$ref: '#/definitions/emailSubscription'}
 
     # notifications
@@ -117,8 +120,8 @@ _.extend UserSchema.properties,
     colorConfig: c.object {additionalProperties: c.colorConfig()}
 
   aceConfig: c.object { default: { language: 'python', keyBindings: 'default', invisibles: false, indentGuides: false, behaviors: false, liveCompletion: true }},
-    language: {type: 'string', 'enum': ['python', 'javascript', 'coffeescript', 'clojure', 'lua', 'io']}
-    keyBindings: {type: 'string', 'enum': ['default', 'vim', 'emacs']}
+    language: {type: 'string', 'enum': ['python', 'javascript', 'coffeescript', 'clojure', 'lua', 'java', 'io']}
+    keyBindings: {type: 'string', 'enum': ['default', 'vim', 'emacs']}  # Deprecated 2016-05-30; now we just always give them 'default'.
     invisibles: {type: 'boolean' }
     indentGuides: {type: 'boolean' }
     behaviors: {type: 'boolean' }
@@ -281,6 +284,9 @@ _.extend UserSchema.properties,
     pollMiscPatches: c.int()
     campaignTranslationPatches: c.int()
     campaignMiscPatches: c.int()
+    courseTranslationPatches: c.int()
+    courseMiscPatches: c.int()
+    courseEdits: c.int()
     concepts: {type: 'object', additionalProperties: c.int(), description: 'Number of levels completed using each programming concept.'}
 
   earned: c.RewardSchema 'earned by achievements'
@@ -325,7 +331,19 @@ _.extend UserSchema.properties,
   coursePrepaidID: c.objectId({
     description: 'Prepaid which has paid for this user\'s course access'
   })
+  coursePrepaid: {
+    type: 'object'
+    properties: {
+      _id: c.objectId()
+      startDate: c.stringDate()
+      endDate: c.stringDate()
+    }
+  }
+  enrollmentRequestSent: { type: 'boolean' }
+
   schoolName: {type: 'string'}
+  role: {type: 'string', enum: ["God", "advisor", "parent", "principal", "student", "superintendent", "teacher", "technology coordinator"]}
+  birthday: c.stringDate({title: "Birthday"})
 
 c.extendBasicProperties UserSchema, 'user'
 

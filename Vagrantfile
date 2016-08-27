@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -85,6 +86,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 end
 >>>>>>> codecombat/master
 =======
+=======
+>>>>>>> refs/remotes/codecombat/master
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -101,14 +104,32 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.hostname = "coco-dev"
 
+<<<<<<< HEAD
   config.vm.network "forwarded_port", guest: 3000, host: 3000
   config.vm.network "forwarded_port", guest: 9485, host: 9485
 
   config.vm.provision "shell", path: "scripts/vagrant/provision.sh", privileged: false
+=======
+  config.vm.network "forwarded_port", guest: 3000, host: 13000
+  config.vm.network "forwarded_port", guest: 9485, host: 19485
+
+  config.vm.define "default" do |default|
+    default.vm.provision "shell", path: "scripts/vagrant/core/provision.sh", privileged: false
+  end
+  
+  config.vm.define "brunchv2", autostart: false do |brunchv2|
+    brunchv2.vm.provision "shell", path: "scripts/vagrant/core/provision.sh", privileged: false
+    brunchv2.vm.provision "shell", path: "scripts/vagrant/core/update-brunchv2.sh", privileged: false
+  end
+>>>>>>> refs/remotes/codecombat/master
 
   config.vm.provider "virtualbox" do |v|
     v.memory = 2048
     v.cpus = 2
+<<<<<<< HEAD
+=======
+    #v.gui = true
+>>>>>>> refs/remotes/codecombat/master
   end
 
   config.vm.provider "vmware_fusion" do |v|
@@ -117,4 +138,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
 end
+<<<<<<< HEAD
+>>>>>>> refs/remotes/codecombat/master
+=======
 >>>>>>> refs/remotes/codecombat/master

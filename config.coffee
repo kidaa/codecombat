@@ -93,12 +93,12 @@ exports.config =
         #- vendor.js, all the vendor libraries
         'javascripts/vendor.js': [
           regJoin('^vendor/scripts/(?!(Box2d|coffeescript|difflib|diffview|jasmine))')
-          regJoin('^bower_components/(?!(aether|d3|treema|three.js))')
+          regJoin('^bower_components/(?!(aether|d3|treema|three.js|esper.js))')
           'bower_components/treema/treema-utils.js'
         ]
         'javascripts/whole-vendor.js': if TRAVIS then [
           regJoin('^vendor/scripts/(?!(Box2d|jasmine))')
-          regJoin('^bower_components/(?!aether)')
+          regJoin('^bower_components/(?!aether|esper.js)')
         ] else []
 
         #- Other vendor libraries in separate bunches
@@ -109,12 +109,13 @@ exports.config =
         'javascripts/box2d.js': regJoin('^vendor/scripts/Box2dWeb-2.1.a.3')
         'javascripts/lodash.js': regJoin('^bower_components/lodash/dist/lodash.js')
         'javascripts/aether.js': regJoin('^bower_components/aether/build/aether.js')
-        'javascripts/app/vendor/aether-clojure.js': 'bower_components/aether/build/clojure.js'
+        'javascripts/esper.js': 'bower_components/esper.js/esper.js'
         'javascripts/app/vendor/aether-coffeescript.js': 'bower_components/aether/build/coffeescript.js'
-        'javascripts/app/vendor/aether-io.js': 'bower_components/aether/build/io.js'
         'javascripts/app/vendor/aether-javascript.js': 'bower_components/aether/build/javascript.js'
         'javascripts/app/vendor/aether-lua.js': 'bower_components/aether/build/lua.js'
+        'javascripts/app/vendor/aether-java.js': 'bower_components/aether/build/java.js'
         'javascripts/app/vendor/aether-python.js': 'bower_components/aether/build/python.js'
+        'javascripts/app/vendor/aether-html.js': 'bower_components/aether/build/html.js'
 
         # Any vendor libraries we don't want the client to load immediately
         'javascripts/app/vendor/d3.js': regJoin('^bower_components/d3')
@@ -128,7 +129,7 @@ exports.config =
 
         #- test, demo libraries
         'javascripts/app/tests.js': regJoin('^test/app/')
-        'javascripts/demo-app.js': regJoin('^test/demo/')
+        'javascripts/app/demo-app.js': regJoin('^test/demo/')
 
         #- More output files are generated at the below
 
@@ -156,12 +157,15 @@ exports.config =
           'bower_components/tv4/tv4.js'
           # Aether before box2d for some strange Object.defineProperty thing
           'bower_components/aether/build/aether.js'
+          'bower_components/esper.js/esper.js'
           'bower_components/fastclick/lib/fastclick.js'
           'bower_components/d3/d3.min.js'
           'vendor/scripts/async.js'
           'vendor/scripts/jquery-ui-1.11.1.js.custom.js'
         ]
-
+        after: [
+          'bower_components/algolia-autocomplete-no-conflict/no-conflict.js'
+        ]
     stylesheets:
       defaultExtension: 'sass'
       joinTo:
@@ -199,12 +203,11 @@ exports.config =
     sass:
       mode: 'native'
       allowCache: true
-    bless:
-      cacheBuster: false
     assetsmanager:
       copyTo:
         'lib/ace': ['node_modules/ace-builds/src-min-noconflict/*']
-        'fonts': ['bower_components/openSansCondensed/*']
+        'fonts': ['bower_components/openSansCondensed/*', 'bower_components/openSans/*']
+        'javascripts': ['bower_components/esper.js/esper.modern.js']
     autoReload:
       delay: 1000
 

@@ -1,4 +1,7 @@
 require '../common'
+LevelSession = require '../../../server/models/LevelSession'
+mongoose = require 'mongoose'
+request = require '../request'
 
 describe '/db/level.session', ->
 
@@ -20,15 +23,14 @@ describe '/db/level.session', ->
 
   # TODO Tried to mimic what happens on the site. Why is this even so hard to do.
   # Right now it's even possible to create ownerless sessions through POST
-  xit 'allows users to create level sessions through PATCH', (done) ->
-    loginJoe (joe) ->
-      console.log url + mongoose.Types.ObjectId()
-      request {method: 'patch', uri: url + mongoose.Types.ObjectId(), json: session}, (err, res, body) ->
-        expect(err).toBeNull()
-        expect(res.statusCode).toBe 200
-        console.log body
-        expect(body.creator).toEqual joe.get('_id').toHexString()
-        done()
+#  xit 'allows users to create level sessions through PATCH', (done) ->
+#    loginJoe (joe) ->
+#      request {method: 'patch', uri: url + mongoose.Types.ObjectId(), json: session}, (err, res, body) ->
+#        expect(err).toBeNull()
+#        expect(res.statusCode).toBe 200
+#        console.log body
+#        expect(body.creator).toEqual joe.get('_id').toHexString()
+#        done()
 
   # Should remove this as soon as the PATCH test case above works
   it 'create a level session', (done) ->

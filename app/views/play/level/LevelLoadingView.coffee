@@ -59,8 +59,9 @@ module.exports = class LevelLoadingView extends CocoView
     goalList = goalContainer.find('ul')
     goalCount = 0
     for goalID, goal of @level.get('goals') when (not goal.team or goal.team is (e.team or 'humans')) and not goal.hiddenGoal
+      continue if goal.optional and @level.isType('course')
       name = utils.i18n goal, 'name'
-      goalList.append $('<li>' + name + '</li>')
+      goalList.append $('<li>').text(name)
       ++goalCount
     if goalCount
       goalContainer.removeClass('secret')
@@ -78,6 +79,8 @@ module.exports = class LevelLoadingView extends CocoView
     @docs = @level.get('documentation') ? {}
     specific = @docs.specificArticles or []
     @intro = _.find specific, name: 'Intro'
+    if window.serverConfig.picoCTF
+      @intro ?= body: ''
 
   showReady: ->
     return if @shownReady
@@ -166,11 +169,23 @@ module.exports = class LevelLoadingView extends CocoView
     @playSound 'loading-view-unveil', 0.5
     @$el.find('.left-wing').css left: '-100%', backgroundPosition: 'right -400px top 0'
     @$el.find('.right-wing').css right: '-100%', backgroundPosition: 'left -400px top 0'
-    $('#level-footer-background').detach().appendTo('#page-container').slideDown(duration)
+    $('#level-footer-background').detach().appendTo('#page-container').slideDown(duration) unless @level.isType('web-dev')
 
   unveilIntro: =>
     return if @destroyed or not @intro or @unveiled
-    html = marked utils.filterMarkdownCodeLanguages(utils.i18n(@intro, 'body'))
+    if window.serverConfig.picoCTF and problem = @level.picoCTFProblem
+      html = marked """
+        ### #{problem.name}
+
+        #{@intro.body}
+
+        #{problem.description}
+
+        #{problem.category} - #{problem.score} points
+      """, sanitize: false
+    else
+      language = @session?.get('codeLanguage')
+      html = marked utils.filterMarkdownCodeLanguages(utils.i18n(@intro, 'body'), language)
     @$el.find('.intro-doc').removeClass('hidden').find('.intro-doc-content').html html
     @resize()
 
@@ -191,9 +206,15 @@ module.exports = class LevelLoadingView extends CocoView
     @$el.find('.level-loading-goals, .tip, .load-progress').hide()
     @$el.find('.course-membership-required').show()
 
+  onLoadError: (resource) ->
+    @$el.find('.level-loading-goals, .tip, .load-progress').hide()
+    @$el.find('.could-not-load').show()
+
   onClickStartSubscription: (e) ->
     @openModalView new SubscribeModal()
-    window.tracker?.trackEvent 'Show subscription modal', category: 'Subscription', label: 'level loading', level: @level?.get('slug') or @options.level?.get('slug')
+    levelSlug = @level?.get('slug') or @options.level?.get('slug')
+    # TODO: Added levelID on 2/9/16. Remove level property and associated AnalyticsLogEvent 'properties.level' index later.
+    window.tracker?.trackEvent 'Show subscription modal', category: 'Subscription', label: 'level loading', level: levelSlug, levelID: levelSlug
 
   onSubscribed: ->
     document.location.reload()

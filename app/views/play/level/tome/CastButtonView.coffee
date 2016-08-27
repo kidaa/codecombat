@@ -1,5 +1,5 @@
 CocoView = require 'views/core/CocoView'
-template = require 'templates/play/level/tome/cast_button'
+template = require 'templates/play/level/tome/cast-button-view'
 {me} = require 'core/auth'
 LadderSubmissionView = require 'views/play/common/LadderSubmissionView'
 LevelSession = require 'models/LevelSession'
@@ -12,15 +12,13 @@ module.exports = class CastButtonView extends CocoView
     'click .cast-button': 'onCastButtonClick'
     'click .submit-button': 'onCastRealTimeButtonClick'
     'click .done-button': 'onDoneButtonClick'
+    'click .game-dev-play-btn': 'onClickGameDevPlayButton'
 
   subscriptions:
     'tome:spell-changed': 'onSpellChanged'
     'tome:cast-spells': 'onCastSpells'
     'tome:manual-cast-denied': 'onManualCastDenied'
     'god:new-world-created': 'onNewWorld'
-    'real-time-multiplayer:created-game': 'onJoinedRealTimeMultiplayerGame'
-    'real-time-multiplayer:joined-game': 'onJoinedRealTimeMultiplayerGame'
-    'real-time-multiplayer:left-game': 'onLeftRealTimeMultiplayerGame'
     'goal-manager:new-goal-states': 'onNewGoalStates'
     'god:goals-calculated': 'onGoalsCalculated'
     'playback:ended-changed': 'onPlaybackEndedChanged'
@@ -31,32 +29,21 @@ module.exports = class CastButtonView extends CocoView
     @castShortcut = '⇧↵'
     @updateReplayabilityInterval = setInterval @updateReplayability, 1000
     @observing = options.session.get('creator') isnt me.id
-    @loadMirrorSession() if @options.level.get('slug') in ['ace-of-coders']
+    @loadMirrorSession() if @options.level.get('slug') in ['ace-of-coders', 'elemental-wars']
+    @mirror = @mirrorSession?
     @autoSubmitsToLadder = @options.level.get('slug') in ['wakka-maul']
 
   destroy: ->
     clearInterval @updateReplayabilityInterval
     super()
 
-  getRenderData: (context={}) ->
-    context = super context
-    shift = $.i18n.t 'keyboard_shortcuts.shift'
-    enter = $.i18n.t 'keyboard_shortcuts.enter'
-    castShortcutVerbose = "#{shift}+#{enter}"
-    castRealTimeShortcutVerbose = (if @isMac() then 'Cmd' else 'Ctrl') + '+' + castShortcutVerbose
-    context.castVerbose = castShortcutVerbose + ': ' + $.i18n.t('keyboard_shortcuts.run_code')
-    context.castRealTimeVerbose = castRealTimeShortcutVerbose + ': ' + $.i18n.t('keyboard_shortcuts.run_real_time')
-    context.observing = @observing
-    context.mirror = @mirrorSession?
-    context
-
   afterRender: ->
     super()
     @castButton = $('.cast-button', @$el)
     spell.view?.createOnCodeChangeHandlers() for spellKey, spell of @spells
-    if @options.level.get('hidesSubmitUntilRun') or @options.level.get 'hidesRealTimePlayback'
+    if @options.level.get('hidesSubmitUntilRun') or @options.level.get('hidesRealTimePlayback') or @options.level.isType('web-dev')
       @$el.find('.submit-button').hide()  # Hide Submit for the first few until they run it once.
-    if @options.session.get('state')?.complete and @options.level.get 'hidesRealTimePlayback'
+    if @options.session.get('state')?.complete and (@options.level.get('hidesRealTimePlayback') or @options.level.isType('web-dev'))
       @$el.find('.done-button').show()
     if @options.level.get('slug') in ['course-thornbush-farm', 'thornbush-farm']
       @$el.find('.submit-button').hide()  # Hide submit until first win so that script can explain it.
@@ -66,22 +53,35 @@ module.exports = class CastButtonView extends CocoView
   attachTo: (spellView) ->
     @$el.detach().prependTo(spellView.toolbarView.$el).show()
 
+  castShortcutVerbose: ->
+    shift = $.i18n.t 'keyboard_shortcuts.shift'
+    enter = $.i18n.t 'keyboard_shortcuts.enter'
+    "#{shift}+#{enter}"
+
+  castVerbose: ->
+    @castShortcutVerbose() + ': ' + $.i18n.t('keyboard_shortcuts.run_code')
+
+  castRealTimeVerbose: ->
+    castRealTimeShortcutVerbose = (if @isMac() then 'Cmd' else 'Ctrl') + '+' + @castShortcutVerbose()
+    castRealTimeShortcutVerbose + ': ' + $.i18n.t('keyboard_shortcuts.run_real_time')
+
   onCastButtonClick: (e) ->
     Backbone.Mediator.publish 'tome:manual-cast', {}
 
   onCastRealTimeButtonClick: (e) ->
-    if @inRealTimeMultiplayerSession
-      Backbone.Mediator.publish 'real-time-multiplayer:manual-cast', {}
-    else if @options.level.get('replayable') and (timeUntilResubmit = @options.session.timeUntilResubmit()) > 0
+    if @options.level.get('replayable') and (timeUntilResubmit = @options.session.timeUntilResubmit()) > 0
       Backbone.Mediator.publish 'tome:manual-cast-denied', timeUntilResubmit: timeUntilResubmit
     else
       Backbone.Mediator.publish 'tome:manual-cast', {realTime: true}
     @updateReplayability()
 
+  onClickGameDevPlayButton: ->
+    Backbone.Mediator.publish 'tome:manual-cast', {realTime: true}
+
   onDoneButtonClick: (e) ->
     return if @options.level.hasLocalChanges()  # Don't award achievements when beating level changed in level editor
-    @options.session.recordScores @world.scores, @options.level
-    Backbone.Mediator.publish 'level:show-victory', showModal: true
+    @options.session.recordScores @world?.scores, @options.level
+    Backbone.Mediator.publish 'level:show-victory', { showModal: true, manual: true }
 
   onSpellChanged: (e) ->
     @updateCastButton()
@@ -90,7 +90,7 @@ module.exports = class CastButtonView extends CocoView
     return if e.preload
     @casting = true
     if @hasStartedCastingOnce  # Don't play this sound the first time
-      @playSound 'cast', 0.5
+      @playSound 'cast', 0.5 unless @options.level.isType('game-dev')
     @hasStartedCastingOnce = true
     @updateCastButton()
 
@@ -102,7 +102,7 @@ module.exports = class CastButtonView extends CocoView
   onNewWorld: (e) ->
     @casting = false
     if @hasCastOnce  # Don't play this sound the first time
-      @playSound 'cast-end', 0.5
+      @playSound 'cast-end', 0.5 unless @options.level.isType('game-dev')
       # Worked great for live beginner tournaments, but probably annoying for asynchronous tournament mode.
       myHeroID = if me.team is 'ogres' then 'Hero Placeholder 1' else 'Hero Placeholder'
       if @autoSubmitsToLadder and not e.world.thangMap[myHeroID]?.errorsOut and not me.get('anonymous')
@@ -117,7 +117,7 @@ module.exports = class CastButtonView extends CocoView
     @winnable = winnable
     @$el.toggleClass 'winnable', @winnable
     Backbone.Mediator.publish 'tome:winnability-updated', winnable: @winnable, level: @options.level
-    if @options.level.get 'hidesRealTimePlayback'
+    if @options.level.get('hidesRealTimePlayback') or @options.level.isType('web-dev', 'game-dev')
       @$el.find('.done-button').toggle @winnable
     else if @winnable and @options.level.get('slug') in ['course-thornbush-farm', 'thornbush-farm']
       @$el.find('.submit-button').show()  # Hide submit until first win so that script can explain it.
@@ -169,7 +169,7 @@ module.exports = class CastButtonView extends CocoView
     url = "/db/level/#{@options.level.get('slug') or @options.level.id}/session"
     url += "?team=#{if me.team is 'humans' then 'ogres' else 'humans'}"
     mirrorSession = new LevelSession().setURL url
-    @mirrorSession = @supermodel.loadModel(mirrorSession, 'level_session', {cache: false}).model
+    @mirrorSession = @supermodel.loadModel(mirrorSession, {cache: false}).model
 
   updateLadderSubmissionViews: ->
     @removeSubView subview for key, subview of @subviews when subview instanceof LadderSubmissionView
@@ -177,9 +177,3 @@ module.exports = class CastButtonView extends CocoView
     return unless placeholder.length
     @ladderSubmissionView = new LadderSubmissionView session: @options.session, level: @options.level, mirrorSession: @mirrorSession
     @insertSubView @ladderSubmissionView, placeholder
-
-  onJoinedRealTimeMultiplayerGame: (e) ->
-    @inRealTimeMultiplayerSession = true
-
-  onLeftRealTimeMultiplayerGame: (e) ->
-    @inRealTimeMultiplayerSession = false

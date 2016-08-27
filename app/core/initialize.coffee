@@ -8,7 +8,6 @@ channelSchemas =
   'errors': require 'schemas/subscriptions/errors'
   'ipad': require 'schemas/subscriptions/ipad'
   'misc': require 'schemas/subscriptions/misc'
-  'multiplayer': require 'schemas/subscriptions/multiplayer'
   'play': require 'schemas/subscriptions/play'
   'surface': require 'schemas/subscriptions/surface'
   'tome': require 'schemas/subscriptions/tome'
@@ -128,6 +127,7 @@ setUpIOSLogging = ->
 
 loadOfflineFonts = ->
   $('head').prepend '<link rel="stylesheet" type="text/css" href="/fonts/openSansCondensed.css">'
+  $('head').prepend '<link rel="stylesheet" type="text/css" href="/fonts/openSans.css">'
 
 # This is so hacky... hopefully it's restrictive enough to not be slow.
 # We could also keep a list of events we are actually subscribed for and only try to send those over.
@@ -157,5 +157,12 @@ window.serializeForIOS = serializeForIOS = (obj, depth=3) ->
       clone[key] = value
   seen = null if root
   clone
+
+window.onbeforeunload = (e) ->
+  leavingMessage = _.result(window.currentView, 'onLeaveMessage')
+  if leavingMessage
+    return leavingMessage
+  else
+    return
 
 $ -> init()

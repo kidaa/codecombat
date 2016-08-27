@@ -15,7 +15,8 @@ module.exports = class SettingsTabView extends CocoView
   editableSettings: [
     'name', 'description', 'documentation', 'nextLevel', 'background', 'victory', 'i18n', 'icon', 'goals',
     'type', 'terrain', 'showsGuide', 'banner', 'employerDescription', 'loadingTip', 'requiresSubscription',
-    'tasks', 'helpVideos', 'replayable', 'scoreTypes', 'concepts'
+    'helpVideos', 'replayable', 'scoreTypes', 'concepts', 'picoCTFProblem', 'practice', 'practiceThresholdMinutes'
+    'primerLanguage', 'shareable', 'studentPlayInstructions'
   ]
 
   subscriptions:

@@ -37,8 +37,6 @@ _.extend LevelSessionSchema.properties,
     type: 'string'
   levelID:
     type: 'string'
-  multiplayer:
-    type: 'boolean'
   creator: c.objectId
     links:
       [
@@ -55,11 +53,12 @@ _.extend LevelSessionSchema.properties,
     title: 'Changed'
     readOnly: true
 
+  dateFirstCompleted: {} # c.stringDate
+#    title: 'Completed'
+#    readOnly: true
+
   team: c.shortString()
   level: LevelSessionLevelSchema
-
-  screenshot:
-    type: 'string'
 
   heroConfig: c.HeroConfigSchema
 
@@ -150,6 +149,9 @@ _.extend LevelSessionSchema.properties,
         type: 'string'
         format: 'code'
 
+  codeLogs:
+    type: 'array'
+
   codeLanguage:
     type: 'string'
 
@@ -200,14 +202,6 @@ _.extend LevelSessionSchema.properties,
 
   submittedCodeLanguage:
     type: 'string'
-
-  transpiledCode:
-    type: 'object'
-    additionalProperties:
-      type: 'object'
-      additionalProperties:
-        type: 'string'
-        format: 'code'
 
   isRanking:
     type: 'boolean'

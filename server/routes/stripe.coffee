@@ -1,8 +1,8 @@
 async = require 'async'
 config = require '../../server_config'
 stripe = require('stripe')(config.stripe.secretKey)
-User = require '../users/User'
-Payment = require '../payments/Payment'
+User = require '../models/User'
+Payment = require '../models/Payment'
 errors = require '../commons/errors'
 mongoose = require 'mongoose'
 utils = require '../../app/core/utils'
@@ -49,8 +49,9 @@ module.exports.setup = (app) ->
       if err
         logStripeWebhookError("Retrieve invoice error: #{JSON.stringify(err)}")
         return res.send(500, '')
-      unless invoice.total or invoice.discount?.coupon?.id is 'free'
+      unless invoice.total or invoice.discount?.coupon?.id in ['free', 'brazil']
         # invoices made when trialing, probably given for people who resubscribe after unsubscribing
+        # also I can't change the test-mode brazil coupon to not end up with a zero price now
         return res.send(200, '')
       return res.send(200, '') unless invoice.lines?.data?.length > 0
 
@@ -85,7 +86,11 @@ module.exports.setup = (app) ->
                 subscriptionID: subscriptionID
               }
             })
-            payment.set 'gems', 3500 if invoice.lines.data[0].plan?.id is 'basic'
+            # TODO: load gems from correct Product
+            productGems = 3500
+            if recipient.get('country') is 'brazil'
+              productGems = 1500
+            payment.set 'gems', productGems if invoice.lines.data[0].plan?.id is 'basic'
 
             payment.save (err) =>
               if err
@@ -96,7 +101,7 @@ module.exports.setup = (app) ->
               # Update purchased gems
               # TODO: is this correct for a resub?
               Payment.find({recipient: recipient._id, gems: {$exists: true}}).select('gems').exec (err, payments) ->
-                gems = _.reduce payments, ((sum, p) -> sum + p.get('gems')), 0
+                gems = _.reduce payments, ((sum, p) -> sum + (p.get('gems') or 0)), 0
                 purchased = _.clone(recipient.get('purchased'))
                 purchased ?= {}
                 purchased.gems = gems

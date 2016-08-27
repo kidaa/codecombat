@@ -21,11 +21,27 @@ module.exports = class CourseInstance extends CocoModel
       data: { userID: userID }
     }
     _.extend options, opts
-    @fetch(options)
+    @fetch options
     if userID is me.id
       unless me.get('courseInstances')
         me.set('courseInstances', [])
       me.get('courseInstances').push(@id)
+  
+  addMembers: (userIDs, opts) ->
+    options = {
+      method: 'POST'
+      url: _.result(@, 'url') + '/members'
+      data: { userIDs }
+      success: =>
+        @trigger 'add-members', { userIDs }
+    }
+    _.extend options, opts
+    jqxhr = @fetch(options)
+    if me.id in userIDs
+      unless me.get('courseInstances')
+        me.set('courseInstances', [])
+      me.get('courseInstances').push(@id)
+    return jqxhr
 
   removeMember: (userID, opts) ->
     options = {
@@ -39,3 +55,7 @@ module.exports = class CourseInstance extends CocoModel
 
   firstLevelURL: ->
     "/play/level/dungeons-of-kithgard?course=#{@get('courseID')}&course-instance=#{@id}"
+  
+  hasMember: (userID, opts) ->
+    userID = userID.id or userID
+    userID in @get('members')

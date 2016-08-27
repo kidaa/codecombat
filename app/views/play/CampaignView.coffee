@@ -9,7 +9,7 @@ LevelSetupManager = require 'lib/LevelSetupManager'
 ThangType = require 'models/ThangType'
 MusicPlayer = require 'lib/surface/MusicPlayer'
 storage = require 'core/storage'
-AuthModal = require 'views/core/AuthModal'
+CreateAccountModal = require 'views/core/CreateAccountModal'
 SubscribeModal = require 'views/core/SubscribeModal'
 LeaderboardModal = require 'views/play/modal/LeaderboardModal'
 Level = require 'models/Level'
@@ -20,7 +20,6 @@ ShareProgressModal = require 'views/play/modal/ShareProgressModal'
 UserPollsRecord = require 'models/UserPollsRecord'
 Poll = require 'models/Poll'
 PollModal = require 'views/play/modal/PollModal'
-storage = require 'core/storage'
 CourseInstance = require 'models/CourseInstance'
 
 trackedHourOfCode = false
@@ -56,6 +55,7 @@ module.exports = class CampaignView extends RootView
     'click #back-button': 'onClickBack'
     'click #clear-storage-button': 'onClickClearStorage'
     'click .portal .campaign': 'onClickPortalCampaign'
+    'click .portal .beta-campaign': 'onClickPortalCampaign'
     'mouseenter .portals': 'onMouseEnterPortals'
     'mouseleave .portals': 'onMouseLeavePortals'
     'mousemove .portals': 'onMouseMovePortals'
@@ -63,22 +63,25 @@ module.exports = class CampaignView extends RootView
 
   constructor: (options, @terrain) ->
     super options
+    @terrain = 'picoctf' if window.serverConfig.picoCTF
     @editorMode = options?.editorMode
     if @editorMode
       @terrain ?= 'dungeon'
     @levelStatusMap = {}
     @levelPlayCountMap = {}
     @levelDifficultyMap = {}
-    @sessions = @supermodel.loadCollection(new LevelSessionsCollection(), 'your_sessions', {cache: false}, 0).model
-    @listenToOnce @sessions, 'sync', @onSessionsLoaded
-    unless @terrain
-      @campaigns = @supermodel.loadCollection(new CampaignsCollection(), 'campaigns', null, 1).model
-      @listenToOnce @campaigns, 'sync', @onCampaignsLoaded
-      return
+    if window.serverConfig.picoCTF
+      @supermodel.addRequestResource(url: '/picoctf/problems', success: (@picoCTFProblems) =>).load()
+    else
+      @sessions = @supermodel.loadCollection(new LevelSessionsCollection(), 'your_sessions', {cache: false}, 0).model
+      @listenToOnce @sessions, 'sync', @onSessionsLoaded
+      unless @terrain
+        @campaigns = @supermodel.loadCollection(new CampaignsCollection(), 'campaigns', null, 1).model
+        @listenToOnce @campaigns, 'sync', @onCampaignsLoaded
+        return
 
     @campaign = new Campaign({_id:@terrain})
-    @campaign.saveBackups = @editorMode
-    @campaign = @supermodel.loadModel(@campaign, 'campaign').model
+    @campaign = @supermodel.loadModel(@campaign).model
 
     # Temporary attempt to make sure all earned rewards are accounted for. Figure out a better solution...
     @earnedAchievements = new CocoCollection([], {url: '/db/earned_achievement', model:EarnedAchievement, project: ['earnedRewards']})
@@ -155,7 +158,7 @@ module.exports = class CampaignView extends RootView
     @preloadTopHeroes() unless me.get('heroConfig')?.thangType
     @$el.find('#campaign-status').delay(4000).animate({top: "-=58"}, 1000) unless @terrain is 'dungeon'
     if @terrain and me.get('anonymous') and me.get('lastLevel') is 'shadow-guard' and me.level() < 4
-      @openModalView new AuthModal supermodel: @supermodel, showSignupRationale: true, mode: 'signup'
+      @openModalView new CreateAccountModal supermodel: @supermodel, showSignupRationale: true
     else if @terrain and me.get('name') and me.get('lastLevel') in ['forgetful-gemsmith', 'signs-and-portents'] and me.level() < 5 and not (me.get('ageRange') in ['18-24', '25-34', '35-44', '45-100']) and not storage.load('sent-parent-email') and not me.isPremium()
       @openModalView new ShareProgressModal()
 
@@ -173,6 +176,8 @@ module.exports = class CampaignView extends RootView
     if me.level() < 12 and @terrain is 'dungeon' and not @editorMode
       reject = if me.getFourthLevelGroup() is 'signs-and-portents' then 'forgetful-gemsmith' else 'signs-and-portents'
       context.levels = _.reject context.levels, slug: reject
+    if me.isOnFreeOnlyServer()
+      context.levels = _.reject context.levels, 'requiresSubscription'
     @annotateLevel level for level in context.levels
     count = @countLevels context.levels
     context.levelsCompleted = count.completed
@@ -187,10 +192,13 @@ module.exports = class CampaignView extends RootView
     context.levelDifficultyMap = @levelDifficultyMap
     context.levelPlayCountMap = @levelPlayCountMap
     context.isIPadApp = application.isIPadApp
+    context.picoCTF = window.serverConfig.picoCTF
     context.requiresSubscription = @requiresSubscription
     context.editorMode = @editorMode
     context.adjacentCampaigns = _.filter _.values(_.cloneDeep(@campaign?.get('adjacentCampaigns') or {})), (ac) =>
-      return false if ac.showIfUnlocked and (ac.showIfUnlocked not in me.levels()) and not @editorMode
+      if ac.showIfUnlocked and not @editorMode
+        return false if _.isString(ac.showIfUnlocked) and ac.showIfUnlocked not in me.levels()
+        return false if _.isArray(ac.showIfUnlocked) and _.intersection(ac.showIfUnlocked, me.levels()).length <= 0
       ac.name = utils.i18n ac, 'name'
       styles = []
       styles.push "color: #{ac.color}" if ac.color
@@ -220,7 +228,10 @@ module.exports = class CampaignView extends RootView
             campaign.locked = true
       for campaign in @campaigns.models
         for acID, ac of campaign.get('adjacentCampaigns') ? {}
-          _.find(@campaigns.models, id: acID)?.locked = false if ac.showIfUnlocked in me.levels()
+          if _.isString(ac.showIfUnlocked)
+            _.find(@campaigns.models, id: acID)?.locked = false if ac.showIfUnlocked in me.levels()
+          else if _.isArray(ac.showIfUnlocked)
+            _.find(@campaigns.models, id: acID)?.locked = false if _.intersection(ac.showIfUnlocked, me.levels()).length > 0
 
     context
 
@@ -257,9 +268,15 @@ module.exports = class CampaignView extends RootView
     return unless @getQueryVariable 'signup'
     return if me.get('email')
     @endHighlight()
-    authModal = new AuthModal supermodel: @supermodel
+    authModal = new CreateAccountModal supermodel: @supermodel
     authModal.mode = 'signup'
     @openModalView authModal
+
+  showAds: ->
+    return false # No ads for now.
+    if application.isProduction() && !me.isPremium() && !me.isTeacher() && !window.serverConfig.picoCTF
+      return me.getCampaignAdsGroup() is 'leaderboard-ads'
+    false
 
   annotateLevel: (level) ->
     level.position ?= { x: 10, y: 10 }
@@ -267,8 +284,7 @@ module.exports = class CampaignView extends RootView
     level.locked = true if level.slug is 'kithgard-mastery' and @calculateExperienceScore() is 0
     level.locked = false if @levelStatusMap[level.slug] in ['started', 'complete']
     level.locked = false if @editorMode
-    level.locked = false if @campaign?.get('name') is 'Auditions'
-    level.locked = false if @campaign?.get('name') is 'Intro'
+    level.locked = false if @campaign?.get('name') in ['Auditions', 'Intro']
     level.locked = false if me.isInGodMode()
     #level.locked = false if level.slug is 'robot-ragnarok'
     level.disabled = true if level.adminOnly and @levelStatusMap[level.slug] not in ['started', 'complete']
@@ -276,10 +292,25 @@ module.exports = class CampaignView extends RootView
     level.color = 'rgb(255, 80, 60)'
     if level.requiresSubscription
       level.color = 'rgb(80, 130, 200)'
+    if level.adventurer
+      level.color = 'rgb(200, 80, 200)'
     if unlocksHero = _.find(level.rewards, 'hero')?.hero
       level.unlocksHero = unlocksHero
     if level.unlocksHero
       level.purchasedHero = level.unlocksHero in (me.get('purchased')?.heroes or [])
+
+    if window.serverConfig.picoCTF
+      if problem = _.find(@picoCTFProblems or [], pid: level.picoCTFProblem)
+        level.locked = false if problem.unlocked or level.slug is 'digital-graffiti'
+        #level.locked = false  # Testing to see all levels
+        level.description = """
+          ### #{problem.name}
+          #{level.description or problem.description}
+
+          #{problem.category} - #{problem.score} points
+        """
+        level.color = 'rgb(80, 130, 200)' if problem.solved
+
     level.hidden = level.locked
     if level.concepts?.length
       level.displayConcepts = level.concepts
@@ -338,18 +369,22 @@ module.exports = class CampaignView extends RootView
     adultPoint = me.get('ageRange') in ['18-24', '25-34', '35-44', '45-100']  # They have to have answered the poll for this, likely after Shadow Guard.
     speedPoints = 0
     for [levelSlug, speedThreshold] in [['dungeons-of-kithgard', 50], ['gems-in-the-deep', 55], ['shadow-guard', 55], ['forgetful-gemsmith', 40], ['true-names', 40]]
-      if _.find(@sessions.models, (session) -> session.get('levelID') is levelSlug)?.attributes.playtime <= speedThreshold
+      if _.find(@sessions?.models, (session) -> session.get('levelID') is levelSlug)?.attributes.playtime <= speedThreshold
         ++speedPoints
     experienceScore = adultPoint + speedPoints  # 0-6 score of how likely we think they are to be experienced and ready for Kithgard Mastery
     return experienceScore
 
   createLine: (o1, o2) ->
-    p1 = x: o1.x, y: 0.66 * o1.y + 0.5
-    p2 = x: o2.x, y: 0.66 * o2.y + 0.5
+    mapHeight = parseFloat($(".map").css("height"))
+    mapWidth = parseFloat($(".map").css("width"))
+    return unless mapHeight > 0
+    ratio =  mapWidth / mapHeight
+    p1 = x: o1.x, y: o1.y / ratio - 0.5
+    p2 = x: o2.x, y: o2.y / ratio
     length = Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y))
     angle = Math.atan2(p1.y - p2.y, p2.x - p1.x) * 180 / Math.PI
     transform = "rotate(#{angle}deg)"
-    line = $('<div>').appendTo('.map').addClass('next-level-line').css(transform: transform, width: length + '%', left: o1.x + '%', bottom: (o1.y + 0.5) + '%')
+    line = $('<div>').appendTo('.map').addClass('next-level-line').css(transform: transform, width: length + '%', left: o1.x + '%', bottom: (o1.y - 0.5) + '%')
     line.append($('<div class="line">')).append($('<div class="point">'))
 
   applyCampaignStyles: ->
@@ -376,15 +411,16 @@ module.exports = class CampaignView extends RootView
     @particleMan.removeEmitters()
     @particleMan.attach @$el.find('.map')
     for level in @campaign.renderedLevels ? {}
-      particleKey = ['level', @terrain.replace('-branching-test', '')]
-      particleKey.push level.type if level.type and not (level.type in ['hero', 'course'])
+      terrain = @terrain.replace('-branching-test', '').replace(/(campaign-)?(game|web)-dev-\d/, 'forest').replace('intro', 'dungeon')
+      particleKey = ['level', terrain]
+      particleKey.push level.type if level.type and not (level.type in ['hero', 'course'])  # Would use isType, but it's not a Level model
       particleKey.push 'replayable' if level.replayable
       particleKey.push 'premium' if level.requiresSubscription
       particleKey.push 'gate' if level.slug in ['kithgard-gates', 'siege-of-stonehold', 'clash-of-clones', 'summits-gate']
       particleKey.push 'hero' if level.unlocksHero and not level.unlockedHero
       #particleKey.push 'item' if level.slug is 'robot-ragnarok'  # TODO: generalize
       continue if particleKey.length is 2  # Don't show basic levels
-      continue unless level.hidden or _.intersection(particleKey, ['item', 'hero-ladder', 'replayable']).length
+      continue unless level.hidden or _.intersection(particleKey, ['item', 'hero-ladder', 'replayable', 'game-dev']).length
       @particleMan.addEmitter level.position.x / 100, level.position.y / 100, particleKey.join('-')
 
   onMouseEnterPortals: (e) ->
@@ -408,7 +444,7 @@ module.exports = class CampaignView extends RootView
     return if 0.2 < fraction < 0.8
     direction = if fraction < 0.5 then 1 else -1
     magnitude = 0.2 * bodyWidth * (if direction is -1 then fraction - 0.8 else 0.2 - fraction) / 0.2
-    portalsWidth = 1902  # TODO: if we add campaigns or change margins, this will get out of date...
+    portalsWidth = 2536  # TODO: if we add campaigns or change margins, this will get out of date...
     scrollTo = $portals.offset().left + direction * magnitude
     scrollTo = Math.max bodyWidth - portalsWidth, scrollTo
     scrollTo = Math.min 0, scrollTo
@@ -421,7 +457,7 @@ module.exports = class CampaignView extends RootView
         @levelStatusMap[session.get('levelID')] = if session.get('state')?.complete then 'complete' else 'started'
       @levelDifficultyMap[session.get('levelID')] = session.get('state').difficulty if session.get('state')?.difficulty
     @render()
-    @loadUserPollsRecord() unless me.get 'anonymous'
+    @loadUserPollsRecord() unless me.get('anonymous') or window.serverConfig.picoCTF
 
   onCampaignsLoaded: (e) ->
     @render()
@@ -429,11 +465,11 @@ module.exports = class CampaignView extends RootView
   preloadLevel: (levelSlug) ->
     levelURL = "/db/level/#{levelSlug}"
     level = new Level().setURL levelURL
-    level = @supermodel.loadModel(level, 'level', null, 0).model
+    level = @supermodel.loadModel(level, null, 0).model
     sessionURL = "/db/level/#{levelSlug}/session"
     @preloadedSession = new LevelSession().setURL sessionURL
     @listenToOnce @preloadedSession, 'sync', @onSessionPreloaded
-    @preloadedSession = @supermodel.loadModel(@preloadedSession, 'level_session', {cache: false}).model
+    @preloadedSession = @supermodel.loadModel(@preloadedSession, {cache: false}).model
     @preloadedSession.levelSlug = levelSlug
 
   onSessionPreloaded: (session) ->
@@ -447,7 +483,7 @@ module.exports = class CampaignView extends RootView
 
   onClickMap: (e) ->
     @$levelInfo?.hide()
-    if @sessions.models.length < 3
+    if @sessions?.models.length < 3
       # Restore the next level higlight for very new players who might otherwise get lost.
       @highlightElement '.level.next', delay: 500, duration: 60000, rotation: 0, sides: ['top']
 
@@ -482,7 +518,8 @@ module.exports = class CampaignView extends RootView
     canPlayAnyway = not @requiresSubscription or level.adventurer or @levelStatusMap[level.slug]
     if requiresSubscription and not canPlayAnyway
       @openModalView new SubscribeModal()
-      window.tracker?.trackEvent 'Show subscription modal', category: 'Subscription', label: 'map level clicked', level: levelSlug
+      # TODO: Added levelID on 2/9/16. Remove level property and associated AnalyticsLogEvent 'properties.level' index later.
+      window.tracker?.trackEvent 'Show subscription modal', category: 'Subscription', label: 'map level clicked', level: levelSlug, levelID: levelSlug
     else
       @startLevel levelElement
       window.tracker?.trackEvent 'Clicked Start Level', category: 'World Map', levelID: levelSlug
@@ -499,17 +536,18 @@ module.exports = class CampaignView extends RootView
     levelSlug = levelElement.data 'level-slug'
     session = @preloadedSession if @preloadedSession?.loaded and @preloadedSession.levelSlug is levelSlug
     @setupManager = new LevelSetupManager supermodel: @supermodel, levelID: levelSlug, levelPath: levelElement.data('level-path'), levelName: levelElement.data('level-name'), hadEverChosenHero: @hadEverChosenHero, parent: @, session: session
-    @$levelInfo.find('.level-info, .progress').toggleClass('hide')
-    @listenToOnce @setupManager, 'open', ->
+    unless @setupManager?.navigatingToPlay
       @$levelInfo.find('.level-info, .progress').toggleClass('hide')
-      @$levelInfo?.hide()
-    @setupManager.open()
+      @listenToOnce @setupManager, 'open', ->
+        @$levelInfo?.find('.level-info, .progress').toggleClass('hide')
+        @$levelInfo?.hide()
+      @setupManager.open()
 
   onClickViewSolutions: (e) ->
     levelElement = $(e.target).parents('.level-info-container')
     levelSlug = levelElement.data('level-slug')
     level = _.find _.values(@campaign.get('levels')), slug: levelSlug
-    if level.type in ['hero-ladder', 'course-ladder']
+    if level.type in ['hero-ladder', 'course-ladder']  # Would use isType, but it's not a Level model
       Backbone.Mediator.publish 'router:navigate', route: "/play/ladder/#{levelSlug}", viewClass: 'views/ladder/LadderView', viewArgs: [{supermodel: @supermodel}, levelSlug]
     else
       @showLeaderboard levelSlug
@@ -535,6 +573,7 @@ module.exports = class CampaignView extends RootView
     aspectRatio = mapWidth / mapHeight
     pageWidth = @$el.width()
     pageHeight = @$el.height()
+    pageHeight -= adContainerHeight if adContainerHeight = $('.ad-container').outerHeight()
     widthRatio = pageWidth / mapWidth
     heightRatio = pageHeight / mapHeight
     # Make sure we can see the whole map, fading to background in one dimension.
@@ -583,12 +622,13 @@ module.exports = class CampaignView extends RootView
       @$el.find(".course-version[data-level-original='#{levelOriginal}']").removeClass('hidden').data('course-id': courseInstance.get('courseID'), 'course-instance-id': courseInstance.id)
 
   preloadTopHeroes: ->
+    return if window.serverConfig.picoCTF
     for heroID in ['captain', 'knight']
       url = "/db/thang.type/#{ThangType.heroes[heroID]}/version"
       continue if @supermodel.getModel url
       fullHero = new ThangType()
       fullHero.setURL url
-      @supermodel.loadModel fullHero, 'thang'
+      @supermodel.loadModel fullHero
 
   updateVolume: (volume) ->
     volume ?= me.get('volume') ? 1.0
@@ -638,7 +678,7 @@ module.exports = class CampaignView extends RootView
     console.error "CampaignView hero update couldn't find hero slug for original:", hero
 
   onClickPortalCampaign: (e) ->
-    campaign = $(e.target).closest('.campaign')
+    campaign = $(e.target).closest('.campaign, .beta-campaign')
     return if campaign.is('.locked') or campaign.is('.silhouette')
     campaignSlug = campaign.data('campaign-slug')
     Backbone.Mediator.publish 'router:navigate',
@@ -659,7 +699,7 @@ module.exports = class CampaignView extends RootView
       else
         console.log 'Poll will be ready in', (22 * 60 * 60 * 1000 - interval) / (60 * 60 * 1000), 'hours.'
     @listenToOnce @userPollsRecord, 'sync', onRecordSync
-    @userPollsRecord = @supermodel.loadModel(@userPollsRecord, 'user_polls_record', null, 0).model
+    @userPollsRecord = @supermodel.loadModel(@userPollsRecord, null, 0).model
     onRecordSync.call @ if @userPollsRecord.loaded
 
   loadPoll: ->
@@ -677,7 +717,7 @@ module.exports = class CampaignView extends RootView
       delete @poll
     @listenToOnce @poll, 'sync', onPollSync
     @listenToOnce @poll, 'error', onPollError
-    @poll = @supermodel.loadModel(@poll, 'poll', null, 0).model
+    @poll = @supermodel.loadModel(@poll, null, 0).model
     onPollSync.call @ if @poll.loaded
 
   activatePoll: ->

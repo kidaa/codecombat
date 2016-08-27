@@ -57,12 +57,14 @@ module.exports = Lank = class Lank extends CocoClass
     'level:set-letterbox': 'onSetLetterbox'
     'surface:ticked': 'onSurfaceTicked'
     'sprite:move': 'onMove'
-
-  constructor: (@thangType, options) ->
+    
+  constructor: (@thangType, options={}) ->
     super()
     spriteName = @thangType.get('name')
     @isMissile = /(Missile|Arrow|Spear|Bolt)/.test(spriteName) and not /(Tower|Charge)/.test(spriteName)
     @options = _.extend($.extend(true, {}, @options), options)
+    @gameUIState = @options.gameUIState
+    @handleEvents = @options.handleEvents
     @setThang @options.thang
     if @thang?
       options = @thang?.getLankOptions?()
@@ -496,6 +498,7 @@ module.exports = Lank = class Lank extends CocoClass
     newEvent = sprite: @, thang: @thang, originalEvent: e, canvas: p.canvas
     @trigger ourEventName, newEvent
     Backbone.Mediator.publish ourEventName, newEvent
+    @gameUIState.trigger(ourEventName, newEvent)
 
   addHealthBar: ->
     return unless @thang?.health? and 'health' in (@thang?.hudProperties ? []) and @options.floatingLayer
@@ -645,6 +648,10 @@ module.exports = Lank = class Lank extends CocoClass
   addMark: (name, layer, thangType=null) ->
     @marks[name] ?= new Mark name: name, lank: @, camera: @options.camera, layer: layer ? @options.groundLayer, thangType: thangType
     @marks[name]
+    
+  removeMark: (name) ->
+    @marks[name].destroy()
+    delete @marks[name]
 
   notifySpeechUpdated: (e) ->
     e = _.clone(e)
@@ -684,7 +691,10 @@ module.exports = Lank = class Lank extends CocoClass
     return unless @thang
     blurb = if @thang.health <= 0 then null else @thang.sayMessage  # Dead men tell no tales
     blurb = null if blurb in ['For Thoktar!', 'Bones!', 'Behead!', 'Destroy!', 'Die, humans!']  # Let's just hear, not see, these ones.
-    labelStyle = if /Hero Placeholder/.test(@thang.id) then Label.STYLE_DIALOGUE else Label.STYLE_SAY
+    if /Hero Placeholder/.test(@thang.id)
+      labelStyle = Label.STYLE_DIALOGUE
+    else
+      labelStyle = @thang.labelStyle ? Label.STYLE_SAY
     @addLabel 'say', labelStyle if blurb
     if @labels.say?.setText blurb
       @notifySpeechUpdated blurb: blurb

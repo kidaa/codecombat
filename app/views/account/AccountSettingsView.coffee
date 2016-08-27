@@ -3,7 +3,6 @@ template = require 'templates/account/account-settings-view'
 {me} = require 'core/auth'
 forms = require 'core/forms'
 User = require 'models/User'
-AuthModal = require 'views/core/AuthModal'
 ConfirmModal = require 'views/editor/modal/ConfirmModal'
 {logoutUser, me} = require('core/auth')
 
@@ -19,15 +18,12 @@ module.exports = class AccountSettingsView extends CocoView
     'click #profile-photo-panel-body': 'onClickProfilePhotoPanelBody'
     'click #delete-account-btn': 'onClickDeleteAccountButton'
     'click #reset-progress-btn': 'onClickResetProgressButton'
+    'click .resend-verification-email': 'onClickResendVerificationEmail'
 
   constructor: (options) ->
     super options
     require('core/services/filepicker')() unless window.application.isIPadApp  # Initialize if needed
     @uploadFilePath = "db/user/#{me.id}"
-
-  afterInsert: ->
-    super()
-    @openModalView new AuthModal() if me.get('anonymous')
 
   getEmailSubsDict: ->
     subs = {}
@@ -64,10 +60,10 @@ module.exports = class AccountSettingsView extends CocoView
   onClickDeleteAccountButton: (e) ->
     @validateCredentialsForDestruction @$el.find('#delete-account-form'), =>
       renderData =
-        confirmTitle: 'Are you really sure?'
-        confirmBody: 'This will completely delete your account. This action CANNOT be undone. Are you entirely sure?'
-        confirmDecline: 'Not really'
-        confirmConfirm: 'Definitely'
+        title: 'Are you really sure?'
+        body: 'This will completely delete your account. This action CANNOT be undone. Are you entirely sure?'
+        decline: 'Cancel'
+        confirm: 'DELETE Your Account'
       confirmModal = new ConfirmModal renderData
       confirmModal.on 'confirm', @deleteAccount
       @openModalView confirmModal
@@ -75,26 +71,32 @@ module.exports = class AccountSettingsView extends CocoView
   onClickResetProgressButton: ->
     @validateCredentialsForDestruction @$el.find('#reset-progress-form'), =>
       renderData =
-        confirmTitle: 'Are you really sure?'
-        confirmBody: 'This will completely erase your progress: code, levels, achievements, earned gems, etc. This action CANNOT be undone. Are you entirely sure?'
-        confirmDecline: 'Not really'
-        confirmConfirm: 'Definitely'
+        title: 'Are you really sure?'
+        body: 'This will completely erase your progress: code, levels, achievements, earned gems, and course work. This action CANNOT be undone. Are you entirely sure?'
+        decline: 'Cancel'
+        confirm: 'Erase ALL Progress'
       confirmModal = new ConfirmModal renderData
       confirmModal.on 'confirm', @resetProgress
       @openModalView confirmModal
 
+  onClickResendVerificationEmail: (e) ->
+    $.post me.getRequestVerificationEmailURL(), ->
+      link = $(e.currentTarget)
+      link.find('.resend-text').addClass('hide')
+      link.find('.sent-text').removeClass('hide')
+
   validateCredentialsForDestruction: ($form, onSuccess) ->
     forms.clearFormAlerts($form)
-    enteredEmail = $form.find('input[type="email"]').val()
-    enteredPassword = $form.find('input[type="password"]').val()
-    if enteredEmail and enteredEmail is me.get('email')
+    enteredEmailOrUsername = $form.find('input[name="emailOrUsername"]').val()
+    enteredPassword = $form.find('input[name="password"]').val()
+    if enteredEmailOrUsername and enteredEmailOrUsername in [me.get('email'), me.get('name')]
       isPasswordCorrect = false
       toBeDelayed = true
       $.ajax
         url: '/auth/login'
         type: 'POST'
         data:
-          username: enteredEmail
+          username: enteredEmailOrUsername
           password: enteredPassword
         parse: true
         error: (error) ->
@@ -223,9 +225,16 @@ module.exports = class AccountSettingsView extends CocoView
     return unless res
 
     res.error =>
-      errors = JSON.parse(res.responseText)
-      forms.applyErrorsToForm(@$el, errors)
-      $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
+      if res.responseJSON?.property
+        errors = res.responseJSON
+        forms.applyErrorsToForm(@$el, errors)
+        $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
+      else
+        noty
+          text: res.responseJSON?.message or res.responseText
+          type: 'error'
+          layout: 'topCenter'
+          timeout: 5000
       @trigger 'save-user-error'
     res.success (model, response, options) =>
       @trigger 'save-user-success'
@@ -257,6 +266,8 @@ module.exports = class AccountSettingsView extends CocoView
   grabOtherData: ->
     @$el.find('#name-input').val @suggestedName if @suggestedName
     me.set 'name', @$el.find('#name-input').val()
+    me.set 'firstName', @$el.find('#first-name-input').val()
+    me.set 'lastName', @$el.find('#last-name-input').val()
     me.set 'email', @$el.find('#email').val()
     for emailName, enabled of @getSubscriptions()
       me.setEmailSubscription emailName, enabled
@@ -265,12 +276,11 @@ module.exports = class AccountSettingsView extends CocoView
 
     permissions = []
 
-    adminCheckbox = @$el.find('#admin')
-    if adminCheckbox.length
-      permissions.push 'admin' if adminCheckbox.prop('checked')
-
-    godmodeCheckbox = @$el.find('#godmode')
-    if godmodeCheckbox.length
-      permissions.push 'godmode' if godmodeCheckbox.prop('checked')
-
-    me.set('permissions', permissions)
+    unless application.isProduction()
+      adminCheckbox = @$el.find('#admin')
+      if adminCheckbox.length
+        permissions.push 'admin' if adminCheckbox.prop('checked')
+      godmodeCheckbox = @$el.find('#godmode')
+      if godmodeCheckbox.length
+        permissions.push 'godmode' if godmodeCheckbox.prop('checked')
+      me.set('permissions', permissions)

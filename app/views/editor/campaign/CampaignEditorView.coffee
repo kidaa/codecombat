@@ -32,7 +32,7 @@ module.exports = class CampaignEditorView extends RootView
   constructor: (options, @campaignHandle) ->
     super(options)
     @campaign = new Campaign({_id:@campaignHandle})
-    @supermodel.loadModel(@campaign, 'campaign')
+    @supermodel.loadModel(@campaign)
     @listenToOnce @campaign, 'sync', (model, response, jqXHR) ->
       @campaign.set '_id', response._id
       @campaign.url = -> '/db/campaign/' + @id
@@ -60,6 +60,14 @@ module.exports = class CampaignEditorView extends RootView
     @listenToOnce @levels, 'sync', @onFundamentalLoaded
     @listenToOnce @achievements, 'sync', @onFundamentalLoaded
 
+  onLeaveMessage: ->
+    @propagateCampaignIndexes()
+    for model in @toSave.models
+      diff = model.getDelta()
+      if _.size(diff)
+        console.log 'model, diff', model, diff
+        return 'You have changes!'
+
   loadThangTypeNames: ->
     # Load the names of the ThangTypes that this level's Treema nodes might want to display.
     originals = []
@@ -72,7 +80,7 @@ module.exports = class CampaignEditorView extends RootView
       thangType = new ThangType()
       thangType.setProjection(thangTypeProject)
       thangType.setURL("/db/thang.type/#{original}/version")
-      @supermodel.loadModel(thangType, 'thang')
+      @supermodel.loadModel(thangType)
 
   onFundamentalLoaded: ->
     # Load any levels which haven't been denormalized into our campaign.
@@ -82,7 +90,7 @@ module.exports = class CampaignEditorView extends RootView
       model = new Level({})
       model.setProjection Campaign.denormalizedLevelProperties
       model.setURL("/db/level/#{level.original}/version")
-      @levels.add @supermodel.loadModel(model, 'level').model
+      @levels.add @supermodel.loadModel(model).model
       achievements = new RelatedAchievementsCollection level.original
       achievements.setProjection achievementProject
       @supermodel.loadCollection achievements, 'achievements'
@@ -109,20 +117,20 @@ module.exports = class CampaignEditorView extends RootView
               rewardObject.hero = reward
               thangType = new ThangType({}, {project: thangTypeProject})
               thangType.setURL("/db/thang.type/#{reward}/version")
-              @supermodel.loadModel(thangType, 'thang')
+              @supermodel.loadModel(thangType)
 
             if rewardType is 'levels'
               rewardObject.level = reward
               if not @levels.findWhere({original: reward})
                 level = new Level({}, {project: Campaign.denormalizedLevelProperties})
                 level.setURL("/db/level/#{reward}/version")
-                @supermodel.loadModel(level, 'level')
+                @supermodel.loadModel(level)
 
             if rewardType is 'items'
               rewardObject.item = reward
               thangType = new ThangType({}, {project: thangTypeProject})
               thangType.setURL("/db/thang.type/#{reward}/version")
-              @supermodel.loadModel(thangType, 'thang')
+              @supermodel.loadModel(thangType)
 
             rewards.push rewardObject
       campaignLevel.rewards = rewards
@@ -143,6 +151,18 @@ module.exports = class CampaignEditorView extends RootView
       @updateRewardsForLevel model, level.rewards
 
     super()
+    
+  propagateCampaignIndexes: ->
+    campaignLevels = $.extend({}, @campaign.get('levels'))
+    index = 0
+    for levelOriginal, campaignLevel of campaignLevels
+      if @campaign.get('type') is 'course'
+        level = @levels.findWhere({original: levelOriginal})
+        if level and level.get('campaignIndex') isnt index
+          level.set('campaignIndex', index)
+      campaignLevel.campaignIndex = index
+      index += 1
+      @campaign.set('levels', campaignLevels)
 
   onClickPatches: (e) ->
     @patchesView = @insertSubView(new PatchesView(@campaign), @$el.find('.patches-view'))
@@ -160,6 +180,7 @@ module.exports = class CampaignEditorView extends RootView
           break
 
   onClickSaveButton: ->
+    @propagateCampaignIndexes()
     @toSave.set @toSave.filter (m) -> m.hasLocalChanges()
     @openModalView new SaveCampaignModal({}, @toSave)
 
@@ -217,6 +238,14 @@ module.exports = class CampaignEditorView extends RootView
     @toSave.add @campaign
     @campaign.set key, value for key, value of @treema.data
     @campaignView.setCampaign(@campaign)
+
+  onTreemaSelectionChanged: (e, node) =>
+    return unless node[0]?.data?.original?
+    elem = @$("div[data-level-original='#{node[0].data.original}']")
+    elem.toggle('pulsate')
+    setTimeout ()->
+      elem.toggle('pulsate')
+    , 1000
 
   onTreemaDoubleClicked: (e, node) =>
     path = node.getPath()

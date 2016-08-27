@@ -1,9 +1,10 @@
 log = require 'winston'
 async = require 'async'
 bayes = new (require 'bayesian-battle')()
-LevelSession = require '../../levels/sessions/LevelSession'
-User = require '../../users/User'
+LevelSession = require '../../models/LevelSession'
+User = require '../../models/User'
 perfmon = require '../../commons/perfmon'
+LZString = require 'lz-string'
 
 SIMULATOR_VERSION = 3
 
@@ -26,11 +27,15 @@ module.exports.sendResponseObject = (res, object) ->
   res.send(object)
   res.end()
 
-
 module.exports.formatSessionInformation = (session) ->
+  heroID = if session.team is 'ogres' then 'hero-placeholder-1' else 'hero-placeholder'
+  submittedCode = {}
+  submittedCode[heroID] = plan: LZString.compressToUTF16(session.submittedCode?[heroID]?.plan ? '')
+
+  _id: session._id
   sessionID: session._id
   team: session.team ? 'No team'
-  transpiledCode: session.transpiledCode
+  submittedCode: submittedCode
   submittedCodeLanguage: session.submittedCodeLanguage
   teamSpells: session.teamSpells ? {}
   levelID: session.levelID
@@ -41,16 +46,13 @@ module.exports.formatSessionInformation = (session) ->
   shouldUpdateLastOpponentSubmitDateForLeague: session.shouldUpdateLastOpponentSubmitDateForLeague
 
 module.exports.calculateSessionScores = (callback) ->
-  sessionIDs = _.pluck @clientResponseObject.sessions, 'sessionID'
+  sessionIDs = _.map @clientResponseObject.sessions, 'sessionID'
   async.map sessionIDs, retrieveOldSessionData.bind(@), (err, oldScores) =>
     if err? then return callback err, {error: 'There was an error retrieving the old scores'}
-    try
-      oldScoreArray = _.toArray putRankingFromMetricsIntoScoreObject @clientResponseObject, oldScores
-      newScoreArray = updatePlayerSkills oldScoreArray
-      createSessionScoreUpdate.call @, scoreObject for scoreObject in newScoreArray
-      callback err, newScoreArray
-    catch e
-      callback e
+    oldScoreArray = _.toArray putRankingFromMetricsIntoScoreObject @clientResponseObject, oldScores
+    newScoreArray = updatePlayerSkills oldScoreArray
+    createSessionScoreUpdate.call @, scoreObject for scoreObject in newScoreArray
+    callback null, newScoreArray
 
 retrieveOldSessionData = (sessionID, callback) ->
   formatOldScoreObject = (session) =>
@@ -151,7 +153,7 @@ module.exports.addMatchToSessionsAndUpdate = (newScoreObject, callback) ->
   #log.info "Match object computed, result: #{JSON.stringify(matchObject, null, 2)}"
   #log.info 'Writing match object to database...'
   #use bind with async to do the writes
-  sessionIDs = _.pluck @clientResponseObject.sessions, 'sessionID'
+  sessionIDs = _.map @clientResponseObject.sessions, 'sessionID'
   async.each sessionIDs, updateMatchesInSession.bind(@, matchObject), (err) ->
     callback err
 

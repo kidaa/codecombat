@@ -6,15 +6,18 @@ module.exports =
     thang: {type: 'object'}
     preload: {type: 'boolean'}
     realTime: {type: 'boolean'}
+    justBegin: {type: 'boolean'}
 
   'tome:cast-spells': c.object {title: 'Cast Spells', description: 'Published when spells are cast', required: ['spells', 'preload', 'realTime', 'submissionCount', 'flagHistory', 'difficulty', 'god']},
     spells: {type: 'object'}
     preload: {type: 'boolean'}
     realTime: {type: 'boolean'}
     submissionCount: {type: 'integer'}
+    fixedSeed: {type: ['integer', 'undefined']}
     flagHistory: {type: 'array'}
     difficulty: {type: 'integer'}
     god: {type: 'object'}
+    justBegin: {type: 'boolean'}
 
   'tome:manual-cast': c.object {title: 'Manually Cast Spells', description: 'Published when you wish to manually recast all spells', required: []},
     realTime: {type: 'boolean'}
@@ -37,8 +40,6 @@ module.exports =
     spellID: {type: 'string'}
     variableChain: c.array {}, {type: 'string'}
     frame: {type: 'integer', minimum: 0}
-
-  'tome:toggle-spell-list': c.object {title: 'Toggle Spell List', description: 'Published when you toggle the dropdown for a thang\'s spells'}
 
   'tome:reload-code': c.object {title: 'Reload Code', description: 'Published when you reset a spell to its original source', required: []},
     spell: {type: 'object'}
@@ -90,10 +91,6 @@ module.exports =
     problems: {type: 'array'}
     isCast: {type: 'boolean'}
 
-  'tome:spell-shown': c.object {title: 'Spell Shown', description: 'Published when we show a spell', required: ['thang', 'spell']},
-    thang: {type: 'object'}
-    spell: {type: 'object'}
-
   'tome:change-language': c.object {title: 'Tome Change Language', description: 'Published when the Tome should update its programming language', required: ['language']},
     language: {type: 'string'}
     reload: {type: 'boolean', description: 'Whether player code should reload to the default when the language changes.'}
@@ -106,12 +103,12 @@ module.exports =
 
   'tome:change-config': c.object {title: 'Change Config', description: 'Published when you change your tome settings'}
 
-  'tome:update-snippets': c.object {title: 'Update Snippets', description: 'Published when we need to add Zatanna snippets', required: ['propGroups', 'allDocs']},
+  'tome:update-snippets': c.object {title: 'Update Snippets', description: 'Published when we need to add autocomplete snippets', required: ['propGroups', 'allDocs']},
     propGroups: {type: 'object'}
     allDocs: {type: 'object'}
     language: {type: 'string'}
 
-  'tome:insert-snippet': c.object {title: 'Insert Snippet', description: 'Published when we need to insert a Zatanna snippet', required: ['doc', 'language', 'formatted']},
+  'tome:insert-snippet': c.object {title: 'Insert Snippet', description: 'Published when we need to insert a autocomplete snippet', required: ['doc', 'language', 'formatted']},
     doc: {type: 'object'}
     language: {type: 'string'}
     formatted: {type: 'object'}
@@ -145,3 +142,7 @@ module.exports =
     lineOffsetPx: {type: ['number', 'undefined']}
   'tome:hide-problem-alert': c.object {title: 'Hide Problem Alert'}
   'tome:jiggle-problem-alert': c.object {title: 'Jiggle Problem Alert'}
+
+  'tome:html-updated': c.object {title: 'HTML Updated', required: ['html', 'create']},
+    html: {type: 'string', description: 'The full HTML to display'}
+    create: {type: 'boolean', description: 'Whether we should (re)create the DOM (as opposed to updating it)'}

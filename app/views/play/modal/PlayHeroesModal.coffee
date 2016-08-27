@@ -7,7 +7,7 @@ SpriteBuilder = require 'lib/sprites/SpriteBuilder'
 AudioPlayer = require 'lib/AudioPlayer'
 utils = require 'core/utils'
 BuyGemsModal = require 'views/play/modal/BuyGemsModal'
-AuthModal = require 'views/core/AuthModal'
+CreateAccountModal = require 'views/core/CreateAccountModal'
 Purchase = require 'models/Purchase'
 LayerAdapter = require 'lib/surface/LayerAdapter'
 Lank = require 'lib/surface/Lank'
@@ -111,10 +111,11 @@ module.exports = class PlayHeroesModal extends ModalView
         {id: 'python', name: "Python (#{$.i18n.t('choose_hero.default')})"}
         {id: 'javascript', name: 'JavaScript'}
         {id: 'coffeescript', name: "CoffeeScript (#{$.i18n.t('choose_hero.experimental')})"}
-        {id: 'clojure', name: "Clojure (#{$.i18n.t('choose_hero.experimental')})"}
         {id: 'lua', name: 'Lua'}
-        #{id: 'io', name: "Io (#{$.i18n.t('choose_hero.experimental')})"}
       ]
+
+      if me.isAdmin() or not application.isProduction()
+        @codeLanguageList.push {id: 'java', name: "Java (#{$.i18n.t('choose_hero.experimental')})"}
 
   onHeroChanged: (e) ->
     direction = e.direction  # 'left' or 'right'
@@ -136,7 +137,7 @@ module.exports = class PlayHeroesModal extends ModalView
       return fullHero
     fullHero = new ThangType()
     fullHero.setURL url
-    fullHero = (@supermodel.loadModel fullHero, 'thang').model
+    fullHero = (@supermodel.loadModel fullHero).model
     fullHero
 
   preloadHero: (heroIndex) ->
@@ -175,6 +176,7 @@ module.exports = class PlayHeroesModal extends ModalView
         m = multiplier
         m *= 0.75 if fullHero.get('slug') in ['knight', 'samurai', 'librarian', 'sorcerer', 'necromancer']  # These heroes are larger for some reason. Shrink 'em.
         m *= 0.4 if fullHero.get('slug') is 'goliath'  # Just too big!
+        m *= 0.9 if fullHero.get('slug') is 'champion'  # Gotta fit her hair in there
         layer.container.scaleX = layer.container.scaleY = m
         layer.container.children[0].x = 160/m
         layer.container.children[0].y = 250/m
@@ -234,7 +236,7 @@ module.exports = class PlayHeroesModal extends ModalView
     affordable = @visibleHero.get('gems') <= me.gems()
     if not affordable
       @playSound 'menu-button-click'
-      @askToBuyGems button
+      @askToBuyGems button unless me.isOnFreeOnlyServer()
     else if button.hasClass('confirm')
       @playSound 'menu-button-unlock-end'
       purchase = Purchase.makeFor(@visibleHero)
@@ -262,9 +264,8 @@ module.exports = class PlayHeroesModal extends ModalView
         button.removeClass('confirm').text($.i18n.t('play.unlock')) if e.target isnt button[0]
 
   askToSignUp: ->
-    authModal = new AuthModal supermodel: @supermodel
-    authModal.mode = 'signup'
-    return @openModalView authModal
+    createAccountModal = new CreateAccountModal supermodel: @supermodel
+    return @openModalView createAccountModal
 
   askToBuyGems: (unlockButton) ->
     @$el.find('.unlock-button').popover 'destroy'

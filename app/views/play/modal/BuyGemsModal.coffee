@@ -6,7 +6,11 @@ SubscribeModal = require 'views/core/SubscribeModal'
 Products = require 'collections/Products'
 
 module.exports = class BuyGemsModal extends ModalView
-  id: 'buy-gems-modal'
+  id: 
+    if (me.get('preferredLanguage',true) || 'en-US').split('-')[0] == 'nl'
+      'buy-gems-modal-nl'
+    else
+      'buy-gems-modal'
   template: template
   plain: true
 
@@ -37,6 +41,9 @@ module.exports = class BuyGemsModal extends ModalView
           @render()
 
   onLoaded: ->
+    @basicProduct = @products.findWhere { name: 'basic_subscription' }
+    if countrySpecificProduct = @products.findWhere { name: "#{me.get('country')}_basic_subscription" }
+      @basicProduct = countrySpecificProduct
     @products.reset @products.filter (product) -> _.string.startsWith(product.get('name'), 'gems_')
     super()
 
@@ -44,6 +51,8 @@ module.exports = class BuyGemsModal extends ModalView
     super()
     return unless @supermodel.finished()
     @playSound 'game-menu-open'
+    if @basicProduct
+      @$el.find('.subscription-gem-amount').text $.i18n.t('buy_gems.price').replace('{{gems}}', @basicProduct.get('gems'))
 
   onHidden: ->
     super()
@@ -63,6 +72,9 @@ module.exports = class BuyGemsModal extends ModalView
   onClickProductButton: (e) ->
     @playSound 'menu-button-click'
     productID = $(e.target).closest('button').val()
+    # Don't throw error when product is not found
+    if productID.length == 0
+      return
     product = @products.findWhere { name: productID }
 
     if application.isIPadApp

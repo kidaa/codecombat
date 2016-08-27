@@ -16,7 +16,7 @@ module.exports =
   'en-US': { nativeDescription: 'English (US)', englishDescription: 'English (US)' }
   'en-GB': { nativeDescription: 'English (UK)', englishDescription: 'English (UK)' }
   'zh-HANS': { nativeDescription: '简体中文', englishDescription: 'Chinese (Simplified)' }
-  'zh-HANT': { nativeDescription: '繁体中文', englishDescription: 'Chinese (Traditional)' }
+  'zh-HANT': { nativeDescription: '繁體中文', englishDescription: 'Chinese (Traditional)' }
   'ru': { nativeDescription: 'русский', englishDescription: 'Russian' }
   'es-ES': { nativeDescription: 'español (ES)', englishDescription: 'Spanish (Spain)' }
   'es-419': { nativeDescription: 'español (América Latina)', englishDescription: 'Spanish (Latin America)' }
@@ -36,11 +36,14 @@ module.exports =
   'fa': { nativeDescription: 'فارسی', englishDescription: 'Persian' }
   'gl': { nativeDescription: 'Galego', englishDescription: 'Galician' }
   'ko': { nativeDescription: '한국어', englishDescription: 'Korean' }
+  'haw': { nativeDescription: 'ʻŌlelo Hawaiʻi', englishDescription: 'Hawaiian' }
+  'he': { nativeDescription: 'עברית', englishDescription: 'Hebrew' }
+  'hr': { nativeDescription: 'hrvatski jezik', englishDescription: 'Croatian' }
+  'hu': { nativeDescription: 'magyar', englishDescription: 'Hungarian' }
   'id': { nativeDescription: 'Bahasa Indonesia', englishDescription: 'Indonesian' }
   'it': { nativeDescription: 'Italiano', englishDescription: 'Italian' }
-  'he': { nativeDescription: 'עברית', englishDescription: 'Hebrew' }
-  'hu': { nativeDescription: 'magyar', englishDescription: 'Hungarian' }
   'lt': { nativeDescription: 'lietuvių kalba', englishDescription: 'Lithuanian' }
+  'mi': { nativeDescription: 'te reo Māori', englishDescription: 'Māori' }
   'mk-MK': { nativeDescription: 'Македонски', englishDescription: 'Macedonian' }
   'hi': { nativeDescription: 'मानक हिन्दी', englishDescription: 'Hindi' }
   'ms': { nativeDescription: 'Bahasa Melayu', englishDescription: 'Bahasa Malaysia' }
