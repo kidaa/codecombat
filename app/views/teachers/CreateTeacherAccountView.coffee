@@ -6,6 +6,7 @@ AuthModal = require 'views/core/AuthModal'
 errors = require 'core/errors'
 User = require 'models/User'
 algolia = require 'core/services/algolia'
+State = require 'models/State'
 
 SIGNUP_REDIRECT = '/teachers/classes'
 DISTRICT_NCES_KEYS = ['district', 'district_id', 'district_schools', 'district_students', 'phone']
@@ -17,14 +18,16 @@ module.exports = class CreateTeacherAccountView extends RootView
 
   events:
     'click .login-link': 'onClickLoginLink'
-    'change form': 'onChangeForm'
-    'submit form': 'onSubmitForm'
+    'change form#signup-form': 'onChangeForm'
+    'submit form#signup-form': 'onSubmitForm'
     'click #gplus-signup-btn': 'onClickGPlusSignupButton'
     'click #facebook-signup-btn': 'onClickFacebookSignupButton'
     'change input[name="city"]': 'invalidateNCES'
     'change input[name="state"]': 'invalidateNCES'
     'change input[name="district"]': 'invalidateNCES'
     'change input[name="country"]': 'invalidateNCES'
+    'change input[name="email"]': 'onChangeEmail'
+    'change input[name="name"]': 'onChangeName'
 
   initialize: ->
     @trialRequest = new TrialRequest()
@@ -32,6 +35,19 @@ module.exports = class CreateTeacherAccountView extends RootView
     @trialRequests.fetchOwn()
     @supermodel.trackCollection(@trialRequests)
     window.tracker?.trackEvent 'Teachers Create Account Loaded', category: 'Teachers', ['Mixpanel']
+    @state = new State {
+      suggestedNameText: '...'
+      checkEmailState: 'standby' # 'checking', 'exists', 'available'
+      checkEmailValue: null
+      checkEmailPromise: null
+      checkNameState: 'standby' # same
+      checkNameValue: null
+      checkNamePromise: null
+      authModalInitialValues: {}
+    }
+    @listenTo @state, 'change:checkEmailState', -> @renderSelectors('.email-check')
+    @listenTo @state, 'change:checkNameState', -> @renderSelectors('.name-check')
+    @listenTo @state, 'change:error', -> @renderSelectors('.error-area')
 
   onLeaveMessage: ->
     if @formChanged
@@ -40,6 +56,11 @@ module.exports = class CreateTeacherAccountView extends RootView
   onLoaded: ->
     if @trialRequests.size()
       @trialRequest = @trialRequests.first()
+      @state.set({
+        authModalInitialValues: {
+          email: @trialRequest?.get('properties')?.email
+        }
+      })
     super()
 
   invalidateNCES: ->
@@ -73,7 +94,8 @@ module.exports = class CreateTeacherAccountView extends RootView
             "<div class='district'>#{hr.district.value}, " +
               "<span>#{hr.city?.value}, #{hr.state.value}</span></div>"
     ]).on 'autocomplete:selected', (event, suggestion, dataset) =>
-      @$('input[name="district"]').val suggestion.district
+      # Tell Algolioa about the change but don't open the suggestion dropdown
+      @$('input[name="district"]').val(suggestion.district).trigger('input').trigger('blur')
       @$('input[name="city"]').val suggestion.city
       @$('input[name="state"]').val suggestion.state
       @$('input[name="country"]').val 'USA'
@@ -94,7 +116,7 @@ module.exports = class CreateTeacherAccountView extends RootView
           "<div class='district'>#{hr.district.value}, " +
             "<span>#{hr.city?.value}, #{hr.state.value}</span></div>"
     ]).on 'autocomplete:selected', (event, suggestion, dataset) =>
-      @$('input[name="organization"]').val '' # TODO: does not persist on tabbing: back to school, back to district
+      @$('input[name="organization"]').val('').trigger('input').trigger('blur')
       @$('input[name="city"]').val suggestion.city
       @$('input[name="state"]').val suggestion.state
       @$('input[name="country"]').val 'USA'
@@ -103,8 +125,7 @@ module.exports = class CreateTeacherAccountView extends RootView
       @onChangeForm()
 
   onClickLoginLink: ->
-    modal = new AuthModal({ initialValues: { email: @trialRequest.get('properties')?.email } })
-    @openModalView(modal)
+    @openModalView(new AuthModal({ initialValues: @state.get('authModalInitialValues') }))
 
   onChangeForm: ->
     unless @formChanged
@@ -127,6 +148,13 @@ module.exports = class CreateTeacherAccountView extends RootView
       trialRequestAttrs.educationLevel.push(val) if val
 
     forms.clearFormAlerts(form)
+    tv4.addFormat({
+      'phoneNumber': (phoneNumber) ->
+        if forms.validatePhoneNumber(phoneNumber)
+          return null
+        else
+          return {code: tv4.errorCodes.FORMAT_CUSTOM, message: 'Please enter a valid phone number, including area code.'}
+    })
 
     result = tv4.validateMultiple(trialRequestAttrs, formSchema)
     error = false
@@ -135,6 +163,9 @@ module.exports = class CreateTeacherAccountView extends RootView
       error = true
     if not error and not forms.validateEmail(trialRequestAttrs.email)
       forms.setErrorToProperty(form, 'email', 'invalid email')
+      error = true
+    if not error and forms.validateEmail(allAttrs.name)
+      forms.setErrorToProperty(form, 'name', 'username may not be an email')
       error = true
     if not _.size(trialRequestAttrs.educationLevel)
       forms.setErrorToProperty(form, 'educationLevel', 'include at least one')
@@ -178,34 +209,57 @@ module.exports = class CreateTeacherAccountView extends RootView
     else
       errors.showNotyNetworkError(arguments...)
 
-  onClickEmailExistsLoginLink: ->
-    modal = new AuthModal({ initialValues: { email: @trialRequest.get('properties')?.email } })
-    @openModalView(modal)
-
   onTrialRequestSubmit: ->
     window.tracker?.trackEvent 'Teachers Create Account Submitted', category: 'Teachers', ['Mixpanel']
     @formChanged = false
-    attrs = _.pick(forms.formToObject(@$('form')), 'name', 'email', 'role')
-    attrs.role = attrs.role.toLowerCase()
-    options = {}
-    newUser = new User(attrs)
-    if @gplusAttrs
-      newUser.set('_id', me.id)
-      options.url = "/db/user?gplusID=#{@gplusAttrs.gplusID}&gplusAccessToken=#{application.gplusHandler.accessToken.access_token}"
-      options.type = 'PUT'
-      newUser.set(@gplusAttrs)
-    else if @facebookAttrs
-      newUser.set('_id', me.id)
-      options.url = "/db/user?facebookID=#{@facebookAttrs.facebookID}&facebookAccessToken=#{application.facebookHandler.authResponse.accessToken}"
-      options.type = 'PUT'
-      newUser.set(@facebookAttrs)
-    else
-      newUser.set('password', @$('input[name="password1"]').val())
-    newUser.save(null, options)
-    newUser.once 'sync', ->
+    
+    Promise.resolve()
+    .then =>
+      attrs = _.pick(forms.formToObject(@$('form')), 'role', 'firstName', 'lastName')
+      attrs.role = attrs.role.toLowerCase()
+      me.set(attrs)
+      me.set(_.omit(@gplusAttrs, 'gplusID', 'email')) if @gplusAttrs
+      me.set(_.omit(@facebookAttrs, 'facebookID', 'email')) if @facebookAttrs
+      jqxhr = me.save()
+      if not jqxhr
+        throw new Error('Could not save user')
+      @trigger 'update-settings'
+      return jqxhr
+      
+    .then =>
+      { name, email } = forms.formToObject(@$('form'))
+      if @gplusAttrs
+        { email, gplusID } = @gplusAttrs
+        { name } = forms.formToObject(@$el)
+        jqxhr = me.signupWithGPlus(name, email, @gplusAttrs.gplusID)
+      else if @facebookAttrs
+        { email, facebookID } = @facebookAttrs
+        { name } = forms.formToObject(@$el)
+        jqxhr = me.signupWithFacebook(name, email, facebookID)
+      else
+        { name, email, password1 } = forms.formToObject(@$el)
+        jqxhr = me.signupWithPassword(name, email, password1)
+      @trigger 'signup'
+      return jqxhr
+      
+    .then =>
       application.router.navigate(SIGNUP_REDIRECT, { trigger: true })
       application.router.reload()
-    newUser.once 'error', errors.showNotyNetworkError
+
+    .catch (e) =>
+      if e instanceof Error
+        noty {
+          text: e.message
+          layout: 'topCenter'
+          type: 'error'
+          timeout: 5000
+          killer: false,
+          dismissQueue: true
+        }
+      else
+        errors.showNotyNetworkError(arguments...)
+      @$('#create-account-btn').text('Submit').attr('disabled', false)
+    
 
   # GPlus signup
 
@@ -291,10 +345,89 @@ module.exports = class CreateTeacherAccountView extends RootView
     @$('input[type="password"]').attr('disabled', true)
     @$('#facebook-logged-in-row, #social-network-signups').toggleClass('hide')
 
+  updateAuthModalInitialValues: (values) ->
+    @state.set {
+      authModalInitialValues: _.merge @state.get('authModalInitialValues'), values
+    }, { silent: true }
+
+  onChangeName: (e) ->
+    @updateAuthModalInitialValues { name: @$(e.currentTarget).val() }
+    @checkName()
+
+  checkName: ->
+    name = @$('input[name="name"]').val()
+
+    if name is @state.get('checkNameValue')
+      return @state.get('checkNamePromise')
+
+    if not name
+      @state.set({
+        checkNameState: 'standby'
+        checkNameValue: name
+        checkNamePromise: null
+      })
+      return Promise.resolve()
+
+    @state.set({
+      checkNameState: 'checking'
+      checkNameValue: name
+
+      checkNamePromise: (User.checkNameConflicts(name)
+      .then ({ suggestedName, conflicts }) =>
+        return unless name is @$('input[name="name"]').val()
+        if conflicts
+          suggestedNameText = $.i18n.t('signup.name_taken').replace('{{suggestedName}}', suggestedName)
+          @state.set({ checkNameState: 'exists', suggestedNameText })
+        else
+          @state.set { checkNameState: 'available' }
+      .catch (error) =>
+        @state.set('checkNameState', 'standby')
+        throw error
+      )
+    })
+
+    return @state.get('checkNamePromise')
+
+  onChangeEmail: (e) ->
+    @updateAuthModalInitialValues { email: @$(e.currentTarget).val() }
+    @checkEmail()
+    
+  checkEmail: ->
+    email = @$('[name="email"]').val()
+    
+    if not _.isEmpty(email) and email is @state.get('checkEmailValue')
+      return @state.get('checkEmailPromise')
+
+    if not (email and forms.validateEmail(email))
+      @state.set({
+        checkEmailState: 'standby'
+        checkEmailValue: email
+        checkEmailPromise: null
+      })
+      return Promise.resolve()
+      
+    @state.set({
+      checkEmailState: 'checking'
+      checkEmailValue: email
+      
+      checkEmailPromise: (User.checkEmailExists(email)
+      .then ({exists}) =>
+        return unless email is @$('[name="email"]').val()
+        if exists
+          @state.set('checkEmailState', 'exists')
+        else
+          @state.set('checkEmailState', 'available')
+      .catch (e) =>
+        @state.set('checkEmailState', 'standby')
+        throw e
+      )
+    })
+    return @state.get('checkEmailPromise')
+    
 
 formSchema = {
   type: 'object'
-  required: ['firstName', 'lastName', 'email', 'role', 'numStudents', 'city', 'state', 'country']
+  required: ['firstName', 'lastName', 'email', 'role', 'numStudents', 'numStudentsTotal', 'city', 'state', 'country', 'phoneNumber']
   properties:
     password1: { type: 'string' }
     password2: { type: 'string' }
@@ -302,7 +435,7 @@ formSchema = {
     lastName: { type: 'string' }
     name: { type: 'string', minLength: 1 }
     email: { type: 'string', format: 'email' }
-    phoneNumber: { type: 'string' }
+    phoneNumber: { type: 'string', format: 'phoneNumber' }
     role: { type: 'string' }
     organization: { type: 'string' }
     district: { type: 'string' }

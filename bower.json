@@ -35,7 +35,7 @@
     "aether": "~0.5.21",
     "underscore.string": "~2.3.3",
     "d3": "~3.4.4",
-    "jsondiffpatch": "0.1.8",
+    "jsondiffpatch": "^0.2.3",
     "nanoscroller": "~0.8.0",
     "treema": "https://github.com/codecombat/treema.git#master",
     "bootstrap": "~3.2.0",
@@ -49,7 +49,8 @@
     "algoliasearch": "^3.13.1",
     "algolia-autocomplete.js": "^0.17.0",
     "algolia-autocomplete-no-conflict": "1.0.0",
-    "promise-polyfill": "^5.2.1"
+    "promise-polyfill": "^5.2.1",
+    "font-awesome": "fontawesome#^4.7.0"
   },
   "overrides": {
     "algolia-autocomplete.js": {
@@ -72,9 +73,9 @@
     },
     "jsondiffpatch": {
       "main": [
-        "build/bundle-full.js",
-        "build/formatters.js",
-        "src/formatters/html.css"
+        "public/build/jsondiffpatch-full.js",
+        "public/build/jsondiffpatch-formatters.js",
+        "public/formatters-styles/html.css"
       ]
     },
     "treema": {

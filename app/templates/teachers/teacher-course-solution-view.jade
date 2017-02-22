@@ -1,3 +1,17 @@
+extends /templates/base-flat
+
+block page_nav
+  include ../courses/teacher-dashboard-nav.jade
+  .do-not-print.container
+    span.backlink
+      a(href='/teachers/courses')
+        |&lt; Back to Course Guides
+    .print
+      .btn.btn-md.btn-navy
+        a(href='javascript:window.print()')
+          span.glyphicon.glyphicon-print &#160;
+          |Print this guide
+
 block content
 
   if !me.isTeacher() && !me.isAdmin()
@@ -16,7 +30,7 @@ block content
 
     if view.levels
       each level, index in view.levels.models
-        h2.page-break-before ##{index + 1}. #{i18n(level.attributes, 'name')}
+        h2.page-break-before ##{view.levelNumberMap[level.get('original')]}. #{i18n(level.attributes, 'name')}
         h3(data-i18n="teacher.level_overview_solutions")
         i #{i18n(level.attributes, 'description')}
         div
@@ -28,7 +42,8 @@ block content
               i(data-i18n="common.coming_soon")
           h4.text-center(data-i18n="common.default_code")
           if level.get('begin')
-            pre!= level.get('begin')
+            pre
+              code= level.get('begin')
           else
             .text-center
               i(data-i18n="common.coming_soon")
@@ -44,7 +59,8 @@ block content
             span= level.get('name')
             span.spl(data-i18n="common.solution")
           if level.get('solution')
-            pre!= level.get('solution')
+            pre
+              code= level.get('solution')
           else
             .text-center
               i(data-i18n="common.coming_soon")

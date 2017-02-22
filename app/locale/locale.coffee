@@ -33,6 +33,7 @@ module.exports =
   'et': { nativeDescription: 'Eesti', englishDescription: 'Estonian' }
   'el': { nativeDescription: 'Ελληνικά', englishDescription: 'Greek' }
   'eo': { nativeDescription: 'Esperanto', englishDescription: 'Esperanto' }
+  'fil': { nativeDescription: 'Filipino', englishDescription: 'Filipino' }
   'fa': { nativeDescription: 'فارسی', englishDescription: 'Persian' }
   'gl': { nativeDescription: 'Galego', englishDescription: 'Galician' }
   'ko': { nativeDescription: '한국어', englishDescription: 'Korean' }
@@ -48,6 +49,7 @@ module.exports =
   'hi': { nativeDescription: 'मानक हिन्दी', englishDescription: 'Hindi' }
   'ms': { nativeDescription: 'Bahasa Melayu', englishDescription: 'Bahasa Malaysia' }
   'my': { nativeDescription: 'မြန်မာစကား', englishDescription: 'Myanmar language' }
+  'nl': { nativeDescription: 'Nederlands', englishDescription: 'Dutch' }
   'nl-BE': { nativeDescription: 'Nederlands (België)', englishDescription: 'Dutch (Belgium)' }
   'nl-NL': { nativeDescription: 'Nederlands (Nederland)', englishDescription: 'Dutch (Netherlands)' }
   'ja': { nativeDescription: '日本語', englishDescription: 'Japanese' }
@@ -56,7 +58,7 @@ module.exports =
   'uz': { nativeDescription: "O'zbekcha", englishDescription: 'Uzbek' }
   'pl': { nativeDescription: 'język polski', englishDescription: 'Polish' }
   'pt-PT': { nativeDescription: 'Português (Portugal)', englishDescription: 'Portuguese (Portugal)' }
-  'pt-BR': { nativeDescription: 'português do Brasil', englishDescription: 'Portuguese (Brazil)' }
+  'pt-BR': { nativeDescription: 'Português (Brasil)', englishDescription: 'Portuguese (Brazil)' }
   'ro': { nativeDescription: 'limba română', englishDescription: 'Romanian' }
   'sr': { nativeDescription: 'српски', englishDescription: 'Serbian' }
   'sk': { nativeDescription: 'slovenčina', englishDescription: 'Slovak' }
@@ -65,7 +67,7 @@ module.exports =
   'sv': { nativeDescription: 'Svenska', englishDescription: 'Swedish' }
   'th': { nativeDescription: 'ไทย', englishDescription: 'Thai' }
   'tr': { nativeDescription: 'Türkçe', englishDescription: 'Turkish' }
-  'uk': { nativeDescription: 'українська мова', englishDescription: 'Ukrainian' }
+  'uk': { nativeDescription: 'українська', englishDescription: 'Ukrainian' }
   'ur': { nativeDescription: 'اُردُو', englishDescription: 'Urdu' }
   'vi': { nativeDescription: 'Tiếng Việt', englishDescription: 'Vietnamese' }
   'zh-WUU-HANS': { nativeDescription: '吴语', englishDescription: 'Wuu (Simplified)' }

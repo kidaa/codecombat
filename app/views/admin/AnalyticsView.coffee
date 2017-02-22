@@ -8,6 +8,8 @@ RootView = require 'views/core/RootView'
 template = require 'templates/admin/analytics'
 utils = require 'core/utils'
 
+# TODO: terminal subscription purchases entered as DRR monthly subs, but should be spread across their timeframe
+
 module.exports = class AnalyticsView extends RootView
   id: 'admin-analytics-view'
   template: template
@@ -20,6 +22,8 @@ module.exports = class AnalyticsView extends RootView
     @activeClasses = []
     @activeClassGroups = {}
     @activeUsers = []
+    @dayMrrMap = {}
+    @monthMrrMap = {}
     @revenue = []
     @revenueGroups = {}
     @dayEnrollmentsMap = {}
@@ -119,6 +123,7 @@ module.exports = class AnalyticsView extends RootView
       url: '/db/analytics_perday/-/recurring_revenue'
       method: 'POST'
       success: (data) =>
+        # Amounts in cents, 'DRR yearly subs', 'DRR monthly subs'
 
         # Organize data by day, then group
         groupMap = {}
@@ -165,6 +170,21 @@ module.exports = class AnalyticsView extends RootView
               @revenue[i].groups.push(_.reduce(monthlyValues, (s, num) -> s + num))
         for monthlyGroup, dailyGroup of monthlyDailyGroupMap
           @revenueGroups.push monthlyGroup
+
+        # Calculate real monthly revenue instead of 30 days estimation
+        @monthMrrMap = {}
+        for revenue in @revenue
+          month = revenue.day.substring(0, 7)
+          @monthMrrMap[month] ?= {gems: 0, yearly: 0, monthly: 0, total: 0}
+          for group, i in @revenueGroups
+            if group is 'DRR gems'
+              @monthMrrMap[month].gems += revenue.groups[i]
+            else if group is 'DRR monthly subs'
+              @monthMrrMap[month].monthly += revenue.groups[i]
+            else if group is 'DRR yearly subs'
+              @monthMrrMap[month].yearly += revenue.groups[i]
+            if group in ['DRR gems', 'DRR monthly subs', 'DRR yearly subs']
+              @monthMrrMap[month].total += revenue.groups[i]
 
         @updateAllKPIChartData()
         @updateRevenueChartData()
@@ -252,14 +272,14 @@ module.exports = class AnalyticsView extends RootView
     }, 0).load()
 
     @courses = new CocoCollection([], { url: "/db/course", model: Course})
-    @courses.comparator = "_id"
     @listenToOnce @courses, 'sync', @onCoursesSync
     @supermodel.loadCollection(@courses)
 
   onCoursesSync: ->
-    # Assumes courses retrieved in order
+    @courses.remove(@courses.findWhere({releasePhase: 'beta'}))
+    sortedCourses = utils.sortCourses(@courses.models ? [])
     @courseOrderMap = {}
-    @courseOrderMap[@courses.models[i].get('_id')] = i for i in [0...@courses.models.length]
+    @courseOrderMap[sortedCourses[i].get('_id')] = i for i in [0...sortedCourses.length]
 
     startDay = new Date()
     startDay.setUTCDate(startDay.getUTCDate() - @furthestCourseDayRange)
@@ -291,6 +311,9 @@ module.exports = class AnalyticsView extends RootView
       for courseInstance in data.courseInstances
         continue if utils.objectIdToDate(courseInstance._id) < startDate
         courseID = courseInstance.courseID
+        unless @courseOrderMap[courseID]?
+          console.error "ERROR: no course order for courseID=#{courseID}"
+          continue
         teacherID = courseInstance.ownerID
         for studentID in courseInstance.members
           studentPaidStatusMap[studentID] = 'free'
@@ -303,7 +326,7 @@ module.exports = class AnalyticsView extends RootView
       prepaidUserMap = {}
       for user in data.students
         continue unless studentPaidStatusMap[user._id]
-        if prepaidID = user.coursePrepaidID or user.coursePrepaid?._id
+        if prepaidID = user.coursePrepaid?._id
           studentPaidStatusMap[user._id] = 'paid'
           prepaidUserMap[prepaidID] ?= []
           prepaidUserMap[prepaidID].push(user._id)
@@ -324,17 +347,27 @@ module.exports = class AnalyticsView extends RootView
       teacherPaidStatusMap = {}
       for teacher, students of teacherStudentsMap
         for student in students
+          unless studentFurthestCourseMap[student]?
+            console.error "ERROR: no student furthest map for teacher=#{teacher} student=#{student}"
+            continue
           if not teacherPaidStatusMap[teacher]
             teacherPaidStatusMap[teacher] = studentPaidStatusMap[student]
             teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
-          else if teacherPaidStatusMap[teacher] is 'trial' and studentPaidStatusMap[student] is 'paid'
-            teacherPaidStatusMap[teacher] = studentPaidStatusMap[student]
-            teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
-          else if teacherPaidStatusMap[teacher] is 'free' and studentPaidStatusMap[student] in ['paid', 'trial']
-            teacherPaidStatusMap[teacher] = studentPaidStatusMap[student]
-            teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
-          else if teacherFurthestCourseMap[teacher] < studentFurthestCourseMap[student]
-            teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
+          else if teacherPaidStatusMap[teacher] is 'paid'
+            if studentPaidStatusMap[student] is 'paid' and teacherFurthestCourseMap[teacher] < studentFurthestCourseMap[student]
+              teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
+          else if teacherPaidStatusMap[teacher] is 'trial'
+            if studentPaidStatusMap[student] is 'paid'
+              teacherPaidStatusMap[teacher] = studentPaidStatusMap[student]
+              teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
+            else if studentPaidStatusMap[student] is 'trial' and teacherFurthestCourseMap[teacher] < studentFurthestCourseMap[student]
+              teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
+          else # free teacher
+            if studentPaidStatusMap[student] in ['paid', 'trial']
+              teacherPaidStatusMap[teacher] = studentPaidStatusMap[student]
+              teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
+            else if studentPaidStatusMap[student] is 'free' and teacherFurthestCourseMap[teacher] < studentFurthestCourseMap[student]
+              teacherFurthestCourseMap[teacher] = studentFurthestCourseMap[student]
 
       # Build table of student/teacher paid/trial/free totals
       updateCourseTotalsMap = (courseTotalsMap, furthestCourseMap, paidStatusMap, columnSuffix) =>
@@ -360,12 +393,12 @@ module.exports = class AnalyticsView extends RootView
       courseDistributions = []
       for courseName, totals of courseTotalsMap
         courseDistributions.push({courseName: courseName, totals: totals})
-      courseDistributions.sort (a, b) ->
-        if a.courseName.indexOf('Introduction') >= 0 and b.courseName.indexOf('Introduction') < 0 then return -1
-        else if b.courseName.indexOf('Introduction') >= 0 and a.courseName.indexOf('Introduction') < 0 then return 1
-        else if a.courseName.indexOf('All Courses') >= 0 and b.courseName.indexOf('All Courses') < 0 then return 1
+      courseDistributions.sort (a, b) =>
+        if a.courseName.indexOf('All Courses') >= 0 and b.courseName.indexOf('All Courses') < 0 then return 1
         else if b.courseName.indexOf('All Courses') >= 0 and a.courseName.indexOf('All Courses') < 0 then return -1
-        a.courseName.localeCompare(b.courseName)
+        aID = @courses.findWhere({name: a.courseName}).id
+        bID = @courses.findWhere({name: b.courseName}).id
+        @courseOrderMap[aID] - @courseOrderMap[bID]
 
       courseDistributions
 
@@ -424,6 +457,22 @@ module.exports = class AnalyticsView extends RootView
     d3Utils.createLineChart('.recurring-monthly-revenue-chart-365', @revenueMonthlyChartLines365Days, visibleWidth)
 
   updateAllKPIChartData: ->
+    # Calculate daily mrr based on previous 30 days, attribute full year sub purchase to purchase day
+    # Do not include gem purchases
+    @dayMrrMap = {}
+    if @revenue?.length > 0
+      daysInMonth = 30
+      currentMrr = 0
+      currentMonthlyValues = []
+      for i in [@revenue.length - 1..0] when i >= 0
+        entry = @revenue[i]
+        monthlySubAmount = entry.groups[@revenueGroups.indexOf('DRR monthly subs')] ? 0
+        yearlySubAmount = entry.groups[@revenueGroups.indexOf('DRR yearly subs')] ? 0
+        currentMonthlyValues.push monthlySubAmount + yearlySubAmount
+        currentMrr += monthlySubAmount + yearlySubAmount
+        currentMrr -= currentMonthlyValues.shift() while currentMonthlyValues.length > daysInMonth
+        @dayMrrMap[entry.day] = currentMrr if currentMonthlyValues.length is daysInMonth
+
     @kpiRecentChartLines = []
     @kpiChartLines = []
     @updateKPIChartData(60, @kpiRecentChartLines)
@@ -454,9 +503,10 @@ module.exports = class AnalyticsView extends RootView
     if @revenue?.length > 0
       data = []
       for entry in @revenue
+        value = @dayMrrMap[entry.day]
         data.push
           day: entry.day
-          value: entry.groups[entry.groups.length - 1] / 100000
+          value: value / 100 / 1000
       data.reverse()
       points = @createLineChartPoints(days, data)
       chartLines.push
@@ -488,7 +538,7 @@ module.exports = class AnalyticsView extends RootView
       points = @createLineChartPoints(days, campaignData)
       chartLines.push
         points: points
-        description: 'Campaign Monthly Active Users (in thousands)'
+        description: 'Home Monthly Active Users (in thousands)'
         lineColor: 'purple'
         strokeWidth: 1
         min: 0
@@ -571,7 +621,9 @@ module.exports = class AnalyticsView extends RootView
           min: 0
           showYScale: showYScale
         showYScale = false
-      line.max = lineMax for line in lines
+      for line in lines
+        line.description = line.description.replace 'campaign', 'home'
+        line.max = lineMax
 
     createActiveUsersChartLines(@campaignDailyActiveUsersChartLines90, 90, 'DAU campaign')
     createActiveUsersChartLines(@campaignMonthlyActiveUsersChartLines90, 90, 'MAU campaign')
@@ -624,6 +676,7 @@ module.exports = class AnalyticsView extends RootView
 
     for line in @campaignVsClassroomMonthlyActiveUsersRecentChartLines
       line.max = max
+      line.description = line.description.replace 'campaign', 'home'
 
     days = d3Utils.createContiguousDays(365)
     colorIndex = 0
@@ -652,6 +705,7 @@ module.exports = class AnalyticsView extends RootView
 
     for line in @campaignVsClassroomMonthlyActiveUsersChartLines
       line.max = max
+      line.description = line.description.replace 'campaign', 'home'
 
   updateEnrollmentsChartData: ->
     @enrollmentsChartLines = []

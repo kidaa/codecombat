@@ -106,18 +106,37 @@ module.exports =
     res.status(200).send(levels)
 
   fetchMemberSessions: wrap (req, res, next) ->
+    # Return member sessions for assigned courses
     throw new errors.Unauthorized() unless req.user
-    memberLimit = parse.getLimitFromReq(req, {default: 10, max: 100, param: 'memberLimit'})
-    memberSkip = parse.getSkipFromReq(req, {param: 'memberSkip'})
     classroom = yield database.getDocFromHandle(req, Classroom)
     throw new errors.NotFound('Classroom not found.') if not classroom
     throw new errors.Forbidden('You do not own this classroom.') unless req.user.isAdmin() or classroom.get('ownerID').equals(req.user._id)
+    courseLevelsMap = {}
+    codeLanguage = classroom.get('aceConfig.language')
+    for course in classroom.get('courses') ? []
+      courseLevelsMap[course._id.toHexString()] = _.map(course.levels, (l) ->
+        {'level.original':l.original?.toHexString(), codeLanguage: l.primerLanguage or codeLanguage}
+      )
+    courseInstances = yield CourseInstance.find({classroomID: classroom._id}).select('_id courseID members').lean()
+    memberCoursesMap = {}
+    for courseInstance in courseInstances
+      for userID in courseInstance.members ? []
+        memberCoursesMap[userID.toHexString()] ?= []
+        memberCoursesMap[userID.toHexString()].push(courseInstance.courseID)
+    memberLimit = parse.getLimitFromReq(req, {default: 10, max: 100, param: 'memberLimit'})
+    memberSkip = parse.getSkipFromReq(req, {param: 'memberSkip'})
     members = classroom.get('members') or []
     members = members.slice(memberSkip, memberSkip + memberLimit)
     dbqs = []
     select = 'state.complete level creator playtime changed created dateFirstCompleted submitted'
     for member in members
-      dbqs.push(LevelSession.find({creator: member.toHexString()}).select(select).exec())
+      $or = []
+      for courseID in memberCoursesMap[member.toHexString()] ? []
+        for subQuery in courseLevelsMap[courseID.toHexString()] ? []
+          $or.push(_.assign({creator: member.toHexString()}, subQuery))
+      if $or.length
+        query = { $or }
+        dbqs.push(LevelSession.find(query).select(select).lean().exec())
     results = yield dbqs
     sessions = _.flatten(results)
     res.status(200).send(sessions)
@@ -135,12 +154,71 @@ module.exports =
       throw new errors.Forbidden('You do not own this classroom.')
     memberIDs = classroom.get('members') or []
     memberIDs = memberIDs.slice(memberSkip, memberSkip + memberLimit)
-    
+
     members = yield User.find({ _id: { $in: memberIDs }}).select(parse.getProjectFromReq(req))
     # members = yield User.find({ _id: { $in: memberIDs }, deleted: { $ne: true }}).select(parse.getProjectFromReq(req))
-    memberObjects = (member.toObject({ req: req, includedPrivates: ["name", "email"] }) for member in members)
-    
+    memberObjects = (member.toObject({ req: req, includedPrivates: ["name", "email", "firstName", "lastName", "coursePrepaid", "coursePrepaidID"] }) for member in members)
+
     res.status(200).send(memberObjects)
+
+  fetchPlaytimes: wrap (req, res, next) ->
+    # For given courseID, returns array of course/level IDs and slugs, and an array of recent level sessions
+    # TODO: returns on this are pretty weird, because the client calls it repeatedly for more data
+    throw new errors.Unauthorized('You must be an administrator.') unless req.user?.isAdmin()
+    sessionLimit = parseInt(req.query?.sessionLimit ? 1000)
+    unless startDay = req.query?.startDay
+      startDay = new Date()
+      startDay.setUTCDate(startDay.getUTCDate() - 1)
+      startDay = startDay.toISOString().substring(0, 10)
+    endDay = req.query?.endDay
+    # console.log "DEBUG: fetchPlaytimes courseID=#{req.query?.courseID} startDay=#{startDay} endDay=#{endDay}"
+
+    query = {$and: [{releasePhase: 'released'}]}
+    query.$and.push {_id: req.query.courseID} if req.query?.courseID?
+    courses = yield Course.find(query, {campaignID: 1, slug: 1}).lean()
+    campaignIDs = []
+    campaignCourseMap = {}
+    for course in courses
+      campaignIDs.push(course.campaignID)
+      campaignCourseMap[course.campaignID] = course
+    campaigns = yield Campaign.find({_id: {$in: campaignIDs}}, {levels: 1, slug: 1}).lean()
+    courseLevelPlaytimes = []
+    levelOriginals = []
+    levelSlugMap = {}
+    for campaign in campaigns
+      for levelOriginal, level of campaign.levels
+        levelOriginals.push(levelOriginal)
+        levelSlugMap[levelOriginal] = level.slug
+        unless level.campaignIndex?
+          log.debug "NO level.campaignIndex for #{campaignCourseMap[campaign._id].slug} #{level.slug}"
+        courseLevelPlaytimes.push
+          courseID: campaignCourseMap[campaign._id]._id
+          courseSlug: campaignCourseMap[campaign._id].slug
+          levelIndex: level.campaignIndex
+          levelSlug: level.slug
+          levelOriginal: levelOriginal
+          practice: level.practice ? false
+    # console.log "DEBUG: courseID=#{req.query?.courseID} total levels=#{levelOriginals.length}"
+
+    query = {$and: [
+      {_id: {$gte: utils.objectIdFromTimestamp(startDay + "T00:00:00.000Z")}}
+      {'level.original': {$in: levelOriginals}}
+      {heroConfig: {$exists: false}}
+      {'state.complete': true}
+      ]}
+    query.$and.push({_id: {$lt: utils.objectIdFromTimestamp(endDay + "T00:00:00.000Z")}}) if endDay
+    project = {'level.original': 1, playtime: 1}
+    levelSessions = yield LevelSession.find(query, project).lean()
+    # console.log "DEBUG: courseID=#{req.query?.courseID} level sessions=#{levelSessions.length}"
+
+    levelCountMap = {}
+    minimalLevelSessions = []
+    for levelSession in levelSessions
+      continue if levelCountMap[levelSession.level.original] >= sessionLimit
+      levelCountMap[levelSession.level.original] ?= 0
+      levelCountMap[levelSession.level.original]++
+      minimalLevelSessions.push(levelSession)
+    res.status(200).send([courseLevelPlaytimes, minimalLevelSessions])
 
   post: wrap (req, res) ->
     throw new errors.Unauthorized() unless req.user and not req.user.isAnonymous()
@@ -152,10 +230,8 @@ module.exports =
     classroom.set 'members', []
     database.assignBody(req, classroom)
 
-    # Copy over data from how courses are right now
-    coursesData = yield module.exports.generateCoursesData(classroom.get('aceConfig')?.language, req.user?.isAdmin())
-    classroom.set('courses', coursesData)
-    
+    yield classroom.setUpdatedCourses({isAdmin: req.user?.isAdmin(), addNewCoursesOnly: false})
+
     # finish
     database.validateDoc(classroom)
     classroom = yield classroom.save()
@@ -166,36 +242,21 @@ module.exports =
     classroom = yield database.getDocFromHandle(req, Classroom)
     if not classroom
       throw new errors.NotFound('Classroom not found.')
-    unless req.user._id.equals(classroom.get('ownerID'))
+    unless req.user._id.equals(classroom.get('ownerID')) or req.user.isAdmin()
       throw new errors.Forbidden('Only the owner may update their classroom content')
+    addNewCoursesOnly = req.body?.addNewCoursesOnly ? false
 
-    coursesData = yield module.exports.generateCoursesData(classroom.get('aceConfig')?.language, req.user?.isAdmin())
-    classroom.set('courses', coursesData)
+    # make sure updates are based on owner, not logged in user
+    if not req.user._id.equals(classroom.get('ownerID'))
+      owner = yield User.findById(classroom.get('ownerID'))
+    else
+      owner = req.user
+
+    yield classroom.setUpdatedCourses({isAdmin: owner.isAdmin(), addNewCoursesOnly})
+
+    database.validateDoc(classroom)
     classroom = yield classroom.save()
     res.status(200).send(classroom.toObject({req: req}))
-
-  generateCoursesData: co.wrap (classLanguage, isAdmin) ->
-    # helper function for generating the latest version of courses
-    query = {}
-    query = {releasePhase: 'released'} unless isAdmin
-    courses = yield Course.find(query)
-    courses = Course.sortCourses courses
-    campaigns = yield Campaign.find({_id: {$in: (course.get('campaignID') for course in courses)}})
-    campaignMap = {}
-    campaignMap[campaign.id] = campaign for campaign in campaigns
-    coursesData = []
-    for course in courses
-      courseData = { _id: course._id, levels: [] }
-      campaign = campaignMap[course.get('campaignID').toString()]
-      levels = _.values(campaign.get('levels'))
-      levels = _.sortBy(levels, 'campaignIndex')
-      for level in levels
-        continue if classLanguage and level.primerLanguage is classLanguage
-        levelData = { original: mongoose.Types.ObjectId(level.original) }
-        _.extend(levelData, _.pick(level, 'type', 'slug', 'name', 'practice', 'practiceThresholdMinutes', 'primerLanguage', 'shareable'))
-        courseData.levels.push(levelData)
-      coursesData.push(courseData)
-    return coursesData
 
   join: wrap (req, res) ->
     unless req.body?.code
@@ -208,14 +269,8 @@ module.exports =
     if not classroom
       log.debug("classrooms.join: Classroom not found with code #{code}")
       throw new errors.NotFound("Classroom not found with code #{code}")
-    members = _.clone(classroom.get('members'))
-    if _.any(members, (memberID) -> memberID.equals(req.user._id))
-      return res.send(classroom.toObject({req: req}))
-    update = { $push: { members : req.user._id }}
-    yield classroom.update(update)
-    members.push req.user._id
-    classroom.set('members', members)
-    
+    yield classroom.addMember(req.user)
+
     # make user role student
     if not req.user.get('role')
       req.user.set('role', 'student')
@@ -274,10 +329,10 @@ module.exports =
         email_data:
           teacher_name: req.user.broadName()
           class_name: classroom.get('name')
-          join_link: "https://codecombat.com/courses?_cc=" + joinCode
+          join_link: "https://codecombat.com/students?_cc=" + joinCode
           join_code: joinCode
       sendwithus.api.send context, _.noop
-    
+
     res.status(200).send({})
 
   getUsers: wrap (req, res, next) ->

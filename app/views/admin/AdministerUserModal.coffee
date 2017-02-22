@@ -5,6 +5,7 @@ Prepaid = require 'models/Prepaid'
 StripeCoupons = require 'collections/StripeCoupons'
 forms = require 'core/forms'
 Prepaids = require 'collections/Prepaids'
+Classrooms = require 'collections/Classrooms'
 
 module.exports = class AdministerUserModal extends ModalView
   id: 'administer-user-modal'
@@ -15,6 +16,8 @@ module.exports = class AdministerUserModal extends ModalView
     'click #add-seats-btn': 'onClickAddSeatsButton'
     'click #destudent-btn': 'onClickDestudentButton'
     'click #deteacher-btn': 'onClickDeteacherButton'
+    'click .update-classroom-btn': 'onClickUpdateClassroomButton'
+    'click .add-new-courses-btn': 'onClickAddNewCoursesButton'
 
   initialize: (options, @userHandle) ->
     @user = new User({_id:@userHandle})
@@ -23,6 +26,8 @@ module.exports = class AdministerUserModal extends ModalView
     @supermodel.trackRequest @coupons.fetch({cache: false})
     @prepaids = new Prepaids()
     @supermodel.trackRequest @prepaids.fetchByCreator(@userHandle)
+    @classrooms = new Classrooms()
+    @supermodel.trackRequest @classrooms.fetchByOwner(@userHandle)
     
   onLoaded: ->
     # TODO: Figure out a better way to expose this info, perhaps User methods?
@@ -103,3 +108,23 @@ module.exports = class AdministerUserModal extends ModalView
       }
       if e.stack
         throw e
+
+  onClickUpdateClassroomButton: (e) ->
+    classroom = @classrooms.get($(e.currentTarget).data('classroom-id'))
+    if confirm("Really update #{classroom.get('name')}?")
+      Promise.resolve(classroom.updateCourses())
+      .then =>
+        noty({text: 'Updated classroom courses.'})
+        @renderSelectors('#classroom-table')
+      .catch ->
+        noty({text: 'Failed to update classroom courses.', type: 'error'})
+
+  onClickAddNewCoursesButton: (e) ->
+    classroom = @classrooms.get($(e.currentTarget).data('classroom-id'))
+    if confirm("Really update #{classroom.get('name')}?")
+      Promise.resolve(classroom.updateCourses({data: {addNewCoursesOnly: true}}))
+      .then =>
+        noty({text: 'Updated classroom courses.'})
+        @renderSelectors('#classroom-table')
+      .catch ->
+        noty({text: 'Failed to update classroom courses.', type: 'error'})

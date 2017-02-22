@@ -13,6 +13,7 @@ Course = require 'models/Course'
 Classroom = require 'models/Classroom'
 Classrooms = require 'collections/Classrooms'
 LevelSession = require 'models/LevelSession'
+Levels = require 'collections/Levels'
 NameLoader = require 'core/NameLoader'
 Campaign = require 'models/Campaign'
 ThangType = require 'models/ThangType'
@@ -34,7 +35,7 @@ module.exports = class CoursesView extends RootView
     'click .view-class-btn': 'onClickViewClass'
     'click .view-levels-btn': 'onClickViewLevels'
 
-  getTitle: -> return $.i18n.t('teacher.students')
+  getTitle: -> return $.i18n.t('courses.students')
 
   initialize: ->
     @classCodeQueryVar = utils.getQueryVariable('_cc', false)
@@ -42,13 +43,16 @@ module.exports = class CoursesView extends RootView
     @courseInstances.comparator = (ci) -> return ci.get('classroomID') + ci.get('courseID')
     @listenToOnce @courseInstances, 'sync', @onCourseInstancesLoaded
     @supermodel.loadCollection(@courseInstances, { cache: false })
-    @classrooms = new CocoCollection([], { url: "/db/classroom", model: Classroom })
+    @classrooms = new CocoCollection([], { url: "/db/classroom", model: Classroom})
+    @classrooms.comparator = (a, b) -> b.id.localeCompare(a.id)
     @supermodel.loadCollection(@classrooms, { data: {memberID: me.id}, cache: false })
     @ownedClassrooms = new Classrooms()
     @ownedClassrooms.fetchMine({data: {project: '_id'}})
     @supermodel.trackCollection(@ownedClassrooms)
     @courses = new CocoCollection([], { url: "/db/course", model: Course})
     @supermodel.loadCollection(@courses)
+    @originalLevelMap = {}
+    @urls = require('core/urls')
 
     # TODO: Trim this section for only what's necessary
     @hero = new ThangType
@@ -59,7 +63,6 @@ module.exports = class CoursesView extends RootView
     @supermodel.loadModel(@hero, 'hero')
     @listenTo @hero, 'all', ->
       @render()
-    window.tracker?.trackEvent 'Students Loaded', category: 'Students', ['Mixpanel']
 
   afterInsert: ->
     super()
@@ -67,22 +70,18 @@ module.exports = class CoursesView extends RootView
       @onClassLoadError()
 
   onCourseInstancesLoaded: ->
-    map = {}
+    # HoC 2015 used special single player course instances
+    @courseInstances.remove(@courseInstances.where({hourOfCode: true}))
+
     for courseInstance in @courseInstances.models
+      continue if not courseInstance.get('classroomID')
       courseID = courseInstance.get('courseID')
-      if map[courseID]
-        courseInstance.sessions = map[courseID]
-        continue
-      map[courseID] = courseInstance.sessions = new CocoCollection([], {
+      courseInstance.sessions = new CocoCollection([], {
         url: courseInstance.url() + '/my-course-level-sessions',
         model: LevelSession
       })
       courseInstance.sessions.comparator = 'changed'
-      @supermodel.loadCollection(courseInstance.sessions, { data: { project: 'state.complete level.original playtime changed' }})
-
-    hocCourseInstance = @courseInstances.findWhere({hourOfCode: true})
-    if hocCourseInstance
-      @courseInstances.remove(hocCourseInstance)
+      @supermodel.loadCollection(courseInstance.sessions, { data: { project: 'state.complete,level.original,playtime,changed' }})
 
   onLoaded: ->
     super()
@@ -98,7 +97,13 @@ module.exports = class CoursesView extends RootView
       @ownerNameMap[ownerID] = NameLoader.getName(ownerID) for ownerID in ownerIDs
       @render?()
     )
-    
+    _.forEach _.unique(_.pluck(@classrooms.models, 'id')), (classroomID) =>
+      levels = new Levels()
+      @listenTo levels, 'sync', =>
+        return if @destroyed
+        @originalLevelMap[level.get('original')] = level for level in levels.models
+        @render()
+      @supermodel.trackRequest(levels.fetchForClassroom(classroomID, { data: { project: 'original,primerLanguage,slug' }}))
 
   onClickLogInButton: ->
     modal = new AuthModal()
@@ -161,7 +166,7 @@ module.exports = class CoursesView extends RootView
         @state = null
         @renderSelectors '#join-class-form'
 
-  # Super hacky way to patch users being able to join class while hiding /courses from others
+  # Super hacky way to patch users being able to join class while hiding /students from others
   onClassLoadError: ->
     _.defer ->
       application.router.routeDirectly('courses/RestrictedToStudentsView')
@@ -204,10 +209,10 @@ module.exports = class CoursesView extends RootView
   onClickViewClass: (e) ->
     classroomID = $(e.target).data('classroom-id')
     window.tracker?.trackEvent 'Students View Class', category: 'Students', classroomID: classroomID, ['Mixpanel']
-    application.router.navigate("/courses/#{classroomID}", { trigger: true })
+    application.router.navigate("/students/#{classroomID}", { trigger: true })
 
   onClickViewLevels: (e) ->
     courseID = $(e.target).data('course-id')
     courseInstanceID = $(e.target).data('courseinstance-id')
     window.tracker?.trackEvent 'Students View Levels', category: 'Students', courseID: courseID, courseInstanceID: courseInstanceID, ['Mixpanel']
-    application.router.navigate("/courses/#{courseID}/#{courseInstanceID}", { trigger: true })
+    application.router.navigate("/students/#{courseID}/#{courseInstanceID}", { trigger: true })

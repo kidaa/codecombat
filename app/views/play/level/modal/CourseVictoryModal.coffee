@@ -14,7 +14,7 @@ module.exports = class CourseVictoryModal extends ModalView
 
   initialize: (options) ->
     @courseID = options.courseID
-    @courseInstanceID = options.courseInstanceID or @getQueryVariable 'course-instance' or @getQueryVariable 'league'
+    @courseInstanceID = options.courseInstanceID or @getQueryVariable('course-instance') or @getQueryVariable('league')
     @views = []
 
     @session = options.session
@@ -49,7 +49,7 @@ module.exports = class CourseVictoryModal extends ModalView
         @course = new Course()
         @supermodel.trackRequest @course.fetchForCourseInstance(@courseInstanceID)
 
-    window.tracker?.trackEvent 'Play Level Victory Modal Loaded', category: 'Students', levelSlug: @level.get('slug'), ['Mixpanel']
+    window.tracker?.trackEvent 'Play Level Victory Modal Loaded', category: 'Students', levelSlug: @level.get('slug'), []
 
   onResourceLoadFailed: (e) ->
     if e.resource.jqxhr is @nextLevelRequest
@@ -98,7 +98,7 @@ module.exports = class CourseVictoryModal extends ModalView
     @showView(@views[index+1])
 
   onNextLevel: ->
-    window.tracker?.trackEvent 'Play Level Victory Modal Next Level', category: 'Students', levelSlug: @level.get('slug'), nextLevelSlug: @nextLevel.get('slug'), ['Mixpanel']
+    window.tracker?.trackEvent 'Play Level Victory Modal Next Level', category: 'Students', levelSlug: @level.get('slug'), nextLevelSlug: @nextLevel.get('slug'), []
     if me.isSessionless()
       link = "/play/level/#{@nextLevel.get('slug')}?course=#{@courseID}&codeLanguage=#{utils.getQueryVariable('codeLanguage', 'python')}"
     else
@@ -107,11 +107,11 @@ module.exports = class CourseVictoryModal extends ModalView
     application.router.navigate(link, {trigger: true})
 
   onDone: ->
-    window.tracker?.trackEvent 'Play Level Victory Modal Done', category: 'Students', levelSlug: @level.get('slug'), ['Mixpanel']
+    window.tracker?.trackEvent 'Play Level Victory Modal Done', category: 'Students', levelSlug: @level.get('slug'), []
     if me.isSessionless()
       link = '/teachers/courses'
     else
-      link = '/courses'
+      link = '/students'
     application.router.navigate(link, {trigger: true})
 
   onLadder: ->

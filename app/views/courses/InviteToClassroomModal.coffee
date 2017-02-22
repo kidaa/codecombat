@@ -12,11 +12,11 @@ module.exports = class InviteToClassroomModal extends ModalView
   initialize: (options) ->
     @classroom = options.classroom
     @classCode = @classroom.get('codeCamel') || @classroom.get('code')
-    @joinURL = document.location.origin + "/courses?_cc=" + @classCode
+    @joinURL = document.location.origin + "/students?_cc=" + @classCode
 
   onClickSendInvitesButton: ->
     emails = @$('#invite-emails-textarea').val()
-    emails = emails.split('\n')
+    emails = emails.split(/[,\n]/)
     emails = _.filter((_.string.trim(email) for email in emails))
     if not emails.length
       return
