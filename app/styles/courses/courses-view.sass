@@ -1,25 +1,27 @@
 #courses-view
-  #main-content
-    padding-left: 250px
-    padding-right: 250px
-
   h1
     margin-bottom: 30px
+    
+  #main-content
+    max-width: 720px
+    margin: 0 auto
 
   #play-now-to-learn-header
     margin-top: 60px
 
-  ul
+  #benefits-ul
     margin: 0 auto 40px
-    width: 320px
-
-  #begin-hoc-area
-    width: 50%
-    margin: 0 auto
+    width: 360px
 
   hr
     border-top: 1px solid grey
     margin: 5px 0
+    padding-bottom: 20px
+    opacity: 0.5
+
+  .view-levels-btn
+    font-size: 13px
+    padding-left: 10px
 
   .text-uppercase
     margin-top: 40px
@@ -32,11 +34,8 @@
     margin: 0 -20px
     padding: 0 20px
 
-  h3
-    margin-top: 20px
-
   .course-instance-entry
-    padding-left: 40px
+    padding-bottom: 10px
 
     .progress-bar
       min-width: 15%
@@ -48,3 +47,22 @@
   #join-class-form
     .alert, .progress
       margin-top: 20px
+
+  // Hero display
+  .current-hero-container
+    display: flex
+    justify-content: center
+
+    .current-hero-text
+      font-size: 16pt
+
+    .hero-avatar
+      background-color: #f8f8f8
+      box-shadow: 0 0 0 1px gray
+      margin-right: 25px
+
+    .current-hero-right-col
+      display: flex
+      flex-direction: column
+      justify-content: space-between
+      align-items: flex-start

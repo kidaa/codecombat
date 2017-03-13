@@ -1,4 +1,8 @@
 require '../common'
+Level = require '../../../server/models/Level'
+LevelComponent = require '../../../server/models/LevelComponent'
+User = require '../../../server/models/User'
+request = require '../request'
 
 describe 'LevelComponent', ->
 
@@ -17,7 +21,7 @@ describe 'LevelComponent', ->
   url = getURL('/db/level.component')
 
   it 'preparing test : clears things first.', (done) ->
-    clearModels [Level, LevelComponent], (err) ->
+    clearModels [Level, LevelComponent, User], (err) ->
       expect(err).toBeNull()
       done()
 

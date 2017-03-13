@@ -1,7 +1,9 @@
 require '../common'
+User = require '../../../server/models/User'
+Article = require '../../../server/models/Article'
+request = require '../request'
 
 describe '/db/<id>/version', ->
-  request = require 'request'
   it 'clears the db first', (done) ->
     clearModels [User, Article], (err) ->
       throw err if err
