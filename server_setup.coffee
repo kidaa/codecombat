@@ -205,20 +205,28 @@ setupFeaturesMiddleware = (app) ->
       freeOnly: false
     }
 
+    if req.headers.host is 'brainpop.codecombat.com' or req.session.featureMode is 'brain-pop'
+      features.freeOnly = true
+      features.campaignSlugs = ['dungeon']
+      features.playViewsOnly = true
+      features.noAuth = true
+      features.brainPop = true
+      features.noAds = true
 
     if req.headers.host is 'cp.codecombat.com' or req.session.featureMode is 'code-play'
       features.freeOnly = true
       features.campaignSlugs = ['dungeon', 'forest', 'desert']
       features.playViewsOnly = true
       features.codePlay = true # for one-off changes. If they're shared across different scenarios, refactor
+    
+    if /cn\.codecombat\.com/.test(req.get('host')) or req.session.featureMode is 'china'
+      features.china = true
 
     if config.picoCTF or req.session.featureMode is 'pico-ctf'
       features.playOnly = true
-    if req.user
-      { user } = req
-      if user.get('country') in ['china'] and not (user.isPremium() or user.get('stripe'))
-        features.freeOnly = true
-
+      features.noAds = true
+      features.picoCtf = true
+      
     next()
 
 setupSecureMiddleware = (app) ->
@@ -319,6 +327,8 @@ setupQuickBailToMainHTML = (app) ->
 
       if req.headers.host is 'cp.codecombat.com'
         features.codePlay = true # for one-off changes. If they're shared across different scenarios, refactor
+      if /cn\.codecombat\.com/.test(req.get('host'))
+        features.china = true
 
       renderMain(template, req, res)
 

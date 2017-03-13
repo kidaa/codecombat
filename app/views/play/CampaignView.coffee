@@ -23,6 +23,7 @@ Poll = require 'models/Poll'
 PollModal = require 'views/play/modal/PollModal'
 CourseInstance = require 'models/CourseInstance'
 codePlay = require('lib/code-play')
+CodePlayCreateAccountModal = require 'views/play/modal/CodePlayCreateAccountModal'
 
 require 'game-libraries'
 
@@ -176,7 +177,10 @@ module.exports = class CampaignView extends RootView
     @preloadTopHeroes() unless me.get('heroConfig')?.thangType
     @$el.find('#campaign-status').delay(4000).animate({top: "-=58"}, 1000) unless @terrain is 'dungeon'
     if not me.get('hourOfCode') and @terrain
-      if me.get('anonymous') and me.get('lastLevel') is 'shadow-guard' and me.level() < 4
+      if features.codePlay
+        if me.get('anonymous') and me.get('lastLevel') is 'true-names' and me.level() < 5
+          @openModalView new CodePlayCreateAccountModal()
+      else if me.get('anonymous') and me.get('lastLevel') is 'shadow-guard' and me.level() < 4 and not features.noAuth
         @openModalView new CreateAccountModal supermodel: @supermodel, showSignupRationale: true
       else if me.get('name') and me.get('lastLevel') in ['forgetful-gemsmith', 'signs-and-portents'] and
       me.level() < 5 and not (me.get('ageRange') in ['18-24', '25-34', '35-44', '45-100']) and
@@ -201,6 +205,9 @@ module.exports = class CampaignView extends RootView
       context.levels = _.reject context.levels, (level) ->
         return false if features.codePlay and codePlay.canPlay(level.slug)
         return level.requiresSubscription
+    if features.brainPop
+      context.levels = _.filter context.levels, (level) ->
+        level.slug in ['dungeons-of-kithgard', 'gems-in-the-deep', 'shadow-guard', 'true-names']
     @annotateLevels(context.levels)
     count = @countLevels context.levels
     context.levelsCompleted = count.completed
@@ -339,13 +346,15 @@ module.exports = class CampaignView extends RootView
     super()
     if @getQueryVariable('signup') and not me.get('email')
       return @promptForSignup()
-    if not me.isPremium() and (@isPremiumCampaign() or (@options.worldComplete and not features.freeOnly))
+    if not me.isPremium() and (@isPremiumCampaign() or (@options.worldComplete and not features.noAuth))
       if not me.get('email')
         return @promptForSignup()
       campaignSlug = window.location.pathname.split('/')[2]
       return @promptForSubscription campaignSlug, 'premium campaign visited'
 
   promptForSignup: ->
+    return if features.noAuth
+
     @endHighlight()
     authModal = new CreateAccountModal supermodel: @supermodel
     authModal.mode = 'signup'
@@ -368,10 +377,9 @@ module.exports = class CampaignView extends RootView
     false
 
   annotateLevels: (orderedLevels) ->
-    previousIncompletePracticeLevel = false # Lock owned levels if there's a earlier incomplete practice level to play
     for level, levelIndex in orderedLevels
       level.position ?= { x: 10, y: 10 }
-      level.locked = not me.ownsLevel(level.original) or previousIncompletePracticeLevel
+      level.locked = not me.ownsLevel(level.original)
       level.locked = true if level.slug is 'kithgard-mastery' and @calculateExperienceScore() is 0
       level.locked = true if level.requiresSubscription and @requiresSubscription and me.get('hourOfCode')
       level.locked = false if @levelStatusMap[level.slug] in ['started', 'complete']
@@ -391,6 +399,7 @@ module.exports = class CampaignView extends RootView
       level.unlocksItem = _.find(level.rewards, 'item')?.item
       level.unlocksPet = utils.petThangIDs.indexOf(level.unlocksItem) isnt -1
 
+
       if window.serverConfig.picoCTF
         if problem = _.find(@picoCTFProblems or [], pid: level.picoCTFProblem)
           level.locked = false if problem.unlocked or level.slug is 'digital-graffiti'
@@ -402,10 +411,6 @@ module.exports = class CampaignView extends RootView
             #{problem.category} - #{problem.score} points
           """
           level.color = 'rgb(80, 130, 200)' if problem.solved
-
-      if @campaign?.levelIsPractice(level) and not level.locked and @levelStatusMap[level.slug] isnt 'complete' and
-      (not level.requiresSubscription or level.adventurer or not @requiresSubscription)
-        previousIncompletePracticeLevel = true
 
       level.hidden = level.locked
       if level.concepts?.length
@@ -895,23 +900,24 @@ module.exports = class CampaignView extends RootView
     true
 
   checkForUnearnedAchievements: ->
-    return unless @campaign
-    
+    return unless @campaign and currentView.sessions
+
     # Another layer attempting to make sure users unlock levels properly.
-    
+
     # Every time the user goes to the campaign view (after initial load),
     # load achievements for that campaign.
     # Look for any achievements where the related level is complete, but
     # the reward level is not earned.
     # Try to create EarnedAchievements for each such Achievement found.
-    
+
     achievements = new Achievements()
-    
+
     achievements.fetchForCampaign(
       @campaign.get('slug'),
       { data: { project: 'related,rewards,name' } })
-    
+
     .done((achievements) =>
+      return if @destroyed
       sessionsComplete = _(currentView.sessions.models)
         .filter (s) => s.get('levelID')
         .filter (s) => s.get('state') && s.get('state').complete
@@ -919,9 +925,9 @@ module.exports = class CampaignView extends RootView
         .value()
 
       sessionsCompleteMap = _.zipObject(sessionsComplete)
-      
+
       campaignLevels = @campaign.get('levels')
-      
+
       levelsEarned = _(me.get('earned')?.levels)
         .filter (levelOriginal) => campaignLevels[levelOriginal]
         .map (levelOriginal) => campaignLevels[levelOriginal].slug
@@ -932,10 +938,10 @@ module.exports = class CampaignView extends RootView
         levelsEarned,
         _.times(levelsEarned.length, -> true)
       )
-      
-      levelAchievements = _.filter(achievements, 
+
+      levelAchievements = _.filter(achievements,
         (a) -> a.rewards && a.rewards.levels && a.rewards.levels.length)
-      
+
       for achievement in levelAchievements
         continue unless campaignLevels[achievement.related]
         relatedLevelSlug = campaignLevels[achievement.related].slug

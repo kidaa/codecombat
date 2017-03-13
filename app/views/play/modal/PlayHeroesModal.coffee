@@ -12,6 +12,7 @@ SubscribeModal = require 'views/core/SubscribeModal'
 Purchase = require 'models/Purchase'
 LayerAdapter = require 'lib/surface/LayerAdapter'
 Lank = require 'lib/surface/Lank'
+store = require 'core/store'
 
 module.exports = class PlayHeroesModal extends ModalView
   className: 'modal fade play-modal'
@@ -52,6 +53,8 @@ module.exports = class PlayHeroesModal extends ModalView
 
   onHeroesLoaded: ->
     @formatHero hero for hero in @heroes.models
+    if store.state.features.freeOnly
+      @heroes.reset(@heroes.filter((hero) => !hero.locked))
 
   formatHero: (hero) ->
     hero.name = utils.i18n hero.attributes, 'extendedName'
@@ -59,9 +62,11 @@ module.exports = class PlayHeroesModal extends ModalView
     hero.description = utils.i18n hero.attributes, 'description'
     hero.unlockLevelName = utils.i18n hero.attributes, 'unlockLevelName'
     original = hero.get('original')
-    hero.locked = not me.ownsHero(original)
-    hero.purchasable = hero.locked and me.hasSubscription()
+    hero.free = hero.attributes.slug in ['captain', 'knight', 'champion', 'duelist']
     hero.unlockBySubscribing = hero.attributes.slug in ['samurai', 'ninja', 'librarian']
+    hero.premium = not hero.free and not hero.unlockBySubscribing
+    hero.locked = not me.ownsHero(original) and not (hero.unlockBySubscribing and me.isPremium())
+    hero.purchasable = hero.locked and me.isPremium()
     if @options.level and allowedHeroes = @options.level.get 'allowedHeroes'
       hero.restricted = not (hero.get('original') in allowedHeroes)
     hero.class = (hero.get('heroClass') or 'warrior').toLowerCase()
