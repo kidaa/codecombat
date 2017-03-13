@@ -37,8 +37,6 @@ _.extend LevelSessionSchema.properties,
     type: 'string'
   levelID:
     type: 'string'
-  multiplayer:
-    type: 'boolean'
   creator: c.objectId
     links:
       [
@@ -55,11 +53,12 @@ _.extend LevelSessionSchema.properties,
     title: 'Changed'
     readOnly: true
 
+  dateFirstCompleted: {} # c.stringDate
+#    title: 'Completed'
+#    readOnly: true
+
   team: c.shortString()
   level: LevelSessionLevelSchema
-
-  screenshot:
-    type: 'string'
 
   heroConfig: c.HeroConfigSchema
 
@@ -150,13 +149,16 @@ _.extend LevelSessionSchema.properties,
         type: 'string'
         format: 'code'
 
+  codeLogs:
+    type: 'array'
+
   codeLanguage:
     type: 'string'
 
   playtime:
     type: 'number'
     title: 'Playtime'
-    description: 'The total playtime on this session'
+    description: 'The total playtime on this session in seconds'
 
   teamSpells:
     type: 'object'
@@ -200,14 +202,6 @@ _.extend LevelSessionSchema.properties,
 
   submittedCodeLanguage:
     type: 'string'
-
-  transpiledCode:
-    type: 'object'
-    additionalProperties:
-      type: 'object'
-      additionalProperties:
-        type: 'string'
-        format: 'code'
 
   isRanking:
     type: 'boolean'
@@ -305,6 +299,11 @@ _.extend LevelSessionSchema.properties,
         leagueID: {type: 'string', description: 'The _id of a Clan or CourseInstance the user belongs to.'}
         stats: c.object {description: 'Multiplayer match statistics corresponding to this entry in the league.'}
         lastOpponentSubmitDate: c.date {description: 'The submitDate of the last league session we selected to play against (for playing through league opponents in order).'}
+
+  isForClassroom:
+    type: 'boolean'
+    title: 'Is For Classroom'
+    description: 'The level session was created for a user inside a course'
 
 LevelSessionSchema.properties.leagues.items.properties.stats.properties = _.pick LevelSessionSchema.properties, 'meanStrength', 'standardDeviation', 'totalScore', 'numberOfWinsAndTies', 'numberOfLosses', 'scoreHistory', 'matches'
 

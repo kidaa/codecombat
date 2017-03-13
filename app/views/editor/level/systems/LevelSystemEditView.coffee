@@ -4,6 +4,8 @@ LevelSystem = require 'models/LevelSystem'
 SystemVersionsModal = require 'views/editor/level/systems/SystemVersionsModal'
 PatchesView = require 'views/editor/PatchesView'
 SaveVersionModal = require 'views/editor/modal/SaveVersionModal'
+ace = require 'ace'
+
 require 'vendor/treema'
 
 module.exports = class LevelSystemEditView extends CocoView
@@ -26,11 +28,6 @@ module.exports = class LevelSystemEditView extends CocoView
     super options
     @levelSystem = @supermodel.getModelByOriginalAndMajorVersion LevelSystem, options.original, options.majorVersion or 0
     console.log 'Couldn\'t get levelSystem for', options, 'from', @supermodel.models unless @levelSystem
-
-  getRenderData: (context={}) ->
-    context = super(context)
-    context.editTitle = "#{@levelSystem.get('name')}"
-    context
 
   afterRender: ->
     super()

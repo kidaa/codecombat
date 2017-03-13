@@ -1,4 +1,7 @@
 require '../common'
+Level = require '../../../server/models/Level'
+LevelSystem = require '../../../server/models/LevelSystem'
+request = require '../request'
 
 describe 'LevelSystem', ->
 
@@ -12,7 +15,6 @@ describe 'LevelSystem', ->
     codeLanguage: 'coffeescript'
     permissions: simplePermissions
     dependencies: []
-    propertyDocumentation: []
 
   systems = {}
 
@@ -77,7 +79,6 @@ describe 'LevelSystem', ->
         expect(body.original).toBeDefined()
         expect(body.created).toBeDefined()
         expect(body.dependencies).toBeDefined()
-        expect(body.propertyDocumentation).toBeDefined()
         expect(body.version.isLatestMajor).toBe(true)
         expect(body.version.isLatestMinor).toBe(true)
         expect(body.permissions).toBeDefined()
