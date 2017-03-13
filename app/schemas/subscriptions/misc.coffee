@@ -3,6 +3,12 @@ c = require 'schemas/schemas'
 module.exports =
   'application:idle-changed': c.object {},
     idle: {type: 'boolean'}
+    type: {enum: ['activity', 'visibility']}
+
+  'view-visibility:away': c.object {}
+  'view-visibility:away-back': c.object {}
+  'view-visibility:hidden': c.object {}
+  'view-visibility:visible': c.object {}
 
   'application:error': c.object {},
     message: {type: 'string'}
@@ -48,9 +54,6 @@ module.exports =
     session: {type: 'object'}
     level: {type: 'object'}
 
-  'supermodel:load-progress-changed': c.object {required: ['progress']},
-    progress: {type: 'number', minimum: 0, maximum: 1}
-
   'buy-gems-modal:update-products': { }
 
   'buy-gems-modal:purchase-initiated': c.object {required: ['productID']},
@@ -70,3 +73,9 @@ module.exports =
   'store:hero-purchased': c.object {required: ['hero', 'heroSlug']},
     hero: {type: 'object'}
     heroSlug: {type: 'string'}
+
+  'application:service-loaded': c.object {required: ['service']},
+    service: {type: 'string'}  # 'segment'
+
+  'test:update': c.object {},
+     state: {type: 'string'}

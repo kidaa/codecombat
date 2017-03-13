@@ -14,17 +14,16 @@ module.exports = class ProblemAlertView extends CocoView
     'level:restart': 'onHideProblemAlert'
     'tome:jiggle-problem-alert': 'onJiggleProblemAlert'
     'tome:manual-cast': 'onHideProblemAlert'
-    'real-time-multiplayer:manual-cast': 'onHideProblemAlert'
 
   events:
     'click .close': 'onRemoveClicked'
-    'click #problem-alert-help-button': 'onClickProblemAlertHelp'
+    'click': -> Backbone.Mediator.publish 'tome:focus-editor', {}
 
   constructor: (options) ->
+    @supermodel = options.supermodel # Has to go before super so events are hooked up
     super options
     @level = options.level
     @session = options.session
-    @supermodel = options.supermodel
     if options.problem?
       @problem = options.problem
       @onWindowResize()
@@ -36,42 +35,41 @@ module.exports = class ProblemAlertView extends CocoView
     $(window).off 'resize', @onWindowResize
     super()
 
-  getRenderData: (context={}) ->
-    context = super context
+  afterRender: ->
+    super()
+    if @problem?
+      @$el.addClass('alert').addClass("alert-#{@problem.level}").hide().fadeIn('slow')
+      @$el.addClass('no-hint') unless @problem.hint
+      @playSound 'error_appear'
+
+  setProblemMessage: ->
     if @problem?
       format = (s) -> marked(s.replace(/</g, '&lt;').replace(/>/g, '&gt;')) if s?
-      message = @problem.aetherProblem.message
+      message = @problem.message
       # Add time to problem message if hint is for a missing null check
       # NOTE: This may need to be updated with Aether error hint changes
-      if @problem.aetherProblem.hint? and /(?:null|undefined)/.test @problem.aetherProblem.hint
-        age = @problem.aetherProblem.userInfo?.age
+      if @problem.hint? and /(?:null|undefined)/.test @problem.hint
+        age = @problem.userInfo?.age
         if age?
           if /^Line \d+:/.test message
             message = message.replace /^(Line \d+)/, "$1, time #{age.toFixed(1)}"
           else
             message = "Time #{age.toFixed(1)}: #{message}"
-      context.message = format message
-      context.hint = format @problem.aetherProblem.hint
-    context
-
-  afterRender: ->
-    super()
-    if @problem?
-      @$el.addClass('alert').addClass("alert-#{@problem.aetherProblem.level}").hide().fadeIn('slow')
-      @$el.addClass('no-hint') unless @problem.aetherProblem.hint
-      Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'error_appear', volume: 1.0
+      @message = format message
+      @hint = format @problem.hint
 
   onShowProblemAlert: (data) ->
     return unless $('#code-area').is(":visible")
     if @problem?
-      if @$el.hasClass "alert-#{@problem.aetherProblem.level}"
-        @$el.removeClass "alert-#{@problem.aetherProblem.level}"
+      if @$el.hasClass "alert-#{@problem.level}"
+        @$el.removeClass "alert-#{@problem.level}"
       if @$el.hasClass "no-hint"
         @$el.removeClass "no-hint"
     @problem = data.problem
     @lineOffsetPx = data.lineOffsetPx or 0
     @$el.show()
     @onWindowResize()
+    @setProblemMessage()
     @render()
     @onJiggleProblemAlert()
     application.tracker?.trackEvent 'Show problem alert', {levelID: @level.get('slug'), ls: @session?.get('_id')}
@@ -80,7 +78,7 @@ module.exports = class ProblemAlertView extends CocoView
     return unless @problem?
     @$el.show() unless @$el.is(":visible")
     @$el.addClass 'jiggling'
-    Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'error_appear', volume: 1.0
+    @playSound 'error_appear'
     pauseJiggle = =>
       @$el?.removeClass 'jiggling'
     _.delay pauseJiggle, 1000
@@ -89,13 +87,10 @@ module.exports = class ProblemAlertView extends CocoView
     return unless @$el.is(':visible')
     @onRemoveClicked()
 
-  onClickProblemAlertHelp: ->
-    application.tracker?.trackEvent 'Problem alert help clicked', {levelID: @level.get('slug'), ls: @session?.get('_id')}
-    @openModalView new GameMenuModal showTab: 'guide', level: @level, session: @session, supermodel: @supermodel
-
   onRemoveClicked: ->
     @playSound 'menu-button-click'
     @$el.hide()
+    Backbone.Mediator.publish 'tome:focus-editor', {}
 
   onWindowResize: (e) =>
     # TODO: This all seems a little hacky

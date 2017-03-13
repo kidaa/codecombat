@@ -1,7 +1,7 @@
 RootView = require 'views/core/RootView'
 template = require 'templates/clans/clan-details'
 app = require 'core/application'
-AuthModal = require 'views/core/AuthModal'
+CreateAccountModal = require 'views/core/CreateAccountModal'
 CocoCollection = require 'collections/CocoCollection'
 Campaign = require 'models/Campaign'
 Clan = require 'models/Clan'
@@ -51,7 +51,6 @@ module.exports = class ClanDetailsView extends RootView
     @clan = new Clan _id: @clanID
     @members = new CocoCollection([], { url: "/db/clan/#{@clanID}/members", model: User, comparator: 'nameLower' })
     @memberAchievements = new CocoCollection([], { url: "/db/clan/#{@clanID}/member_achievements", model: EarnedAchievement, comparator:'_id' })
-    # MemberSessions: only loads creatorName, levelName, codeLanguage, submittedCodeLanguage for each session
     @memberSessions = new CocoCollection([], { url: "/db/clan/#{@clanID}/member_sessions", model: LevelSession, comparator:'_id' })
 
     @listenTo me, 'sync', => @render?()
@@ -61,11 +60,10 @@ module.exports = class ClanDetailsView extends RootView
     @listenTo @memberAchievements, 'sync', @onMemberAchievementsSync
     @listenTo @memberSessions, 'sync', @onMemberSessionsSync
 
-    @supermodel.loadModel @campaigns, 'campaigns', cache: false
-    @supermodel.loadModel @clan, 'clan', cache: false
+    @supermodel.loadModel @campaigns, cache: false
+    @supermodel.loadModel @clan, cache: false
     @supermodel.loadCollection(@members, 'members', {cache: false})
     @supermodel.loadCollection(@memberAchievements, 'member_achievements', {cache: false})
-    @supermodel.loadCollection(@memberSessions, 'member_sessions', {cache: false})
 
   getRenderData: ->
     context = super()
@@ -94,7 +92,7 @@ module.exports = class ClanDetailsView extends RootView
     userConceptsMap = {}
     if @campaigns.loaded
       levelCount = 0
-      for campaign in @campaigns.models
+      for campaign in @campaigns.models when campaign.get('type') is 'hero'
         campaignID = campaign.id
         lastLevelIndex = 0
         for levelID, level of campaign.get('levels')
@@ -116,7 +114,7 @@ module.exports = class ClanDetailsView extends RootView
           lastLevelIndex++
           levelCount++
 
-    @sortMembers(highestUserLevelCountMap, userConceptsMap) if @clan.get('dashboardType') is 'premium'
+    @sortMembers(highestUserLevelCountMap, userConceptsMap)# if @clan.get('dashboardType') is 'premium'
     context.members = @members?.models ? []
     context.lastUserCampaignLevelMap = lastUserCampaignLevelMap
     context.showExpandedProgress = maxLastUserCampaignLevel <= 30 or @showExpandedProgress
@@ -140,7 +138,7 @@ module.exports = class ClanDetailsView extends RootView
     return unless @members? and @memberSort?
     switch @memberSort
       when "nameDesc"
-        @members.comparator = (a, b) -> return (b.get('name') or 'Anoner').localeCompare(a.get('name') or 'Anoner')
+        @members.comparator = (a, b) -> return (b.get('name') or 'Anonymous').localeCompare(a.get('name') or 'Anonymous')
       when "progressAsc"
         @members.comparator = (a, b) ->
           aComplete = (concept for concept, state of userConceptsMap[a.id] when state is 'complete')
@@ -153,7 +151,7 @@ module.exports = class ClanDetailsView extends RootView
           else if aStarted > bStarted then return 1
           if highestUserLevelCountMap[a.id] < highestUserLevelCountMap[b.id] then return -1
           else if highestUserLevelCountMap[a.id] > highestUserLevelCountMap[b.id] then return 1
-          (a.get('name') or 'Anoner').localeCompare(b.get('name') or 'Anoner')
+          (a.get('name') or 'Anonymous').localeCompare(b.get('name') or 'Anonymous')
       when "progressDesc"
         @members.comparator = (a, b) ->
           aComplete = (concept for concept, state of userConceptsMap[a.id] when state is 'complete')
@@ -166,9 +164,9 @@ module.exports = class ClanDetailsView extends RootView
           else if aStarted < bStarted then return 1
           if highestUserLevelCountMap[a.id] > highestUserLevelCountMap[b.id] then return -1
           else if highestUserLevelCountMap[a.id] < highestUserLevelCountMap[b.id] then return 1
-          (b.get('name') or 'Anoner').localeCompare(a.get('name') or 'Anoner')
+          (b.get('name') or 'Anonymous').localeCompare(a.get('name') or 'Anonymous')
       else
-        @members.comparator = (a, b) -> return (a.get('name') or 'Anoner').localeCompare(b.get('name') or 'Anoner')
+        @members.comparator = (a, b) -> return (a.get('name') or 'Anonymous').localeCompare(b.get('name') or 'Anonymous')
     @members.sort()
 
   updateHeroIcons: ->
@@ -183,8 +181,7 @@ module.exports = class ClanDetailsView extends RootView
     @campaignLevelProgressions = []
     @conceptsProgression = []
     @arenas = []
-    for campaign in @campaigns.models
-      continue if campaign.get('slug') is 'auditions'
+    for campaign in @campaigns.models when campaign.get('type') is 'hero'
       campaignLevelProgression =
         ID: campaign.id
         slug: campaign.get('slug')
@@ -198,7 +195,7 @@ module.exports = class ClanDetailsView extends RootView
         if level.concepts?
           for concept in level.concepts
             @conceptsProgression.push concept unless concept in @conceptsProgression
-        if level.type == 'hero-ladder'
+        if level.type is 'hero-ladder' and level.slug not in ['capture-their-flag']  # Would use isType, but it's not a Level model
           @arenas.push level
       @campaignLevelProgressions.push campaignLevelProgression
     @render?()
@@ -207,7 +204,9 @@ module.exports = class ClanDetailsView extends RootView
     unless @owner?
       @owner = new User _id: @clan.get('ownerID')
       @listenTo @owner, 'sync', => @render?()
-      @supermodel.loadModel @owner, 'owner', cache: false
+      @supermodel.loadModel @owner, cache: false
+    if @clan.get("dashboardType") is "premium"
+      @supermodel.loadCollection(@memberSessions, 'member_sessions', {cache: false})
     @render?()
 
   onMembersSync: ->
@@ -282,7 +281,7 @@ module.exports = class ClanDetailsView extends RootView
     window.open url, '_blank'
 
   onDeleteClan: (e) ->
-    return @openModalView(new AuthModal()) if me.isAnonymous()
+    return @openModalView(new CreateAccountModal()) if me.isAnonymous()
     return unless window.confirm("Delete Clan?")
     options =
       url: "/db/clan/#{@clanID}"
@@ -313,7 +312,7 @@ module.exports = class ClanDetailsView extends RootView
     $('.expand-progress-checkbox').attr('checked', @showExpandedProgress)
 
   onJoinClan: (e) ->
-    return @openModalView(new AuthModal()) if me.isAnonymous()
+    return @openModalView(new CreateAccountModal()) if me.isAnonymous()
     return unless @clan.loaded
     if @clan.get('type') is 'private' and not me.isPremium()
       @openModalView new SubscribeModal()

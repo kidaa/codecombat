@@ -69,30 +69,97 @@
     position: absolute
     top: 114px
     right: 65px
+    
+  //- Paper area
+  
+  .paper-area
+    position: absolute
+    top: 114px
+    left: 31px
+    min-height: 370px
+    width: 684px
+    background: #d4c9b1
+    border: 3px solid black
+    
+    .benefits-header
+      font-weight: bold
+      font-size: 20px
+      margin: 10px 0
+      
+    table
+      width: 100%
+      margin: 20px 0
+      text-align: center
+    
+    ul
+      list-style: none
+      padding: 0
+      font-size: 16px
+      font-weight: bold
+      
+      li::before
+        content: "• "
+      
+    hr
+      border-top: 1px solid gray
+      margin: 20px 40px
+      
+    th
+      font-size: 36px
+      text-align: center
+      line-height: 36px
+      color: #59882f
+      text-shadow: 1px 1px 1px rgba(0,0,0,0.5)
+      
+    .option-col
+      text-align: center
+      
+    .option-header
+      font-weight: bold
+      font-size: 16px
+      
+    .price
+      font-weight: bold
+      font-size: 24px
+      
+    p
+      margin: 5px 0 0 20px
+      
+    button
+      min-width: 250px
+      
+    .row
+      margin-bottom: 17px
+
 
   //- Feature comparison table
 
-  .comparison-blurb
+  .comparison-blurb, .premium-pricing
     position: absolute
-    left: 10%
-    top: 132px
-    width: 450px
+    left: 8.5%
+    top: 135px
+    width: 620px
     background: rgba(0, 0, 0, 0.0)
     font-weight: normal
     line-height: 18px
     color: black
     font-family: $headings-font-family
     font-size: 18px
+    text-align: center
+
+  .premium-pricing
+    top: 355px
 
   .comparison-table
     position: absolute
-    left: 10%
+    left: 8.5%
     top: 160px
-    width: 450px
+    width: 620px
     background: rgba(0, 0, 0, 0.0)
     border-width: 0px
     .free-cell
       border-right-width: 1px
+      min-width: 40px
     thead
       tr
         th
@@ -105,13 +172,14 @@
           padding: 4px
           border-width: 0px
           border-color: rgba(85, 85, 85, 0.1)
+          text-align: right
     tbody
       font-size: 14px
       .center-ok
         text-align: center
       tr
         td
-          padding: 3px
+          padding: 2px
           border-width: 0px
           border-top-width: 1px
           border-color: rgba(85, 85, 85, 0.1)
@@ -147,18 +215,27 @@
     font-family: $headings-font-family
     font-size: 18px
 
+  //- Action buttons
+
+  .subscribe-actions
+    position: absolute
+    top: 430px
+    left: 18px
+    right: 18px
+    display: flex
+
+    > button
+      height: 70px
+      margin: 0 5px
+
   //- Purchase button
 
   .purchase-button
-    position: absolute
-    right: 24px
-    width: 300px
-    height: 70px
-    top: 430px
-    font-size: 32px
-    line-height: 42px
+    flex-grow: 1
+    font-size: 24px
+    line-height: 30px
     border-style: solid
-    border-image: url(/images/level/code_toolbar_submit_button_active.png) 14 20 20 20 fill round
+    border-image: url(/images/common/button-background-primary-active.png) 14 20 20 20 fill round
     border-width: 14px 20px 20px 20px
     color: darken(white, 5%)
 
@@ -166,42 +243,24 @@
       pointer-events: none
 
     &:hover
-      border-image: url(/images/level/code_toolbar_submit_button_zazz.png) 14 20 20 20 fill round
-      color: white
+      border-image: url(/images/common/button-background-primary-disabled.png) 14 20 20 20 fill round
 
     &:active
-      border-image: url(/images/level/code_toolbar_submit_button_zazz_pressed.png) 14 20 20 20 fill round
+      border-image: url(/images/common/button-background-primary-pressed.png) 14 20 20 20 fill round
       padding: 2px 0 0 2px
       color: white
 
-  //- Parent button
-  //- TODO: Add hover and active effects
-
-  .parent-button
-    position: absolute
-    left: 24px
-    width: 250px
-    height: 70px
-    top: 430px
-    font-size: 28px
-    line-height: 38px
-    border-style: solid
-    border-image: url(/images/common/button-background-warning-disabled.png) 14 20 20 20 fill round
-    border-width: 14px 20px 20px 20px
-    color: darken(white, 5%)
-
   //- Sale button
 
-  .sale-button
-    position: absolute
-    left: 290px
-    width: 115px
-    height: 70px
-    top: 430px
-    font-size: 32px
-    line-height: 42px
+  .sale-button, .lifetime-button
+    font-size: 24px
+    line-height: 30px
     border-style: solid
-    border-image: url(/images/common/button-background-primary-active.png) 14 20 20 20 fill round
+    border-image: url(/images/common/button-background-success-active.png) 14 20 20 20 fill round
+    &:hover
+      border-image: url(/images/common/button-background-success-inactive.png) 14 20 20 20 fill round
+    &:active
+      border-image: url(/images/common/button-background-success-pressed.png) 14 20 20 20 fill round
     border-width: 14px 20px 20px 20px
     color: darken(white, 5%)
 
@@ -225,24 +284,8 @@
     border: 5px solid gray
 
 
-html.no-borderimage #subscribe-modal
-  .purchase-button
-    border: 0
-    background-image: url(/images/level/code_toolbar_submit_button_active.png)
-    background-size: 100% 100%
-    padding: 7px 10px 10px 10px
-
-    &:hover
-      background-image: url(/images/level/code_toolbar_submit_button_zazz.png)
-      border: 0
-
-    &:active
-      background-image: url(/images/level/code_toolbar_submit_button_zazz_pressed.png)
-      padding: 9px 8px 8px 12px
-      border: 0
-
 body[lang='fr']
-  #subscribe-modal .parent-button
+  #subscribe-modal
     font-size: 21px
 
   #subscribe-modal .comparison-table tbody
@@ -262,5 +305,5 @@ body[lang='pt-PT']
   #subscribe-modal .comparison-table tbody
     font-size: 12px
 
-  #subscribe-modal .parent-button
+  #subscribe-modal
     font-size: 18px

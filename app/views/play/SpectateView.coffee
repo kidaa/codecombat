@@ -32,6 +32,8 @@ DuelStatsView = require './level/DuelStatsView'
 VictoryModal = require './level/modal/VictoryModal'
 InfiniteLoopModal = require './level/modal/InfiniteLoopModal'
 
+require 'game-libraries'
+
 PROFILE_ME = false
 
 module.exports = class SpectateLevelView extends RootView
@@ -69,7 +71,7 @@ module.exports = class SpectateLevelView extends RootView
       @load()
 
   setLevel: (@level, @supermodel) ->
-    serializedLevel = @level.serialize @supermodel, @session, @otherSession
+    serializedLevel = @level.serialize {@supermodel, @session, @otherSession, headless: false, sessionless: false}
     @god?.setLevel serializedLevel
     if @world
       @world.loadFromLevel serializedLevel, false
@@ -93,7 +95,7 @@ module.exports = class SpectateLevelView extends RootView
 
   afterRender: ->
     window.onPlayLevelViewLoaded? @  # still a hack
-    @insertSubView @loadingView = new LoadingView {}
+    @insertSubView @loadingView = new LoadingView autoUnveil: true, level: @levelLoader?.level ? @level
     @$el.find('#level-done-button').hide()
     super()
     $('body').addClass('is-playing')
@@ -106,7 +108,7 @@ module.exports = class SpectateLevelView extends RootView
     #at this point, all requisite data is loaded, and sessions are not denormalized
     team = @world.teamForPlayer(0)
     @loadOpponentTeam(team)
-    @god.setLevel @level.serialize @supermodel, @session, @otherSession
+    @god.setLevel @level.serialize {@supermodel, @session, @otherSession, headless: false, sessionless: false}
     @god.setLevelSessionIDs if @otherSession then [@session.id, @otherSession.id] else [@session.id]
     @god.setWorldClassMap @world.classMap
     @setTeam team
@@ -135,8 +137,8 @@ module.exports = class SpectateLevelView extends RootView
       continue if spellTeam is myTeam or not myTeam
       opponentSpells = opponentSpells.concat spells
 
-    opponentCode = @otherSession?.get('transpiledCode') or {}
-    myCode = @session.get('transpiledCode') or {}
+    opponentCode = @otherSession?.get('code') or {}
+    myCode = @session.get('code') or {}
     for spell in opponentSpells
       [thang, spell] = spell.split '/'
       c = opponentCode[thang]?[spell]
@@ -144,21 +146,19 @@ module.exports = class SpectateLevelView extends RootView
       if c then myCode[thang][spell] = c else delete myCode[thang][spell]
 
     @session.set('code', myCode)
-    if @session.get('multiplayer') and @otherSession?
-      # For now, ladderGame will disallow multiplayer, because session code combining doesn't play nice yet.
-      @session.set 'multiplayer', false
 
   onLevelStarted: (e) ->
     go = =>
       @loadingView?.startUnveiling()
-      @loadingView?.unveil()
+      @loadingView?.unveil true
     _.delay go, 1000
 
   onLoadingViewUnveiled: (e) ->
     # Don't remove it; we want its decoration around on large screens.
     #@removeSubView @loadingView
     #@loadingView = null
-    Backbone.Mediator.publish 'level:set-playing', playing: true
+    Backbone.Mediator.publish 'level:set-playing', playing: false
+    Backbone.Mediator.publish 'level:set-time', time: 1  # Helps to have perhaps built a few Thangs and gotten a good list of spritesheets we need to render for our initial paused frame
 
   onSupermodelLoadedOne: =>
     @modelsLoaded ?= 0
@@ -175,18 +175,18 @@ module.exports = class SpectateLevelView extends RootView
     ctx.fillText("Loaded #{@modelsLoaded} thingies",50,50)
 
   insertSubviews: ->
-    @insertSubView @tome = new TomeView levelID: @levelID, session: @session, otherSession: @otherSession, thangs: @world.thangs, supermodel: @supermodel, spectateView: true, spectateOpponentCodeLanguage: @otherSession?.get('submittedCodeLanguage'), level: @level
+    @insertSubView @tome = new TomeView levelID: @levelID, session: @session, otherSession: @otherSession, thangs: @world.thangs, supermodel: @supermodel, spectateView: true, spectateOpponentCodeLanguage: @otherSession?.get('submittedCodeLanguage'), level: @level, god: @god
     @insertSubView new PlaybackView session: @session, level: @level
 
     @insertSubView new GoldView {}
     @insertSubView new HUDView {level: @level}
-    @insertSubView new DuelStatsView level: @level, session: @session, otherSession: @otherSession, supermodel: @supermodel, thangs: @world.thangs if @level.get('type') in ['hero-ladder', 'course-ladder']
+    @insertSubView new DuelStatsView level: @level, session: @session, otherSession: @otherSession, supermodel: @supermodel, thangs: @world.thangs if @level.isType('hero-ladder', 'course-ladder')
     @insertSubView @controlBar = new ControlBarView {worldName: utils.i18n(@level.attributes, 'name'), session: @session, level: @level, supermodel: @supermodel, spectateGame: true}
 
   # callbacks
 
   onInfiniteLoop: (e) ->
-    return unless e.firstWorld
+    return unless e.firstWorld and e.god is @god
     @openModalView new InfiniteLoopModal()
     window.tracker?.trackEvent 'Saw Initial Infinite Loop', level: @world.name, label: @world.name
 
@@ -195,7 +195,7 @@ module.exports = class SpectateLevelView extends RootView
   initSurface: ->
     webGLSurface = $('canvas#webgl-surface', @$el)
     normalSurface = $('canvas#normal-surface', @$el)
-    @surface = new Surface @world, normalSurface, webGLSurface, thangTypes: @supermodel.getModels(ThangType), playJingle: not @isEditorPreview, spectateGame: true, playerNames: @findPlayerNames()
+    @surface = new Surface @world, normalSurface, webGLSurface, thangTypes: @supermodel.getModels(ThangType), spectateGame: true, playerNames: @findPlayerNames(), levelType: @level.get('type', true)
     worldBounds = @world.getBounds()
     bounds = [{x:worldBounds.left, y:worldBounds.top}, {x:worldBounds.right, y:worldBounds.bottom}]
     @surface.camera.setBounds(bounds)
@@ -206,7 +206,7 @@ module.exports = class SpectateLevelView extends RootView
   findPlayerNames: ->
     playerNames = {}
     for session in [@session, @otherSession] when session?.get('team')
-      playerNames[session.get('team')] = session.get('creatorName') or 'Anoner'
+      playerNames[session.get('team')] = session.get('creatorName') or 'Anonymous'
     playerNames
 
   initGoalManager: ->
@@ -256,6 +256,8 @@ module.exports = class SpectateLevelView extends RootView
     startFrame = @lastWorldFramesLoaded ? 0
     if @world.frames.length is @world.totalFrames  # Finished loading
       @lastWorldFramesLoaded = 0
+      unless @getQueryVariable('autoplay') is false
+        Backbone.Mediator.publish 'level:set-playing', playing: true  # Since we paused at first, now we autostart playback.
     else
       @lastWorldFramesLoaded = @world.frames.length
     for [spriteName, message] in @world.thangDialogueSounds startFrame
@@ -265,10 +267,13 @@ module.exports = class SpectateLevelView extends RootView
 
   onNextGamePressed: (e) ->
     @fetchRandomSessionPair (err, data) =>
+      return if @destroyed
       if err? then return console.log "There was an error fetching the random session pair: #{data}"
       @sessionOne = data[0]._id
       @sessionTwo = data[1]._id
       url = "/play/spectate/#{@levelID}?session-one=#{@sessionOne}&session-two=#{@sessionTwo}"
+      if leagueID = @getQueryVariable 'league'
+        url += "&league=" + leagueID
       Backbone.Mediator.publish 'router:navigate', {
         route: url,
         viewClass: SpectateLevelView,

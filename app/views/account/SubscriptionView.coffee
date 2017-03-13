@@ -1,6 +1,9 @@
 RootView = require 'views/core/RootView'
 template = require 'templates/account/subscription-view'
 CocoCollection = require 'collections/CocoCollection'
+Products = require 'collections/Products'
+Product = require 'models/Product'
+
 SubscribeModal = require 'views/core/SubscribeModal'
 Payment = require 'models/Payment'
 stripeHandler = require 'core/services/stripe'
@@ -49,14 +52,11 @@ module.exports = class SubscriptionView extends RootView
     prepaidCode = utils.getQueryVariable '_ppc'
     @personalSub = new PersonalSub(@supermodel, prepaidCode)
     @recipientSubs = new RecipientSubs(@supermodel)
+    @emailValidator = new EmailValidator(@superModel)
     @personalSub.update => @render?()
     @recipientSubs.update => @render?()
-
-  getRenderData: ->
-    c = super()
-    c.personalSub = @personalSub
-    c.recipientSubs = @recipientSubs
-    c
+    @products = new Products()
+    @supermodel.loadCollection @products
 
   # Personal Subscriptions
 
@@ -88,7 +88,8 @@ module.exports = class SubscriptionView extends RootView
 
   onClickRecipientsSubscribe: (e) ->
     emails = @$el.find('.recipient-emails').val().split('\n')
-    @recipientSubs.startSubscribe(emails)
+    valid = @emailValidator.validateEmails(emails, =>@render?())
+    @recipientSubs.startSubscribe(emails) if valid
 
   onClickRecipientUnsubscribe: (e) ->
     $(e.target).addClass('hide')
@@ -102,6 +103,31 @@ module.exports = class SubscriptionView extends RootView
     @recipientSubs.finishSubscribe(e.token.id, => @render?())
 
 # Helper classes for managing subscription actions and updating UI state
+
+class EmailValidator
+
+  validateEmails: (emails, render) ->
+    @lastEmails = emails.join('\n')
+    #taken from http://www.regular-expressions.info/email.html
+    emailRegex = /[A-z0-9._%+-]+@[A-z0-9.-]+\.[A-z]{2,63}/
+    @validEmails = (email for email in emails when emailRegex.test(email.trim().toLowerCase()))
+    return @emailsInvalid(render) if @validEmails.length < emails.length
+    return @emailsValid(render)
+
+  emailString: ->
+    return unless @validEmails
+    return @validEmails.join('\n')
+
+  emailsInvalid: (render) ->
+    @state = "invalid"
+    render()
+    return false
+
+  emailsValid: (render) ->
+    @state = "valid"
+    render()
+    return true
+
 
 class PersonalSub
   constructor: (@supermodel, @prepaidCode) ->
@@ -200,7 +226,21 @@ class PersonalSub
             @activeUntil = periodEnd
           else if sub.discount?.coupon?.id isnt 'free'
             @nextPaymentDate = periodEnd
-            @cost = "$#{(sub.plan.amount/100).toFixed(2)}"
+            # NOTE: This checks the product list for one that corresponds to their
+            #   country. This will not work for "free" or "halfsies" because there
+            #   are not products that correspond to those.
+            # NOTE: This does NOT use the "amount" of the coupon in this client side calculation
+            #   (those should be kept up to date on the server)
+            # TODO: Calculate and return the true price on the server side, and use that as a source of truth
+            if sub.discount?.coupon?.id
+              productName = "#{sub.discount?.coupon?.id}_basic_subscription"
+            else
+              productName = "basic_subscription"
+            product = _.findWhere(@supermodel.getModels(Product), (m) -> m.get('name') is productName)
+            if product
+              @cost = "$#{(product.get('amount')/100).toFixed(2)}"
+            else
+              @cost = "$#{(sub.plan.amount/100).toFixed(2)}"
         else
           console.error "Could not find personal subscription #{me.get('stripe')?.customerID} #{me.get('stripe')?.subscriptionID}"
         delete @state

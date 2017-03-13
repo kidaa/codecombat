@@ -10,10 +10,8 @@ module.exports = class SimulateTabView extends CocoView
 
   events:
     'click #simulate-button': 'onSimulateButtonClick'
-    'click #simulate-all-button': 'onSimulateAllButtonClick'
 
-  constructor: (options) ->
-    super(options)
+  initialize: ->
     @simulatorsLeaderboardData = new SimulatorsLeaderboardData(me)
     @simulatorsLeaderboardDataRes = @supermodel.addModelResource(@simulatorsLeaderboardData, 'top_simulators', {cache: false})
     @simulatorsLeaderboardDataRes.load()
@@ -21,22 +19,13 @@ module.exports = class SimulateTabView extends CocoView
     require 'vendor/aether-python'
     require 'vendor/aether-coffeescript'
     require 'vendor/aether-lua'
-    require 'vendor/aether-clojure'
-    require 'vendor/aether-io'
+    require 'vendor/aether-java'
 
   onLoaded: ->
     super()
     @render()
-    if document.location.hash is '#simulate' and not @simulator
+    if (document.location.hash is '#simulate' or @options.level.isType('course-ladder')) and not @simulator
       @startSimulating()
-
-  getRenderData: ->
-    ctx = super()
-    ctx.simulationStatus = @simulationStatus
-    ctx.simulatorsLeaderboardData = @simulatorsLeaderboardData
-    ctx.numberOfGamesInQueue = @simulatorsLeaderboardData.numberOfGamesInQueue
-    ctx._ = _
-    ctx
 
   afterRender: ->
     super()
@@ -60,11 +49,12 @@ module.exports = class SimulateTabView extends CocoView
 
   simulateNextGame: ->
     unless @simulator
-      @simulator = new Simulator()
+      @simulator = new Simulator levelID: @options.level.get('slug'), leagueID: @options.leagueID
       @listenTo @simulator, 'statusUpdate', @updateSimulationStatus
       # Work around simulator getting super slow on Chrome
       fetchAndSimulateTaskOriginal = @simulator.fetchAndSimulateTask
       @simulator.fetchAndSimulateTask = =>
+        return if @destroyed
         if @simulator.simulatedByYou >= 20
           console.log '------------------- Destroying  Simulator and making a new one -----------------'
           @simulator.destroy()
@@ -75,6 +65,7 @@ module.exports = class SimulateTabView extends CocoView
     @simulator.fetchAndSimulateTask()
 
   refresh: ->
+    return  # Queue-based scoring is currently not active anyway, so don't keep checking this until we fix it.
     success = (numberOfGamesInQueue) ->
       $('#games-in-queue').text numberOfGamesInQueue
     $.ajax '/queue/messagesInQueueCount', cache: false, success: success
@@ -145,6 +136,7 @@ class SimulatorsLeaderboardData extends CocoClass
     return me.id in (user.id for user in @topSimulators.models)
 
   nearbySimulators: ->
+    return [] if not @playersAbove?.models
     l = []
     above = @playersAbove.models
     l = l.concat(above)

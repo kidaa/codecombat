@@ -1,6 +1,7 @@
 CocoView = require 'views/core/CocoView'
 template = require 'templates/play/common/ladder_submission'
 {createAetherOptions} = require 'lib/aether_utils'
+LevelSession = require 'models/LevelSession'
 
 module.exports = class LadderSubmissionView extends CocoView
   className: 'ladder-submission-view'
@@ -13,6 +14,7 @@ module.exports = class LadderSubmissionView extends CocoView
   constructor: (options) ->
     super options
     @session = options.session
+    @mirrorSession = options.mirrorSession
     @level = options.level
 
   getRenderData: ->
@@ -47,8 +49,8 @@ module.exports = class LadderSubmissionView extends CocoView
     @$el.find('.last-submitted').toggle(showLastSubmitted)
 
   showApologeticSignupModal: ->
-    AuthModal = require 'views/core/AuthModal'
-    @openModalView(new AuthModal({showRequiredError: true}))
+    CreateAccountModal = require 'views/core/CreateAccountModal'
+    @openModalView(new CreateAccountModal({showRequiredError: true}))
 
   rankSession: (e) ->
     return unless @session.readyToRank()
@@ -61,35 +63,35 @@ module.exports = class LadderSubmissionView extends CocoView
     failure = (jqxhr, textStatus, errorThrown) =>
       console.log jqxhr.responseText
       @setRankingButtonText 'failed' unless @destroyed
-    @transpileSession (transpiledCode) =>
-
+    @session.save null, success: =>
       ajaxData =
         session: @session.id
         levelID: @level.id
         originalLevelID: @level.get('original')
         levelMajorVersion: @level.get('version').major
-        transpiledCode: transpiledCode
-
-      $.ajax '/queue/scoring', {
+      ajaxOptions =
         type: 'POST'
         data: ajaxData
         success: success
         error: failure
-      }
+      if @mirrorSession and @mirrorSession.get('submittedCode')
+        # Also submit the mirrorSession after the main session submits successfully.
+        mirrorAjaxData = _.clone ajaxData
+        mirrorAjaxData.session = @mirrorSession.id
+        mirrorCode = @mirrorSession.get('code')
+        if @session.get('team') is 'humans'
+          mirrorCode['hero-placeholder-1'] = @session.get('code')['hero-placeholder']
+        else
+          mirrorCode['hero-placeholder'] = @session.get('code')['hero-placeholder-1']
+        mirrorAjaxOptions = _.clone ajaxOptions
+        mirrorAjaxOptions.data = mirrorAjaxData
+        ajaxOptions.success = =>
+          patch = code: mirrorCode, codeLanguage: @session.get('codeLanguage')
+          tempSession = new LevelSession _id: @mirrorSession.id
+          tempSession.save patch, patch: true, type: 'PUT', success: ->
+            $.ajax '/queue/scoring', mirrorAjaxOptions
 
-  transpileSession: (callback) ->
-    submittedCode = @session.get('code')
-    codeLanguage = @session.get('codeLanguage') or 'javascript'
-    @session.set('submittedCodeLanguage', codeLanguage)
-    transpiledCode = {}
-    for thang, spells of submittedCode
-      transpiledCode[thang] = {}
-      for spellID, spell of spells
-        unless _.contains(@session.get('teamSpells')[@session.get('team')], thang + '/' + spellID) then continue
-        aetherOptions = createAetherOptions functionName: spellID, codeLanguage: codeLanguage
-        aether = new Aether aetherOptions
-        transpiledCode[thang][spellID] = aether.transpile spell
-    @session.save null, success: -> callback transpiledCode
+      $.ajax '/queue/scoring', ajaxOptions
 
   onHelpSimulate: ->
     @playSound 'menu-button-click'
