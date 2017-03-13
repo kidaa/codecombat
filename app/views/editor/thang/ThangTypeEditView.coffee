@@ -22,6 +22,8 @@ template = require 'templates/editor/thang/thang-type-edit-view'
 storage = require 'core/storage'
 ExportThangTypeModal = require './ExportThangTypeModal'
 
+require 'game-libraries'
+
 CENTER = {x: 200, y: 400}
 
 commonTasks = [
@@ -77,6 +79,7 @@ defaultTasks =
     'Set the hero class.'
     'Add Extended Hero Name.'
     'Upload Hero Doll Images.'
+    'Upload Pose Image.'
     'Start a new name category in names.coffee.'
     'Set up hero stats in Equips, Attackable, Moves.'
     'Set Collects collectRange to 2, Sees visualRange to 60.'
@@ -174,7 +177,7 @@ module.exports = class ThangTypeEditView extends RootView
     super options
     @mockThang = $.extend(true, {}, @mockThang)
     @thangType = new ThangType(_id: @thangTypeID)
-    @thangType = @supermodel.loadModel(@thangType, 'thang').model
+    @thangType = @supermodel.loadModel(@thangType).model
     @thangType.saveBackups = true
     @listenToOnce @thangType, 'sync', ->
       @files = @supermodel.loadCollection(new DocumentFiles(@thangType), 'files').model

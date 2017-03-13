@@ -1,11 +1,10 @@
 ModalView = require 'views/core/ModalView'
-AuthModal = require 'views/core/AuthModal'
+CreateAccountModal = require 'views/core/CreateAccountModal'
 template = require 'templates/play/menu/game-menu-modal'
 submenuViews = [
   require 'views/play/menu/SaveLoadView'
   require 'views/play/menu/OptionsView'
   require 'views/play/menu/GuideView'
-  require 'views/play/menu/MultiplayerView'
 ]
 
 module.exports = class GameMenuModal extends ModalView
@@ -31,10 +30,12 @@ module.exports = class GameMenuModal extends ModalView
   getRenderData: (context={}) ->
     context = super(context)
     docs = @options.level.get('documentation') ? {}
-    submenus = ['guide', 'options', 'save-load', 'multiplayer']
-    submenus = _.without submenus, 'guide' unless docs.specificArticles?.length or docs.generalArticles?.length
+    submenus = ['guide', 'options', 'save-load']
+    submenus = _.without submenus, 'options' if window.serverConfig.picoCTF
+    unless window.serverConfig.picoCTF
+      if @level.isType('course', 'course-ladder') or not @options.level.get('helpVideos')?.length > 0
+        submenus = _.without submenus, 'guide'
     submenus = _.without submenus, 'save-load' unless me.isAdmin() or /https?:\/\/localhost/.test(window.location.href)
-    submenus = _.without submenus, 'multiplayer' unless me.isAdmin() or (@level?.get('type') in ['ladder', 'hero-ladder', 'course-ladder'] and @level.get('slug') not in ['ace-of-coders'])
     @includedSubmenus = submenus
     context.showTab = @options.showTab ? submenus[0]
     context.submenus = submenus
@@ -42,19 +43,17 @@ module.exports = class GameMenuModal extends ModalView
       'options': 'cog'
       'guide': 'list'
       'save-load': 'floppy-disk'
-      'multiplayer': 'globe'
     context
 
   showsChooseHero: ->
-    return false if @level?.get('type') in ['course', 'course-ladder']
-    return false if @options.levelID in ['zero-sum', 'ace-of-coders']
+    return false if @level?.isType('course', 'course-ladder')
+    return false if @options.levelID in ['zero-sum', 'ace-of-coders', 'elemental-wars', 'the-battle-of-sky-span']
     return true
 
   afterRender: ->
     super()
     @insertSubView new submenuView @options for submenuView in submenuViews
     firstView = switch @options.showTab
-      when 'multiplayer' then @subviews.multiplayer_view
       when 'guide' then @subviews.guide_view
       else
         if 'guide' in @includedSubmenus then @subviews.guide_view else @subviews.options_view
@@ -79,4 +78,4 @@ module.exports = class GameMenuModal extends ModalView
     window.tracker?.trackEvent 'Started Signup', category: 'Play Level', label: 'Game Menu', level: @options.levelID
     # TODO: Default already seems to be prevented.  Need to be explicit?
     e.preventDefault()
-    @openModalView new AuthModal {mode: 'signup'}
+    @openModalView new CreateAccountModal()

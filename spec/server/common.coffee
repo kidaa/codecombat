@@ -1,44 +1,17 @@
 # import this at the top of every file so we're not juggling connections
 # and common libraries are available
 
-console.log 'IT BEGINS'
+console.log '/spec/server/common.coffee - Setting up spec globals...'
 if process.env.COCO_MONGO_HOST
   throw Error('Tests may not run with production environment')
 
-GLOBAL._ = require 'lodash'
-_.str = require 'underscore.string'
-_.mixin(_.str.exports())
-GLOBAL.mongoose = require 'mongoose'
+require '../../server' # make lodash globally available
+mongoose = require 'mongoose'
 path = require 'path'
 GLOBAL.testing = true
 GLOBAL.tv4 = require 'tv4' # required for TreemaUtils to work
 
-models_path = [
-  '../../server/analytics/AnalyticsUsersActive'
-  '../../server/articles/Article'
-  '../../server/campaigns/Campaign'
-  '../../server/clans/Clan'
-  '../../server/classrooms/Classroom'
-  '../../server/courses/Course'
-  '../../server/courses/CourseInstance'
-  '../../server/levels/Level'
-  '../../server/levels/components/LevelComponent'
-  '../../server/levels/systems/LevelSystem'
-  '../../server/levels/sessions/LevelSession'
-  '../../server/levels/thangs/LevelThangType'
-  '../../server/users/User'
-  '../../server/patches/Patch'
-  '../../server/achievements/Achievement'
-  '../../server/achievements/EarnedAchievement'
-  '../../server/payments/Payment'
-  '../../server/prepaids/Prepaid'
-  '../../server/trial_requests/TrialRequest'
-]
-
-for m in models_path
-  model = path.basename(m)
-  #console.log('model=' + model)
-  GLOBAL[model] = require m
+User = require '../../server/models/User'
 
 async = require 'async'
 
@@ -70,7 +43,6 @@ GLOBAL.saveModels = (models, done) ->
 
 GLOBAL.simplePermissions = [target: 'public', access: 'owner']
 GLOBAL.ObjectId = mongoose.Types.ObjectId
-GLOBAL.request = require 'request'
 
 GLOBAL.unittest = {}
 unittest.users = unittest.users or {}
@@ -86,10 +58,9 @@ unittest.getUser = (name, email, password, done, force) ->
   # Creates the user if it doesn't already exist.
 
   return done(unittest.users[email]) if unittest.users[email] and not force
-  request = require 'request'
   request.post getURL('/auth/logout'), ->
     request.get getURL('/auth/whoami'), ->
-      req = request.post(getURL('/db/user'), (err, response, body) ->
+      req = request.post({url: getURL('/db/user'), json: {email, password}}, (err, response, body) ->
         throw err if err
         User.findOne({email: email}).exec((err, user) ->
           throw err if err
@@ -99,9 +70,6 @@ unittest.getUser = (name, email, password, done, force) ->
             wrapUpGetUser(email, user, done)
         )
       )
-      form = req.form()
-      form.append('email', email)
-      form.append('password', password)
 
 wrapUpGetUser = (email, user, done) ->
   unittest.users[email] = user
@@ -168,58 +136,48 @@ GLOBAL.loginNewUser = (done) ->
   email = "#{name}@me.com"
   request.post getURL('/auth/logout'), ->
     unittest.getUser name, email, password, (user) ->
-      req = request.post(getURL('/auth/login'), (error, response) ->
+      json = {username: email, password}
+      req = request.post({url: getURL('/auth/login'), json}, (error, response) ->
         expect(response.statusCode).toBe(200)
         done(user)
       )
-      form = req.form()
-      form.append('username', email)
-      form.append('password', password)
     , true
 
 GLOBAL.loginJoe = (done) ->
   request.post getURL('/auth/logout'), ->
     unittest.getNormalJoe (user) ->
-      req = request.post(getURL('/auth/login'), (error, response) ->
+      json = {username: 'normal@jo.com', password: 'food'}
+      req = request.post({url: getURL('/auth/login'), json}, (error, response) ->
         expect(response.statusCode).toBe(200)
         done(user)
       )
-      form = req.form()
-      form.append('username', 'normal@jo.com')
-      form.append('password', 'food')
 
 GLOBAL.loginSam = (done) ->
   request.post getURL('/auth/logout'), ->
     unittest.getOtherSam (user) ->
-      req = request.post(getURL('/auth/login'), (error, response) ->
+      json = { username: 'other@sam.com', password: 'beer'}
+      req = request.post({url: getURL('/auth/login'), json}, (error, response) ->
         expect(response.statusCode).toBe(200)
         done(user)
       )
-      form = req.form()
-      form.append('username', 'other@sam.com')
-      form.append('password', 'beer')
 
 GLOBAL.loginAdmin = (done) ->
   request.post getURL('/auth/logout'), ->
     unittest.getAdmin (user) ->
-      req = request.post(getURL('/auth/login'), (error, response) ->
+      json = { username: 'admin@afc.com', password: '80yqxpb38j' }
+      req = request.post({url: getURL('/auth/login'), json}, (error, response) ->
         expect(response.statusCode).toBe(200)
         done(user)
       )
-      form = req.form()
-      form.append('username', 'admin@afc.com')
-      form.append('password', '80yqxpb38j')
       # find some other way to make the admin object an admin... maybe directly?
 
 GLOBAL.loginUser = (user, done) ->
   request.post getURL('/auth/logout'), ->
-    req = request.post(getURL('/auth/login'), (error, response) ->
+    json = { username: user.get('email'), password: user.get('name') }
+    req = request.post({ url: getURL('/auth/login'), json}, (error, response) ->
       expect(response.statusCode).toBe(200)
       done(user)
     )
-    form = req.form()
-    form.append('username', user.get('email'))
-    form.append('password', user.get('name'))
 
 GLOBAL.logoutUser = (done) ->
   request.post getURL('/auth/logout'), ->
@@ -240,6 +198,6 @@ _drop = (done) ->
       done()
       
 GLOBAL.resetUserIDCounter = (number=0) ->
-  auth = require '../../server/routes/auth'
-  auth.idCounter = number
+  User.idCounter = number
 
+console.log '/spec/server/common.coffee - Done'
