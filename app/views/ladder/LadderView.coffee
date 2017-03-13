@@ -39,20 +39,29 @@ module.exports = class LadderView extends RootView
     'click a:not([data-toggle])': 'onClickedLink'
     'click .spectate-button': 'onClickSpectateButton'
 
-  constructor: (options, @levelID, @leagueType, @leagueID) ->
-    super(options)
-    @level = @supermodel.loadModel(new Level(_id: @levelID), 'level').model
+  initialize: (options, @levelID, @leagueType, @leagueID) ->
+    @level = @supermodel.loadModel(new Level(_id: @levelID)).model
+    onLoaded = =>
+      return if @destroyed
+      @levelDescription = marked(@level.get('description')) if @level.get('description')
+      @teams = teamDataFromLevel @level
+
+    if @level.loaded then onLoaded() else @level.once('sync', onLoaded) 
     @sessions = @supermodel.loadCollection(new LevelSessionsCollection(@levelID), 'your_sessions', {cache: false}).model
-    @teams = []
+    @winners = require('./tournament_results')[@levelID]
+
+    if tournamentEndDate = {greed: 1402444800000, 'criss-cross': 1410912000000, 'zero-sum': 1428364800000, 'ace-of-coders': 1444867200000}[@levelID]
+      @tournamentTimeLeft = moment(new Date(tournamentEndDate)).fromNow()
+    if tournamentStartDate = {'zero-sum': 1427472000000, 'ace-of-coders': 1442417400000}[@levelID]
+      @tournamentTimeElapsed = moment(new Date(tournamentStartDate)).fromNow()
+
     @loadLeague()
-    @course = new Course()
 
   loadLeague: ->
     @leagueID = @leagueType = null unless @leagueType in ['clan', 'course']
     return unless @leagueID
     modelClass = if @leagueType is 'clan' then Clan else CourseInstance
-    resourceString = if @leagueType is 'clan' then 'clans.clan' else 'courses.course'
-    @league = @supermodel.loadModel(new modelClass(_id: @leagueID), resourceString).model
+    @league = @supermodel.loadModel(new modelClass(_id: @leagueID)).model
     if @leagueType is 'course'
       if @league.loaded
         @onCourseInstanceLoaded @league
@@ -62,29 +71,8 @@ module.exports = class LadderView extends RootView
   onCourseInstanceLoaded: (courseInstance) ->
     return if @destroyed
     course = new Course({_id: courseInstance.get('courseID')})
-    @course = @supermodel.loadModel(course, 'courses.course').model
+    @course = @supermodel.loadModel(course).model
     @listenToOnce @course, 'sync', @render
-
-  onLoaded: ->
-    @teams = teamDataFromLevel @level
-    super()
-
-  getRenderData: ->
-    ctx = super()
-    ctx.level = @level
-    ctx.link = "/play/level/#{@level.get('name')}"
-    ctx.teams = @teams
-    ctx.levelID = @levelID
-    ctx.levelDescription = marked(@level.get('description')) if @level.get('description')
-    ctx.leagueType = @leagueType
-    ctx.league = @league
-    ctx._ = _
-    if tournamentEndDate = {greed: 1402444800000, 'criss-cross': 1410912000000, 'zero-sum': 1428364800000, 'ace-of-coders': 1444867200000}[@levelID]
-      ctx.tournamentTimeLeft = moment(new Date(tournamentEndDate)).fromNow()
-    if tournamentStartDate = {'zero-sum': 1427472000000, 'ace-of-coders': 1442417400000}[@levelID]
-      ctx.tournamentTimeElapsed = moment(new Date(tournamentStartDate)).fromNow()
-    ctx.winners = require('./tournament_results')[@levelID]
-    ctx
 
   afterRender: ->
     super()

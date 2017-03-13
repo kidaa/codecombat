@@ -132,6 +132,7 @@ _.extend ThangTypeSchema.properties,
   raster: {type: 'string', format: 'image-file', title: 'Raster Image'}
   rasterIcon: { type: 'string', format: 'image-file', title: 'Raster Image Icon' }
   containerIcon: { type: 'string' }
+  poseImage: { type: 'string', format: 'image-file', title: 'Pose Image' }
   featureImages: c.object { title: 'Hero Doll Images' },
     body: { type: 'string', format: 'image-file', title: 'Body' }
     head: { type: 'string', format: 'image-file', title: 'Head' }
@@ -139,16 +140,17 @@ _.extend ThangTypeSchema.properties,
     thumb: { type: 'string', format: 'image-file', title: 'Thumb' }
     wizardHand: { type: 'string', format: 'image-file', title: 'Wizard Hand' }
   dollImages: c.object { title: 'Paper Doll Images' },
-    male: { type: 'string', format: 'image-file', title: ' Male' }
-    female: { type: 'string', format: 'image-file', title: ' Female' }
+    male: { type: 'string', format: 'image-file', title: 'Male' }
+    female: { type: 'string', format: 'image-file', title: 'Female' }
     maleThumb: { type: 'string', format: 'image-file', title: 'Thumb (Male)' }
     femaleThumb: { type: 'string', format: 'image-file', title: 'Thumb (Female)' }
     maleRanger: { type: 'string', format: 'image-file', title: 'Glove (Male Ranger)' }
     maleRangerThumb: { type: 'string', format: 'image-file', title: 'Thumb (Male Ranger)' }
     femaleRanger: { type: 'string', format: 'image-file', title: 'Glove (Female Ranger)' }
     femaleRangerThumb: { type: 'string', format: 'image-file', title: 'Thumb (Female Ranger)' }
-    maleBack: { type: 'string', format: 'image-file', title: ' Male Back' }
-    femaleBack: { type: 'string', format: 'image-file', title: ' Female Back' }
+    maleBack: { type: 'string', format: 'image-file', title: 'Male Back' }
+    femaleBack: { type: 'string', format: 'image-file', title: 'Female Back' }
+    pet: { type: 'string', format: 'image-file', title: 'Pet' }
   colorGroups: c.object
     title: 'Color Groups'
     additionalProperties:
@@ -205,7 +207,7 @@ _.extend ThangTypeSchema.properties,
         type: 'number'
       }
       spriteType: { enum: ['singular', 'segmented'], title: 'Sprite Type' }
-
+  restricted: {type: 'string', title: 'Restricted', description: 'If set, this ThangType will only be accessible by admins and whoever it is restricted to.'}
 
 ThangTypeSchema.required = []
 

@@ -2,7 +2,7 @@ log = require 'winston'
 async = require 'async'
 errors = require '../../commons/errors'
 scoringUtils = require './scoringUtils'
-LevelSession = require '../../levels/sessions/LevelSession'
+LevelSession = require '../../models/LevelSession'
 Mandate = require '../../models/Mandate'
 
 module.exports = getTwoGames = (req, res) ->
@@ -21,13 +21,13 @@ module.exports = getTwoGames = (req, res) ->
       leagueID: req.body.leagueID
     getRandomSessions req.user, options, sendSessionsResponse(res)
 
-sessionSelectionString = 'team totalScore transpiledCode submittedCodeLanguage teamSpells levelID creatorName creator submitDate leagues'
+sessionSelectionString = 'team totalScore submittedCode submittedCodeLanguage teamSpells levelID creatorName creator submitDate leagues'
 
 sendSessionsResponse = (res) ->
   (err, sessions) ->
     if err then return errors.serverError res, "Couldn't get two games to simulate: #{err}"
     unless _.filter(sessions).length is 2
-      res.send 204, 'No games to score.'
+      res.status(204).send 'No games to score.'
       return res.end()
     taskObject = messageGenerated: Date.now(), sessions: (scoringUtils.formatSessionInformation session for session in sessions)
     #console.log 'Dispatching ladder game simulation between', taskObject.sessions[0].creatorName, 'and', taskObject.sessions[1].creatorName
@@ -80,7 +80,7 @@ getRandomSessions = (user, options, callback) ->
 
 # Sampling by level: we pick a level, then find a human and ogre session for that level, one at random, one biased towards recent submissions.
 #ladderLevelIDs = ['greed', 'criss-cross', 'brawlwood', 'dungeon-arena', 'gold-rush', 'sky-span']  # Let's not give any extra simulations to old ladders.
-ladderLevelIDs = ['dueling-grounds', 'cavern-survival', 'multiplayer-treasure-grove', 'harrowland', 'zero-sum', 'ace-of-coders', 'wakka-maul']
+ladderLevelIDs = ['dueling-grounds', 'cavern-survival', 'multiplayer-treasure-grove', 'harrowland', 'zero-sum', 'ace-of-coders', 'wakka-maul', 'power-peak', 'cross-bones', 'the-battle-of-sky-span']
 backgroundLadderLevelIDs = _.without ladderLevelIDs, 'zero-sum', 'ace-of-coders'
 sampleByLevel = (options, callback) ->
   levelID = options.levelID or _.sample(if options.background then backgroundLadderLevelIDs else ladderLevelIDs)

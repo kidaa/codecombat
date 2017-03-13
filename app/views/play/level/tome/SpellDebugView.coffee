@@ -1,5 +1,6 @@
 CocoView = require 'views/core/CocoView'
 template = require 'templates/play/level/tome/spell_debug'
+ace = require 'ace'
 Range = ace.require('ace/range').Range
 TokenIterator = ace.require('ace/token_iterator').TokenIterator
 serializedClasses =
@@ -17,7 +18,6 @@ module.exports = class SpellDebugView extends CocoView
     'god:new-world-created': 'onNewWorld'
     'god:debug-value-return': 'handleDebugValue'
     'god:debug-world-load-progress-changed': 'handleWorldLoadProgressChanged'
-    'tome:spell-shown': 'changeCurrentThangAndSpell'
     'tome:cast-spells': 'onTomeCast'
     'surface:frame-changed': 'onFrameChanged'
     'tome:spell-has-changed-significantly-calculation': 'onSpellChangedCalculation'
@@ -97,10 +97,6 @@ module.exports = class SpellDebugView extends CocoView
         currentObject[key] = {}
       currentObject = currentObject[key]
     currentObject[keys[keys.length - 1]] = value
-
-  changeCurrentThangAndSpell: (thangAndSpellObject) ->
-    @thang = thangAndSpellObject.thang
-    @spell = thangAndSpellObject.spell
 
   handleDebugValue: (e) ->
     {key, value} = e

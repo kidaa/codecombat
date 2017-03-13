@@ -1,5 +1,9 @@
 config = require '../../../server_config'
 require '../common'
+User = require '../../../server/models/User'
+Payment = require '../../../server/models/Payment'
+request = require '../request'
+utils = require '../utils'
 
 # sample data that comes in through the webhook when you subscribe
 
@@ -20,6 +24,10 @@ describe '/db/user, editing stripe.couponID property', ->
   #- shared data between tests
   joeData = null
   firstSubscriptionID = null
+  
+  beforeEach utils.wrap (done) ->
+    yield utils.populateProducts()
+    done()
 
   it 'does not work for non-admins', (done) ->
     loginJoe (joe) ->
