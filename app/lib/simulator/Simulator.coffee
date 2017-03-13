@@ -5,7 +5,7 @@ GoalManager = require 'lib/world/GoalManager'
 God = require 'lib/God'
 {createAetherOptions} = require 'lib/aether_utils'
 
-SIMULATOR_VERSION = 3
+SIMULATOR_VERSION = 4
 
 simulatorInfo = {}
 if $.browser
@@ -114,7 +114,6 @@ module.exports = class Simulator extends CocoClass
     catch error
       console.log "Failed to form task results:", error
       return @cleanupAndSimulateAnotherTask()
-    console.log 'Processing results:', taskResults
     humanSessionRank = taskResults.sessions[0].metrics.rank
     ogreSessionRank = taskResults.sessions[1].metrics.rank
     if @options.headlessClient and @options.simulateOnlyOneGame
@@ -226,7 +225,7 @@ module.exports = class Simulator extends CocoClass
     @levelLoader = null
 
   setupGod: ->
-    @god.setLevel @level.serialize(@supermodel, @session, @otherSession)
+    @god.setLevel @level.serialize {@supermodel, @session, @otherSession, headless: true, sessionless: false}
     @god.setLevelSessionIDs (session.sessionID for session in @task.getSessions())
     @god.setWorldClassMap @world.classMap
     @god.setGoalManager new GoalManager @world, @level.get('goals'), null, {headless: true}
@@ -377,81 +376,25 @@ module.exports = class Simulator extends CocoClass
       return 1
 
   generateSpellsObject: ->
-    @currentUserCodeMap = @task.generateSpellKeyToSourceMap()
-    @spells = {}
-    for thang in @level.attributes.thangs
-      continue if @thangIsATemplate thang
-      @generateSpellKeyToSourceMapPropertiesFromThang thang
-    @spells
-
-  thangIsATemplate: (thang) ->
-    for component in thang.components
-      continue unless @componentHasProgrammableMethods component
-      for methodName, method of component.config.programmableMethods
-        return true if @methodBelongsToTemplateThang method
-
-    return false
-
-  componentHasProgrammableMethods: (component) -> component.config? and _.has component.config, 'programmableMethods'
-
-  methodBelongsToTemplateThang: (method) -> typeof method is 'string'
-
-  generateSpellKeyToSourceMapPropertiesFromThang: (thang) =>
-    for component in thang.components
-      continue unless @componentHasProgrammableMethods component
-      for methodName, method of component.config.programmableMethods
-        spellKey = @generateSpellKeyFromThangIDAndMethodName thang.id, methodName
-
-        @createSpellAndAssignName spellKey, methodName
-        @createSpellThang thang, method, spellKey
-        @transpileSpell thang, spellKey, methodName
-
-  generateSpellKeyFromThangIDAndMethodName: (thang, methodName) ->
-    spellKeyComponents = [thang, methodName]
-    spellKeyComponents[0] = _.string.slugify spellKeyComponents[0]
-    spellKey = spellKeyComponents.join '/'
-    spellKey
-
-  createSpellAndAssignName: (spellKey, spellName) ->
-    @spells[spellKey] ?= {}
-    @spells[spellKey].name = spellName
-
-  createSpellThang: (thang, method, spellKey) ->
-    @spells[spellKey].thangs ?= {}
-    @spells[spellKey].thangs[thang.id] ?= {}
-    spellTeam = @task.getSpellKeyToTeamMap()[spellKey]
-    playerTeams = @task.getPlayerTeams()
-    useProtectAPI = true
-    if spellTeam not in playerTeams
-      useProtectAPI = false
-    else
-      spellSession = _.filter(@task.getSessions(), {team: spellTeam})[0]
-      unless codeLanguage = spellSession?.submittedCodeLanguage
-        console.warn 'Session', spellSession.creatorName, spellSession.team, 'didn\'t have submittedCodeLanguage, just:', spellSession
-    @spells[spellKey].thangs[thang.id].aether = @createAether @spells[spellKey].name, method, useProtectAPI, codeLanguage ? 'javascript'
-
-  transpileSpell: (thang, spellKey, methodName) ->
-    slugifiedThangID = _.string.slugify thang.id
-    generatedSpellKey = [slugifiedThangID,methodName].join '/'
-    source = @currentUserCodeMap[generatedSpellKey] ? ''
-    aether = @spells[spellKey].thangs[thang.id].aether
-    unless _.contains(@task.spellKeysToTranspile, generatedSpellKey)
-      aether.pure = source
-    else
+    spells = {}
+    for {hero, team} in [{hero: 'Hero Placeholder', team: 'humans'}, {hero: 'Hero Placeholder 1', team: 'ogres'}]
+      sessionInfo = _.filter(@task.getSessions(), {team: team})[0]
+      fullSpellName = _.string.slugify(hero) + '/plan'
+      submittedCodeLanguage = sessionInfo?.submittedCodeLanguage ? 'javascript'
+      submittedCodeLanguage = 'javascript' if submittedCodeLanguage in ['clojure', 'io']  # No longer supported
+      submittedCode = LZString.decompressFromUTF16 sessionInfo?.submittedCode?[_.string.slugify(hero)]?.plan ? ''
+      aether = new Aether createAetherOptions functionName: 'plan', codeLanguage: submittedCodeLanguage, skipProtectAPI: false
       try
-        aether.transpile source
+        aether.transpile submittedCode
       catch e
-        console.log "Couldn't transpile #{spellKey}:\n#{source}\n", e
+        console.log "Couldn't transpile #{fullSpellName}:\n#{submittedCode}\n", e
         aether.transpile ''
+      spells[fullSpellName] = name: 'plan', team: team, thang: {thang: {id: hero}, aether: aether}
+    spells
 
-  createAether: (methodName, method, useProtectAPI, codeLanguage) ->
-    aetherOptions = createAetherOptions functionName: methodName, codeLanguage: codeLanguage, skipProtectAPI: not useProtectAPI
-    return new Aether aetherOptions
 
 class SimulationTask
   constructor: (@rawData) ->
-    @spellKeyToTeamMap = {}
-    @spellKeysToTranspile = []
 
   getLevelName: ->
     levelName = @rawData.sessions?[0]?.levelID
@@ -479,52 +422,4 @@ class SimulationTask
 
   getSessions: -> @rawData.sessions
 
-  getSpellKeyToTeamMap: -> @spellKeyToTeamMap
-
-  getPlayerTeams: -> _.pluck @rawData.sessions, 'team'
-
   setWorld: (@world) ->
-
-  generateSpellKeyToSourceMap: ->
-    playerTeams = _.pluck @rawData.sessions, 'team'
-    spellKeyToSourceMap = {}
-    for session in @rawData.sessions
-      teamSpells = session.teamSpells[session.team]
-      allTeams = _.keys session.teamSpells
-      nonPlayerTeams = _.difference allTeams, playerTeams
-      for team in allTeams
-        for spell in session.teamSpells[team]
-          @spellKeyToTeamMap[spell] = team
-      for nonPlayerTeam in nonPlayerTeams
-        for spell in session.teamSpells[nonPlayerTeam]
-          spellKeyToSourceMap[spell] ?= @getWorldProgrammableSource(spell, @world)
-          @spellKeysToTranspile.push spell
-      teamCode = {}
-
-      for thangName, thangSpells of session.transpiledCode
-        for spellName, spell of thangSpells
-          fullSpellName = [thangName, spellName].join '/'
-          if _.contains(teamSpells, fullSpellName)
-            teamCode[fullSpellName]=spell
-
-      _.merge spellKeyToSourceMap, teamCode
-
-    spellKeyToSourceMap
-
-  getWorldProgrammableSource: (desiredSpellKey ,world) ->
-    programmableThangs = _.filter world.thangs, 'isProgrammable'
-    @spells ?= {}
-    @thangSpells ?= {}
-    for thang in programmableThangs
-      continue if @thangSpells[thang.id]?
-      @thangSpells[thang.id] = []
-      for methodName, method of thang.programmableMethods
-        pathComponents = [thang.id, methodName]
-        if method.cloneOf
-          pathComponents[0] = method.cloneOf  # referencing another Thang's method
-        pathComponents[0] = _.string.slugify pathComponents[0]
-        spellKey = pathComponents.join '/'
-        @thangSpells[thang.id].push spellKey
-        if not method.cloneOf and spellKey is desiredSpellKey
-          #console.log "Setting #{desiredSpellKey} from world!"
-          return method.source

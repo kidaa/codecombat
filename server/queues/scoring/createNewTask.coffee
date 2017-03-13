@@ -2,14 +2,13 @@ log = require 'winston'
 async = require 'async'
 errors = require '../../commons/errors'
 scoringUtils = require './scoringUtils'
-LevelSession = require '../../levels/sessions/LevelSession'
-Level = require '../../levels/Level'
+LevelSession = require '../../models/LevelSession'
+Level = require '../../models/Level'
 
 module.exports = createNewTask = (req, res) ->
   requestSessionID = req.body.session
   originalLevelID = req.body.originalLevelID
   currentLevelID = req.body.levelID
-  transpiledCode = req.body.transpiledCode
   requestLevelMajorVersion = parseInt(req.body.levelMajorVersion)
 
   yetiGuru = {}
@@ -17,7 +16,7 @@ module.exports = createNewTask = (req, res) ->
     validatePermissions.bind(yetiGuru, req, requestSessionID)
     fetchAndVerifyLevelType.bind(yetiGuru, currentLevelID)
     fetchSessionObjectToSubmit.bind(yetiGuru, requestSessionID)
-    updateSessionToSubmit.bind(yetiGuru, transpiledCode, req.user)
+    updateSessionToSubmit.bind(yetiGuru, req.user)
     # Because there's some bug where the chained rankings don't work, and this is super slow, let's just not do this until we fix it.
     #fetchInitialSessionsToRankAgainst.bind(yetiGuru, requestLevelMajorVersion, originalLevelID)
     #generateAndSendTaskPairsToTheQueue
@@ -27,7 +26,7 @@ module.exports = createNewTask = (req, res) ->
 
 
 validatePermissions = (req, sessionID, callback) ->
-  return callback 'You are unauthorized to submit that game to the simulator.' unless req.user?.get('email')
+  return callback 'You are unauthorized to submit that game to the simulator.' if (not req.user) or req.user.isAnonymous()
   return callback null if req.user?.isAdmin()
 
   findParameters = _id: sessionID
@@ -49,14 +48,14 @@ fetchAndVerifyLevelType = (levelID, cb) ->
     cb null
 
 fetchSessionObjectToSubmit = (sessionID, callback) ->
-  LevelSession.findOne({_id: sessionID}).select('team code leagues').exec (err, session) ->
+  LevelSession.findOne({_id: sessionID}).select('team code leagues codeLanguage').exec (err, session) ->
     callback err, session?.toObject()
 
-updateSessionToSubmit = (transpiledCode, user, sessionToUpdate, callback) ->
+updateSessionToSubmit = (user, sessionToUpdate, callback) ->
   sessionUpdateObject =
     submitted: true
     submittedCode: sessionToUpdate.code
-    transpiledCode: transpiledCode
+    submittedCodeLanguage: sessionToUpdate.codeLanguage or 'python'
     submitDate: new Date()
     #meanStrength: 25  # Let's try not resetting the score on resubmission
     standardDeviation: 25 / 3

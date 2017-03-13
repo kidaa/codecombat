@@ -116,6 +116,7 @@ block content
             else
               span.spr(data-i18n="subscribe.was_free_until")
               span= moment(new Date(view.personalSub.free)).format('l')
+              button.start-subscription-button.btn.btn-lg.btn-success(data-i18n="subscribe.subscribe_title")
           else
             button.start-subscription-button.btn.btn-lg.btn-success(data-i18n="subscribe.subscribe_title")
 
@@ -137,7 +138,7 @@ block content
           span.spr Managed subscriptions are discontinued. Please contact
           a(href='mailto:team@codecombat.com') team@codecombat.com
           span.spl for more information.
-        
+
       .panel-body
         if view.recipientSubs.nextPaymentAmount > 0 && view.recipientSubs.sponsorSub
           h4(data-i18n="account.next_payment")
