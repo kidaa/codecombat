@@ -59,6 +59,18 @@ $gameControlMargin: 30px
 
   .map
     position: relative
+    
+    #brain-pop-done-banner-wrapper
+      position: absolute
+      top: 30%
+      width: 100%
+      #brain-pop-done-banner
+        background: url("/images/pages/base/modal_background.png")
+        background-size: 100% 100%
+        width: 400px
+        margin: 0 auto
+        padding: 20px 40px
+        text-align: center
 
     .map-background
       width: 100%
@@ -186,6 +198,13 @@ $gameControlMargin: 30px
       position: absolute
       height: 250%
       transform: translate(-50%, -100%) translateX(-20%) translateY(-10%) scaleY(1.33)
+      filter: drop-shadow(0px 0px 10px black)
+      z-index: 3
+
+    img.pet-banner
+      position: absolute
+      height: 250%
+      transform: translate(-50%, -80%) translateX(-20%) translateY(-10%) scaleY(1.33) scale(0.625)
       filter: drop-shadow(0px 0px 10px black)
       z-index: 3
 

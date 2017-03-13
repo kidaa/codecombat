@@ -144,6 +144,8 @@ module.exports =
         progressData[classroom.id][course.id] = { completed: true, started: false } # to be updated
 
         levels = classroom.getLevels({courseID: course.id})
+        progressData[classroom.id][course.id].levelCount = levels.models.length
+        progressData[classroom.id][course.id].userCount = students.models.length
         for level in levels.models
           levelID = level.get('original')
           progressData[classroom.id][course.id][levelID] = {
@@ -153,14 +155,16 @@ module.exports =
             # numCompleted: 0
           }
           isPractice = level.get('practice')
+          sessionsForLevel = _.filter classroom.sessions.models, (session) ->
+            session.get('level').original is levelID
 
           for user in students.models
             userID = user.id
             courseProgress = progressData[classroom.id][course.id]
             courseProgress[userID] ?= { completed: true, started: false, levelsCompleted: 0 } # Only set it the first time through a user
             courseProgress[levelID][userID] = { completed: true, started: false } # These don't matter, will always be set
-            sessions = _.filter classroom.sessions.models, (session) ->
-              session.get('creator') is userID and session.get('level').original is levelID
+            sessions = _.filter sessionsForLevel, (session) ->
+              session.get('creator') is userID
             
             courseProgress[levelID][userID].session = _.find(sessions, (s) -> s.completed()) or _.first(sessions)
 
@@ -170,7 +174,7 @@ module.exports =
               courseProgress[userID].started ||= false unless isPractice #no-op
               courseProgress[userID].completed = false unless isPractice
               courseProgress[levelID].started ||= false #no-op
-              courseProgress[levelID].completed = false unless isPractice 
+              courseProgress[levelID].completed = false unless isPractice
               courseProgress[levelID][userID].started = false
               courseProgress[levelID][userID].completed = false
               
@@ -179,7 +183,8 @@ module.exports =
               courseProgress[userID].started = true unless isPractice
               courseProgress[levelID].started = true
               courseProgress[levelID][userID].started = true
-              courseProgress[levelID][userID].lastPlayed = new Date(Math.max(_.map(sessions, 'changed')))
+              dates = _.map(sessions, (s) -> new Date(s.get('changed')))
+              courseProgress[levelID][userID].lastPlayed = new Date(Math.max(dates...))
               courseProgress[levelID].numStarted += 1
             
             if _.find(sessions, (s) -> s.completed()) # have finished this level
@@ -189,7 +194,7 @@ module.exports =
               courseProgress[levelID].completed &&= true #no-op
               # courseProgress[levelID].numCompleted += 1
               courseProgress[levelID][userID].completed = true
-              dates = (s.get('dateFirstCompleted') || s.get('changed') for s in sessions)
+              dates = (new Date(s.get('dateFirstCompleted') || s.get('changed')) for s in sessions)
               courseProgress[levelID][userID].dateFirstCompleted = new Date(Math.max(dates...))
             else # level started but not completed
               courseProgress.completed = false unless isPractice

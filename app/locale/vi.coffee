@@ -3,8 +3,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     slogan: "Trò chơi hấp dẫn nhất để học lập trình."
     classroom_edition: "Phiên bản Lớp học:"
     learn_to_code: "Học lập trình:"
-    teacher: "Giáo viên"
-    student: "Học viên"
     play_now: "Chơi ngay"
     im_a_teacher: "Tôi là Giáo viên"
     im_a_student: "Tôi là Học viên"
@@ -138,6 +136,10 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     change_hero: "Đổi Tướng" # Go back from choose inventory to choose hero
     buy_gems: "Mua Ngọc"
     subscription_required: "Cần đăng kí"
+#    subscribers_only: "Subscribers Only!"
+#    subscribe_unlock: "Subscribe to Unlock!"
+#    subscriber_heroes: "Subscribe today to immediately unlock Amara, Hushbaum, and Hattori!"
+#    subscriber_gems: "Subscribe today to purchase this hero with gems!"
     anonymous: "Người chơi ẩn danh"
     level_difficulty: "Độ khó: "
     play_classroom_version: "Chơi Phiên Bản Lớp Học" # Choose a level in campaign version that you also can play in one of your courses
@@ -148,6 +150,7 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     adjust_volume: "Tùy chỉnh âm lượng"
     campaign_multiplayer: "Đấu trường thi đấu"
     campaign_multiplayer_description: "... nơi mà bạn đối đầu với người chơi khác."
+#    brain_pop_done: "You’ve defeated the Ogres with code! You win!"
 
 #  code:
 #    if: "if" # Keywords--these translations show up on hover, so please translate them all, even if it's kind of long. (In the code editor, they will still be in English.)
@@ -422,7 +425,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     level: "Level" # Like "Level: Dungeons of Kithgard"
     skip: "Bỏ qua"
     game_menu: "Game menu"
-    guide: "Hướng dẫn"
     restart: "Khởi động lại"
     goals: "Mục tiêu"
     goal: "Mục tiêu"
@@ -456,7 +458,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     victory_viking_code_school: "Thật tuyệt vời, bạn vừa vượt qua một màn chơi khó khủng khiếp! Không lâu nữa bạn sẽ trở thành một lập trình viên thôi. Bạn vừa được nhận thẳng vào trường Viking Code School, nơi bạn có thể nâng tầm kĩ năng của mình và trở thành lập trình viên web chuyên nghiệp trong 14 tuần."
     victory_become_a_viking: "Trở thành Viking"
     victory_no_progress_for_teachers: "Giáo viên không thể lưu tiến trình. Nhưng bạn có thể tự thâm tài khoản sinh viên vào lớp học của bạn."
-    guide_title: "Hướng dẫn"
     tome_cast_button_run: "Chạy"
     tome_cast_button_running: "Đang chạy"
     tome_cast_button_ran: "Đã chạy xong"
@@ -464,13 +465,11 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     tome_reload_method: "Load lại đoạn code gốc cho method này" # {change}
     tome_available_spells: "Pháp thuật hiện có"
     tome_your_skills: "Những Kĩ năng của bạn"
-    tome_current_method: "Method hiện tại"
 #    hints: "Hints"
 #    hints_title: "Hint {{number}}"
     code_saved: "Đã lưu Code"
     skip_tutorial: "Bỏ qua (esc)"
     keyboard_shortcuts: "Các phím tắt"
-    loading_ready: "Sẵn sàng!"
     loading_start: "Bắt đầu màn chơi"
     problem_alert_title: "Hãy sửa lại Code của bạn"
     time_current: "Bây giờ:"
@@ -611,6 +610,9 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     prompt_button: "Vào cửa hàng"
     recovered: "Ngọc đã được hoàn trả. Vui lòng refresh lại trang."
     price: "x{{gems}} / tháng"
+#    buy_premium: "Buy Premium"
+#    purchase: "Purchase"
+#    purchased: "Purchased"
 
   subscribe:
 #    subscribe_modal_title: "CodeCombat Premium"
@@ -618,15 +620,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
 #    premium_pricing_prefix: "Get Premium for just"
 #    premium_pricing_suffix: "and become a master coder."
 #    premium: "Premium" # Make sure the following feature translations don't go onto two lines
-    feature1: "__levelsCount__+ màn chơi cơ bản trên __worldsCount__ bản đồ thế giới" # {change}
-    feature2: "__heroesCount__ <strong>tướng mới</strong> mạnh mẽ với những kĩ năng đặc biệt!" # {change}
-    feature3: "__bonusLevelsCount__+ màn chơi thêm" # {change}
-    feature4: "<strong>Được thưởng thêm {{gems}} ngọc</strong> mỗi tháng!" # {change}
-    feature6: "Hỗ trợ đặc biệt qua email"
-    feature7: "<strong>Clan</strong> riêng"
-    feature8: "<strong>Không quảng cáo!</strong>"
-#    feature_game_dev: "Make games for your friends to play in our <strong>Game Dev Worlds</strong>"
-#    feature_web_dev: "Build websites and apps with HTML, CSS, and jQuery in our <strong>Web Dev Worlds</strong>"
     free: "Miễn phí"
     month: "tháng"
     must_be_logged: "Trước tiên bạn phải đăng nhập. Hãy tạo một tài khoản mới hoặc đăng nhập ở menu phía trên."
@@ -676,6 +669,44 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     unsubscribing: "Đang hủy gói dịch vụ"
     subscribe_prepaid: "Nhấn Subscribe để sử dụng mã mua hàng"
     using_prepaid: "Sử dụng mã mua hàng để mua gói dịch vụ tháng"
+#    feature_levels: "Access __premiumLevelsCount__ levels available"
+#    feature_gems: "Receive __gems__ gems per month"
+#    feature_heroes: "Unlock exclusive heroes"
+#    feature_games: "Make games for your friends"
+#    feature_websites: "Build websites and apps"
+#    feature_items: "Equip more powerful items"
+#    month_price: "$__price__/mo"
+#    lifetime: "Lifetime Subscription"
+#    lifetime_price: "$__price__"
+#    year_subscription: "Yearly Subscription"
+#    year_price: "$__price__/year"
+#    kids_message_1: "Kids! We'll send an email to your parents so they can purchase a subscription for you."
+#    kids_message_2: "Ask Your Parent"
+#    support_part1: "Need help with payment options? Email"
+#    support_part2: "support@codecombat.com"
+#    support_part3: "if you have any questions."
+
+#  premium_features:
+#    get_premium: "Get<br>CodeCombat<br>Premium" # Fit into the banner on the /features page
+#    master_coder: "Become a Master Coder by subscribing today!"
+#    subscribe_now: "Subscribe Now"
+#    hero_blurb_1: "Get access to __premiumHeroesCount__ super-charged subscriber-only heroes! Harness the unstoppable power of Okar Stompfoot, the deadly precision of Naria of the Leaf, or summon \"adorable\" skeletons with Nalfar Cryptor."
+#    hero_blurb_2: "Premium Warriors unlock stunning martial skills like Warcry, Stomp, and Hurl Enemy. Or, play as a Ranger, using stealth and bows, throwing knives, traps! Try your skill as a true coding Wizard, and unleash a powerful array of Primordial, Necromantic or Elemental magic!"
+#    hero_caption: "Exciting new heroes!"
+#    pet_blurb_1: "Pets aren't just adorable companions, they also provide unique functionality and methods. The Baby Griffin can fly over obstacles while helping the hero, the Wolf Pup can fetch potions, and the Cougar can speak!"
+#    pet_blurb_2: "Collect all the pets to discover their unique abilities!"
+#    pet_caption: "Adopt pets to accompany your hero!"
+#    game_dev_blurb: "Learn game scripting and build new levels to share with your friends! Place the items you want, write code for unit logic and behavior, and see if your friends can beat the level!"
+#    game_dev_caption: "Design your own games to challenge your friends!"
+#    everything_in_premium: "Everything you get in CodeCombat Premium:"
+#    list_gems: "Receive bonus gems every month to buy gear, pets, and heroes"
+#    list_levels: "Gain access to __premiumLevelsCount__ more levels"
+#    list_heroes: "Unlock exclusive heroes, include Ranger and Wizard classes"
+#    list_game_dev: "Make and share games with friends"
+#    list_web_dev: "Build websites and interactive apps"
+#    list_items: "Equip Premium-only items like pets"
+#    list_support: "Get Premium support to help you debug tricky code"
+#    list_clans: "Create private clans to invite your friends and compete on a group leaderboard"
 
   choose_hero:
     choose_hero: "Chọn Tướng"
@@ -905,7 +936,7 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     primary_role_default: "Lựa chọn vai trò"
 #    purchaser_role_default: "Select Purchaser Role"
 #    tech_coordinator: "Technology coordinator"
-    advisor: "Cố vấn"
+    advisor: "Cố vấn" # {change}
     principal: "Hiệu trưởng"
 #    superintendent: "Superintendent"
     parent: "Phụ huynh"
@@ -929,6 +960,8 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     please_explain: "(ghi rõ chi tiết)"
     middle_school: "Trung học cơ sở"
     college_plus: "Cao đẳng/Đại học hoặc cao hơn"
+#    referrer: "How did you hear about us?"
+#    referrer_help: "For example: from another teacher, a conference, your students, Code.org, etc."
     anything_else: "Còn điều gì chúng tôi nên biết thêm nữa không?"
     thanks_header: "Đã nhận yêu cầu!"
     thanks_sub_header: "Cảm ơn vì đã bày tỏ sự quan tâm của trường bạn với CodeCombat."
@@ -974,7 +1007,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
   account_settings:
     title: "Cài đặt tài khoản"
     not_logged_in: "Đăng nhập hoặc tạo tài khoản để thay đổi cài đặt."
-    autosave: "Tự động lưu thay đổi"
     me_tab: "Tôi"
     picture_tab: "Ảnh Đại Diện"
     delete_account_tab: "Xóa Tài Khoản"
@@ -1013,6 +1045,7 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     saved: "Thay đổi được lưu"
     password_mismatch: "Mật khẩu không khớp."
     password_repeat: "Hãy nhập lại mật khẩu của bạn một lần nữa."
+#    file_size_limit: "(max file size: 1MB)"
 
   keyboard_shortcuts:
     keyboard_shortcuts: "Các phím tắt"
@@ -1114,7 +1147,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     private_require_sub: "Các Clan kín cần mua subscription để tạo hoặc tham gia."
 
   courses:
-    course: "Khóa học"
     create_new_class: "Tạo Lớp Học Mới"
     unnamed_class: "Lớp học chưa đặt tên"
     edit_settings1: "Thay đổi tùy chỉnh lớp học"
@@ -1126,30 +1158,14 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     average_levels: "Lượng cấp độ trung bình đã hoàn thành:"
     total_levels: "Tổng số cấp độ đã hoàn thành"
     students: "Học viên"
-    students1: "học viên"
     concepts: "Các khái niệm"
     play_time: "Thời gian chơi:"
     completed: "Đã hoàn thành:"
     enter_emails: "Nhập email học viên để gửi lời mời, mỗi email một dòng" # {change}
     send_invites: "Gửi lời mời" # {change}
-    creating_class: "Đang tạo lớp..."
-    purchasing_course: "Đang mua khóa học..."
-    buy_course: "Mua khóa học"
-    select_all_courses: "Lựa chọn 'Tất cả khóa học' để nhận giảm giá 50%!"
-    all_courses: "Tất cả khóa học"
     number_programming_students: "Số Lượng Học Viên"
     number_total_students: "Tổng Số Học Viên tại Trường/Quận"
-    enter_number_students: "Hãy nhập vào số lượng học sinh bạn cần cho lớp học này."
-    name_class: "Đặt tên lớp của bạn"
-#    displayed_course_page: "This will be displayed on the course page for you and your students. It can be changed later."
-    buy: "Mua"
-    purchasing_for: "Bạn đang muc giấy phép cho"
-    creating_for: "Bạn đang tạo một lớp cho"
-    for: "dành cho" # Like in 'for 30 students'
-#    receive_code: "Afterwards you will receive an unlock code to distribute to your students, which they can use to enroll in your class."
-    questions: "Có câu hỏi?"
 #    enroll: "Enroll"
-    enter: "Enter"
 #    enroll_paid: "Enroll Students in Paid Courses"
 #    get_enrollments: "Get More Licenses"
 #    change_language: "Change Course Language"
@@ -1200,13 +1216,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
 #    remove_description2: "The activated paid license will not be returned."
 #    keep_student: "Keep Student"
 #    removing_user: "Removing user"
-#    to_join_ask: "To join a class, ask your teacher for an unlock code."
-#    join_this_class: "Join Class"
-#    enter_here: "<enter unlock code here>"
-#    successfully_joined: "Successfully joined"
-#    click_to_start: "Click here to start taking"
-#    my_courses: "My Courses"
-#    classroom: "Classroom"
     subtitle: "Xem giáo án của các khóa học, lời giải và các màn chơi" # Flat style redesign {change}
     changelog: "Xem những thay đổi mới nhất về các khóa học."
     select_language: "Chọn ngôn ngữ"
@@ -1278,6 +1287,8 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
 #    current_hero: "Current Hero:"
 #    change_hero: "Change Hero"
 #    web_dev_language_transition: "All classes program in HTML / JavaScript for this course.  Classes that have been using Python will start with extra JavaScript intro levels to ease the transition.  Classes that are already using JavaScript will skip the intro levels."
+#    course_membership_required_to_play: "You'll need to join a course to play this level."
+#    license_required_to_play: "Ask your teacher to assign a license to you so you can continue to play CodeCombat!"
 
   teacher:
 #    assigning_course: "Assigning course"
@@ -1320,6 +1331,7 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
 #    latest_complete: "Latest completed level"
 #    enroll_student: "Enroll student"
 #    apply_license: "Apply License"
+#    revoke_license: "Revoke License"
 #    course_progress: "Course Progress"
 #    not_applicable: "N/A"
 #    edit: "edit"
@@ -1419,6 +1431,8 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
 #    progress_journal_desc: "Encourage students to keep track of their progress via a progress journal."
 #    cs1_curriculum: "Introduction to Computer Science - Curriculum Guide"
 #    cs1_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 1."
+#    arenas_curriculum: "Arena Levels - Teacher Guide"
+#    arenas_curriculum_desc: "Instructions on how to run Wakka Maul, Cross Bones and Power Peak multiplayer arenas with your class."
 #    cs2_curriculum: "Computer Science 2 - Curriculum Guide"
 #    cs2_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 2."
 #    cs3_curriculum: "Computer Science 3 - Curriculum Guide"
@@ -1484,6 +1498,8 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
 #    hoc_additional_desc1: "For additional CodeCombat resources and activities, see our"
 #    hoc_additional_desc2: "Questions"
 #    hoc_additional_contact: "Get in touch"
+#    revoke_confirm: "Are you sure you want to revoke a Full License from {{student_name}}? The license will become available to assign to another student."
+#    revoking: "Revoking..."
 
 #  sharing:
 #    game: "Game"
@@ -1704,7 +1720,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     helpful_ambassadors: "Những Sứ Giả đầy hữu ích của chúng tôi:"
 
   ladder:
-    please_login: "Hãy đăng nhập để tham gia thi đấu."
     my_matches: "Những trận đấu của tôi"
 #    simulate: "Simulate"
 #    simulation_explanation: "By simulating games you can get your game ranked faster!"
@@ -1822,9 +1837,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
 #    email_sent: "Email sent! Check your inbox."
 #    verifying_email: "Verifying your email address..."
 #    successfully_verified: "You've successfully verified your email address!"
-#    back_to_student_page: "Go back to student things"
-#    back_to_teacher_page: "Go to My Classes"
-#    back_to_game: "Go play some more levels!"
 #    verify_error: "Something went wrong when verifying your email :("
 
   account_invoices:
@@ -1860,11 +1872,6 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
     you_can1: "Bạn có thể"
     you_can2: "mua một mã trả trước"
     you_can3: "mà có thể áp dụng cho tài khoản của bạn hoặc gửi cho người khác."
-
-  coppa_deny:
-    text1: "Bạn muốn học lập trình ngay hôm nay?"
-    text2: "Hãy hỏi phụ huynh để tạo tài khoản cho bạn!" # {change}
-    close: "Đóng Cửa Sổ"
 
   loading_error:
     could_not_load: "Không kết nối được với server"
@@ -2001,6 +2008,16 @@ module.exports = nativeDescription: "Tiếng Việt", englishDescription: "Vietn
 #    advanced_web_scripting: "Advanced Web Scripting"
     input_handling: "Xử lý đầu vào"
     while_loops: "Vòng lặp While"
+#    place_game_objects: "Place game objects"
+#    construct_mazes: "Construct mazes"
+#    create_playable_game: "Create a playable, sharable game project"
+#    alter_existing_web_pages: "Alter existing web pages"
+#    create_sharable_web_page: "Create a sharable web page"
+#    basic_input_handling: "Basic Input Handling"
+#    basic_game_ai: "Basic Game AI"
+#    basic_javascript: "Basic JavaScript"
+#    basic_event_handling: "Basic Event Handling"
+#    create_sharable_interactive_web_page: "Create a sharable interactive web page"
 
   delta:
     added: "Đã Thêm"

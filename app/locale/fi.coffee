@@ -3,8 +3,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
     slogan: "Lumoavin peli ohjelmoinnin oppimiseen."
     classroom_edition: "Kouluversio:"
     learn_to_code: "Opi koodaamaan:"
-    teacher: "Opettaja"
-    student: "Oppilas"
     play_now: "Pelaa Nyt"
     im_a_teacher: "Olen Opettaja"
     im_a_student: "Olen Oppilas"
@@ -138,6 +136,10 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
     change_hero: "Vaihda sankaria" # Go back from choose inventory to choose hero
     buy_gems: "Osta jalokiviä"
     subscription_required: "Tilaus vaaditaan"
+#    subscribers_only: "Subscribers Only!"
+#    subscribe_unlock: "Subscribe to Unlock!"
+#    subscriber_heroes: "Subscribe today to immediately unlock Amara, Hushbaum, and Hattori!"
+#    subscriber_gems: "Subscribe today to purchase this hero with gems!"
     anonymous: "Nimetön Pelaaja"
     level_difficulty: "Vaikeustaso: "
 #    play_classroom_version: "Play Classroom Version" # Choose a level in campaign version that you also can play in one of your courses
@@ -148,6 +150,7 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
     adjust_volume: "Aänenvoimakkuus"
     campaign_multiplayer: "Moninpeli Areenat"
     campaign_multiplayer_description: "... joissa mittaat ohjelmointitaitosi toisia pelaajia vastaan."
+#    brain_pop_done: "You’ve defeated the Ogres with code! You win!"
 
 #  code:
 #    if: "if" # Keywords--these translations show up on hover, so please translate them all, even if it's kind of long. (In the code editor, they will still be in English.)
@@ -422,7 +425,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
     level: "Taso" # Like "Level: Dungeons of Kithgard"
     skip: "Ohita"
     game_menu: "Pelivalikko"
-    guide: "Ohje"
     restart: "Käynnistä uudelleen"
     goals: "Tavoitteet"
     goal: "Tavoite"
@@ -456,7 +458,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    victory_viking_code_school: "Holy smokes, that was a hard level you just beat! If you aren't already a software developer, you should be. You just got fast-tracked for acceptance with Viking Code School, where you can take your skills to the next level and become a professional web developer in 14 weeks."
     victory_become_a_viking: "Tule viikingiksi"
 #    victory_no_progress_for_teachers: "Progress is not saved for teachers. But, you can add a student account to your classroom for yourself."
-    guide_title: "Opas"
     tome_cast_button_run: "Suorita"
     tome_cast_button_running: "Suoritetaan"
     tome_cast_button_ran: "Suoritettu"
@@ -464,13 +465,11 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
     tome_reload_method: "Lataa koodi uudelleen" # {change}
     tome_available_spells: "Saatavissa olevat taiat"
     tome_your_skills: "Taitosi"
-    tome_current_method: "Vaaditut toimet"
     hints: "Vihjeet"
     hints_title: "Vihje {{number}}"
     code_saved: "Koodi on tallennettu"
     skip_tutorial: "Ohita (esc)"
     keyboard_shortcuts: "Pikanäppäimet"
-    loading_ready: "Valmis!"
     loading_start: "Aloita Taso"
     problem_alert_title: "Korjaa koodisi"
     time_current: "Nyt:"
@@ -611,6 +610,9 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
     prompt_button: "Siirry kauppaan"
     recovered: "Aiempi jalokiviostos palautettu. Ole hyvä ja päivitä sivu."
     price: "x{{gems}} / kk"
+#    buy_premium: "Buy Premium"
+#    purchase: "Purchase"
+#    purchased: "Purchased"
 
   subscribe:
 #    subscribe_modal_title: "CodeCombat Premium"
@@ -618,15 +620,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    premium_pricing_prefix: "Get Premium for just"
 #    premium_pricing_suffix: "and become a master coder."
 #    premium: "Premium" # Make sure the following feature translations don't go onto two lines
-    feature1: "__levelsCount__+ perustasoa __worldsCount__:ssä maailmassa" # {change}
-    feature2: "__heroesCount__ mahtavaa <strong>uutta sankaria</strong> erilaisine kykyineen!" # {change}
-    feature3: "__bonusLevelsCount__+ lisätasoa" # {change}
-    feature4: "<strong>{{gems}} jalokiveä</strong> joka kuukausi!" # {change}
-    feature6: "Premium sähköpostituki"
-    feature7: "<strong>Yksityisklaanit</strong>"
-    feature8: "<strong>Ei mainoksia!</strong>"
-#    feature_game_dev: "Make games for your friends to play in our <strong>Game Dev Worlds</strong>"
-#    feature_web_dev: "Build websites and apps with HTML, CSS, and jQuery in our <strong>Web Dev Worlds</strong>"
     free: "Ilmainen"
     month: "kuukausi"
     must_be_logged: "Kirjaudu ensin sisään. Ole hyvä, luo tunnus tai kirjaudu sisään yläpuolella olevasta valikosta."
@@ -676,6 +669,44 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
     unsubscribing: "Tilaus päätetään..." # {change}
     subscribe_prepaid: "Tilaa käyttämällä ennakkomaksettua koodinumeroa"
     using_prepaid: "Käytetään ennakkomaksettu koodinumero kuukausitilaukseen"
+#    feature_levels: "Access __premiumLevelsCount__ levels available"
+#    feature_gems: "Receive __gems__ gems per month"
+#    feature_heroes: "Unlock exclusive heroes"
+#    feature_games: "Make games for your friends"
+#    feature_websites: "Build websites and apps"
+#    feature_items: "Equip more powerful items"
+#    month_price: "$__price__/mo"
+#    lifetime: "Lifetime Subscription"
+#    lifetime_price: "$__price__"
+#    year_subscription: "Yearly Subscription"
+#    year_price: "$__price__/year"
+#    kids_message_1: "Kids! We'll send an email to your parents so they can purchase a subscription for you."
+#    kids_message_2: "Ask Your Parent"
+#    support_part1: "Need help with payment options? Email"
+#    support_part2: "support@codecombat.com"
+#    support_part3: "if you have any questions."
+
+#  premium_features:
+#    get_premium: "Get<br>CodeCombat<br>Premium" # Fit into the banner on the /features page
+#    master_coder: "Become a Master Coder by subscribing today!"
+#    subscribe_now: "Subscribe Now"
+#    hero_blurb_1: "Get access to __premiumHeroesCount__ super-charged subscriber-only heroes! Harness the unstoppable power of Okar Stompfoot, the deadly precision of Naria of the Leaf, or summon \"adorable\" skeletons with Nalfar Cryptor."
+#    hero_blurb_2: "Premium Warriors unlock stunning martial skills like Warcry, Stomp, and Hurl Enemy. Or, play as a Ranger, using stealth and bows, throwing knives, traps! Try your skill as a true coding Wizard, and unleash a powerful array of Primordial, Necromantic or Elemental magic!"
+#    hero_caption: "Exciting new heroes!"
+#    pet_blurb_1: "Pets aren't just adorable companions, they also provide unique functionality and methods. The Baby Griffin can fly over obstacles while helping the hero, the Wolf Pup can fetch potions, and the Cougar can speak!"
+#    pet_blurb_2: "Collect all the pets to discover their unique abilities!"
+#    pet_caption: "Adopt pets to accompany your hero!"
+#    game_dev_blurb: "Learn game scripting and build new levels to share with your friends! Place the items you want, write code for unit logic and behavior, and see if your friends can beat the level!"
+#    game_dev_caption: "Design your own games to challenge your friends!"
+#    everything_in_premium: "Everything you get in CodeCombat Premium:"
+#    list_gems: "Receive bonus gems every month to buy gear, pets, and heroes"
+#    list_levels: "Gain access to __premiumLevelsCount__ more levels"
+#    list_heroes: "Unlock exclusive heroes, include Ranger and Wizard classes"
+#    list_game_dev: "Make and share games with friends"
+#    list_web_dev: "Build websites and interactive apps"
+#    list_items: "Equip Premium-only items like pets"
+#    list_support: "Get Premium support to help you debug tricky code"
+#    list_clans: "Create private clans to invite your friends and compete on a group leaderboard"
 
   choose_hero:
     choose_hero: "Valitse Sankarisi"
@@ -905,7 +936,7 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    primary_role_default: "Select Primary Role"
 #    purchaser_role_default: "Select Purchaser Role"
 #    tech_coordinator: "Technology coordinator"
-#    advisor: "Advisor"
+#    advisor: "Curriculum Specialist/Advisor"
 #    principal: "Principal"
 #    superintendent: "Superintendent"
 #    parent: "Parent"
@@ -929,6 +960,8 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    please_explain: "(please explain)"
 #    middle_school: "Middle School"
 #    college_plus: "College or higher"
+#    referrer: "How did you hear about us?"
+#    referrer_help: "For example: from another teacher, a conference, your students, Code.org, etc."
 #    anything_else: "Anything else we should know?"
 #    thanks_header: "Request Received!"
 #    thanks_sub_header: "Thanks for expressing interest in CodeCombat for your school."
@@ -974,7 +1007,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
   account_settings:
     title: "Tiliasetukset"
     not_logged_in: "Kirjaudu sisään tai luo tili jotta pelitilanne voidaan tallentaa."
-    autosave: "Tallenna Muutokset Automaattisesti"
     me_tab: "Minä"
     picture_tab: "Kuva"
     delete_account_tab: "Poista Tili"
@@ -1013,6 +1045,7 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
     saved: "Muutokset tallennettu"
     password_mismatch: "Salasanat eivät täsmää."
     password_repeat: "Kirjoita salasana uudestaan."
+#    file_size_limit: "(max file size: 1MB)"
 
   keyboard_shortcuts:
     keyboard_shortcuts: "Pikanäppäimet"
@@ -1114,7 +1147,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    private_require_sub: "Private clans require a subscription to create or join."
 
   courses:
-    course: "Kurssi"
     create_new_class: "Luo uusi luokka"
     unnamed_class: "Nimetön luokka"
     edit_settings1: "Muokkkaa Luokan Asetuksia"
@@ -1126,30 +1158,14 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    average_levels: "Average levels completed:"
     total_levels: "Tasoja suoritettu yhteensä:"
     students: "Oppilaat"
-    students1: "oppilaat"
 #    concepts: "Concepts"
     play_time: "Peliaika:"
     completed: "Suoritettu:"
     enter_emails: "Kirjoita oppilaiden sähköpostit kutsuaksesi, yksi per rivi" # {change}
     send_invites: "Lähetä kutsut" # {change}
-    creating_class: "Luodaan luokkaa..."
-    purchasing_course: "Hankitaan kurssia..."
-    buy_course: "Osta kurssi"
-#    select_all_courses: "Select 'All Courses' for a 50% discount!"
-    all_courses: "Kaikki Kurssit"
 #    number_programming_students: "Number of Programming Students"
 #    number_total_students: "Total Students in School/District"
-#    enter_number_students: "Enter the number of students you need for this class."
-    name_class: "Nimeä luokkasi"
-#    displayed_course_page: "This will be displayed on the course page for you and your students. It can be changed later."
-    buy: "Osta"
-#    purchasing_for: "You are purchasing a license for"
-#    creating_for: "You are creating a class for"
-#    for: "for" # Like in 'for 30 students'
-#    receive_code: "Afterwards you will receive an unlock code to distribute to your students, which they can use to enroll in your class."
-    questions: "Kysymyksiä?"
 #    enroll: "Enroll"
-#    enter: "Enter"
 #    enroll_paid: "Enroll Students in Paid Courses"
 #    get_enrollments: "Get More Licenses"
 #    change_language: "Change Course Language"
@@ -1200,13 +1216,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    remove_description2: "The activated paid license will not be returned."
     keep_student: "Pidä Oppilas"
     removing_user: "Poistetaan käyttäjää"
-#    to_join_ask: "To join a class, ask your teacher for an unlock code."
-#    join_this_class: "Join Class"
-#    enter_here: "<enter unlock code here>"
-#    successfully_joined: "Successfully joined"
-#    click_to_start: "Click here to start taking"
-    my_courses: "Minun kurssit"
-#    classroom: "Classroom"
 #    subtitle: "Review course overviews and levels" # Flat style redesign
 #    changelog: "View latest changes to course levels."
     select_language: "Valitse kieli"
@@ -1278,6 +1287,8 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    current_hero: "Current Hero:"
 #    change_hero: "Change Hero"
 #    web_dev_language_transition: "All classes program in HTML / JavaScript for this course.  Classes that have been using Python will start with extra JavaScript intro levels to ease the transition.  Classes that are already using JavaScript will skip the intro levels."
+#    course_membership_required_to_play: "You'll need to join a course to play this level."
+#    license_required_to_play: "Ask your teacher to assign a license to you so you can continue to play CodeCombat!"
 
 #  teacher:
 #    assigning_course: "Assigning course"
@@ -1320,6 +1331,7 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    latest_complete: "Latest completed level"
 #    enroll_student: "Enroll student"
 #    apply_license: "Apply License"
+#    revoke_license: "Revoke License"
 #    course_progress: "Course Progress"
 #    not_applicable: "N/A"
 #    edit: "edit"
@@ -1419,6 +1431,8 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    progress_journal_desc: "Encourage students to keep track of their progress via a progress journal."
 #    cs1_curriculum: "Introduction to Computer Science - Curriculum Guide"
 #    cs1_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 1."
+#    arenas_curriculum: "Arena Levels - Teacher Guide"
+#    arenas_curriculum_desc: "Instructions on how to run Wakka Maul, Cross Bones and Power Peak multiplayer arenas with your class."
 #    cs2_curriculum: "Computer Science 2 - Curriculum Guide"
 #    cs2_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 2."
 #    cs3_curriculum: "Computer Science 3 - Curriculum Guide"
@@ -1484,6 +1498,8 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    hoc_additional_desc1: "For additional CodeCombat resources and activities, see our"
 #    hoc_additional_desc2: "Questions"
 #    hoc_additional_contact: "Get in touch"
+#    revoke_confirm: "Are you sure you want to revoke a Full License from {{student_name}}? The license will become available to assign to another student."
+#    revoking: "Revoking..."
 
 #  sharing:
 #    game: "Game"
@@ -1704,7 +1720,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    helpful_ambassadors: "Our Helpful Ambassadors:"
 
 #  ladder:
-#    please_login: "Please log in first before playing a ladder game."
 #    my_matches: "My Matches"
 #    simulate: "Simulate"
 #    simulation_explanation: "By simulating games you can get your game ranked faster!"
@@ -1822,9 +1837,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    email_sent: "Email sent! Check your inbox."
 #    verifying_email: "Verifying your email address..."
 #    successfully_verified: "You've successfully verified your email address!"
-#    back_to_student_page: "Go back to student things"
-#    back_to_teacher_page: "Go to My Classes"
-#    back_to_game: "Go play some more levels!"
 #    verify_error: "Something went wrong when verifying your email :("
 
   account_invoices:
@@ -1860,11 +1872,6 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    you_can1: "You can"
 #    you_can2: "purchase a prepaid code"
 #    you_can3: "that can be applied to your own account or given to others."
-
-  coppa_deny:
-    text1: "Etkö malta odottaa ohjelmoimista?"
-    text2: "Vanhempiesi täytyy luoda sinulle tili! lähetä viesti osoiteeseen team@codecombat.com jos sinulla on jotain kysyttävää."
-    close: "Sulje ikkuna"
 
   loading_error:
     could_not_load: "Virhe ladattaessa tietoja palvelimelta"
@@ -2001,6 +2008,16 @@ module.exports = nativeDescription: "suomi", englishDescription: "Finnish", tran
 #    advanced_web_scripting: "Advanced Web Scripting"
 #    input_handling: "Input Handling"
 #    while_loops: "While Loops"
+#    place_game_objects: "Place game objects"
+#    construct_mazes: "Construct mazes"
+#    create_playable_game: "Create a playable, sharable game project"
+#    alter_existing_web_pages: "Alter existing web pages"
+#    create_sharable_web_page: "Create a sharable web page"
+#    basic_input_handling: "Basic Input Handling"
+#    basic_game_ai: "Basic Game AI"
+#    basic_javascript: "Basic JavaScript"
+#    basic_event_handling: "Basic Event Handling"
+#    create_sharable_interactive_web_page: "Create a sharable interactive web page"
 
 #  delta:
 #    added: "Added"

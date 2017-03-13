@@ -74,7 +74,7 @@ module.exports = class DiplomatView extends ContributeClassView
     totalStrings = @countStrings @locale.en
     languageStats = {}
     for languageCode, language of @locale
-      continue if languageCode is 'update'
+      continue if languageCode in ['update', 'installVueI18n']
       languageStats[languageCode] =
         githubURL: "https://github.com/codecombat/codecombat/blob/master/app/locale/#{languageCode}.coffee"
         completion: @countStrings(language) / totalStrings
@@ -94,7 +94,7 @@ module.exports = class DiplomatView extends ContributeClassView
     en: []             # English - English
     'en-US': []        # English (US), English (US)
     'en-GB': []        # English (UK), English (UK)
-    ru: ['EagleTA', 'ImmortalJoker', 'Mr A', 'Shpionus', 'a1ip', 'fess89', 'iulianR', 'kerradus', 'kisik21', 'nixel', 'ser-storchak']             # русский язык, Russian
+    ru: ['EagleTA', 'ImmortalJoker', 'Mr A', 'Shpionus', 'a1ip', 'fess89', 'iulianR', 'kerradus', 'kisik21', 'nixel', 'ser-storchak', 'CatSkald']             # русский язык, Russian
     'de-DE': ['Anon', 'Dirk', 'HiroP0', 'bahuma20', 'bkimminich', 'djsmith85', 'dkundel', 'domenukk', 'faabsen', 'Zeldaretter']        # Deutsch (Deutschland), German (Germany)
     'de-AT': ['djsmith85']        # Deutsch (Österreich), German (Austria)
     'de-CH': ['greyhusky']        # Deutsch (Schweiz), German (Switzerland)

@@ -3,16 +3,20 @@ request = require 'request'
 log = require 'winston'
 
 roomChannelMap =
-  main: '#general'
+  artisan: '#artisan'
   artisans: '#artisan'
-  
+  eng: '#eng'
+  main: '#general'
+  ops: '#ops'
+  tower: '#general'
+
 module.exports.sendChangedSlackMessage = (options) ->
   message = "#{options.creator.get('name')} saved a change to #{options.target.get('name')}: #{options.target.get('commitMessage') or '(no commit message)'} #{options.docLink}"
   @sendSlackMessage message, ['artisans']
 
-module.exports.sendSlackMessage = (message, rooms=['tower'], options={}) ->
+module.exports.sendSlackMessage = (message, rooms=['#eng'], options={}) ->
   unless config.isProduction
-    log.info "Slack msg: #{message}"
+    log.info "Slack msg: #{message} #{JSON.stringify(rooms)}, #{JSON.stringify(options)}"
     return
   unless token = config.slackToken
     log.info "No Slack token."
@@ -37,8 +41,8 @@ module.exports.sendSlackMessage = (message, rooms=['tower'], options={}) ->
       try
         response = JSON.parse(body)
         return log.error('Error sending Slack message:', err) if err
-        return log.error("Slack returned error: #{response.error}") unless response.ok
-        log.warn("Slack returned warning: #{response.warning}") if response.warning 
+        return log.error("Slack returned error: #{response.error} to channel #{channel} with message #{message}") unless response.ok
+        log.warn("Slack returned warning: #{response.warning}") if response.warning
         # log.info "Got Slack message response:", body
       catch error
         log.error("Slack response parse error: #{error}")

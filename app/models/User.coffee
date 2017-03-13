@@ -147,6 +147,23 @@ module.exports = class User extends CocoModel
     myHeroClasses = []
     myHeroClasses.push heroClass for heroClass, heroSlugs of ThangType.heroClasses when _.intersection(myHeroSlugs, heroSlugs).length
     myHeroClasses
+    
+  validate: ->
+    errors = super()
+    if errors and @_revertAttributes
+      
+      # Do not return errors if they were all present when last marked to revert.
+      # This is so that if a user has an invalid property, that does not prevent
+      # them from editing their settings.
+      definedAttributes = _.pick @_revertAttributes, (v) -> v isnt undefined
+      oldResult = tv4.validateMultiple(definedAttributes, @constructor.schema or {})
+      mapper = (error) -> [error.code.toString(),error.dataPath,error.schemaPath].join(':')
+      originalErrors = _.map(oldResult.errors, mapper)
+      currentErrors = _.map(errors, mapper)
+      newErrors = _.difference(currentErrors, originalErrors)
+      if _.size(newErrors) is 0
+        return
+    return errors
 
   getAnnouncesActionAudioGroup: ->
     return @announcesActionAudioGroup if @announcesActionAudioGroup
@@ -203,6 +220,9 @@ module.exports = class User extends CocoModel
     return true if me.isAdmin()
     return true if me.hasSubscription()
     return false
+    
+  isForeverPremium: ->
+    return @get('stripe')?.free is true
 
   isOnPremiumServer: ->
     return true if me.get('country') in ['brazil']
@@ -388,7 +408,25 @@ module.exports = class User extends CocoModel
 
   finishedAnyLevels: -> Boolean((@get('stats') or {}).gamesCompleted)
 
-  isFromUk: -> @get('country') is 'united-kingdom'
+  isFromUk: -> @get('country') is 'united-kingdom' or @get('preferredLanguage') is 'en-GB'
+  isFromIndia: -> @get('country') is 'india'
+  setToGerman: -> _.string.startsWith((@get('preferredLanguage') or ''), 'de')
+  setToSpanish: -> _.string.startsWith((@get('preferredLanguage') or ''), 'es')
+
+  sendParentEmail: (email, options={}) ->
+    options.data ?= {}
+    options.data.type = 'subscribe modal parent'
+    options.data.email = email
+    options.url = '/db/user/-/send_one_time_email'
+    options.method = 'POST'
+    return $.ajax(options)
+    
+  subscribe: (token, options={}) ->
+    stripe = _.clone(@get('stripe') ? {})
+    stripe.planID = 'basic'
+    stripe.token = token.id
+    @set({stripe})
+    return me.patch({headers: {'X-Change-Plan': 'true'}})
 
 tiersByLevel = [-1, 0, 0.05, 0.14, 0.18, 0.32, 0.41, 0.5, 0.64, 0.82, 0.91, 1.04, 1.22, 1.35, 1.48, 1.65, 1.78, 1.96, 2.1, 2.24, 2.38, 2.55, 2.69, 2.86, 3.03, 3.16, 3.29, 3.42, 3.58, 3.74, 3.89, 4.04, 4.19, 4.32, 4.47, 4.64, 4.79, 4.96,
   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15

@@ -3,8 +3,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     slogan: "Det mest engagerende spil for at lære programmering."
     classroom_edition: "Klasseværelse Udgave:"
     learn_to_code: "Lær at kode:"
-    teacher: "Lærer"
-    student: "Elev"
     play_now: "Spil Nu"
     im_a_teacher: "Jeg er lærer"
     im_a_student: "Jeg er elev"
@@ -138,6 +136,10 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     change_hero: "Skift helt" # Go back from choose inventory to choose hero
     buy_gems: "Køb diamanter"
     subscription_required: "Kræver abonnement"
+#    subscribers_only: "Subscribers Only!"
+#    subscribe_unlock: "Subscribe to Unlock!"
+#    subscriber_heroes: "Subscribe today to immediately unlock Amara, Hushbaum, and Hattori!"
+#    subscriber_gems: "Subscribe today to purchase this hero with gems!"
     anonymous: "Anonym spiller"
     level_difficulty: "Sværhedsgrad: "
     play_classroom_version: "Spil Klasseværelse Version" # Choose a level in campaign version that you also can play in one of your courses
@@ -148,6 +150,7 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     adjust_volume: "Indstil lydstyrke"
     campaign_multiplayer: "Multiplayer Arenaer"
     campaign_multiplayer_description: "... hvor du koder ansigt-til-ansigt imod andre spillere."
+#    brain_pop_done: "You’ve defeated the Ogres with code! You win!"
 
 #  code:
 #    if: "if" # Keywords--these translations show up on hover, so please translate them all, even if it's kind of long. (In the code editor, they will still be in English.)
@@ -422,7 +425,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     level: "Bane" # Like "Level: Dungeons of Kithgard"
     skip: "Spring over"
     game_menu: "Spilmenu"
-    guide: "Guide"
     restart: "Start forfra"
     goals: "Mål"
     goal: "Mål"
@@ -456,7 +458,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     victory_viking_code_school: "For dælen det var en svær bane du lige slog! Hvis ikke du allerede er softwareudvikler, så burde du blive det. Du er lige kommet foran i køen til at blive accepteret hos Viking Code School, du kan tage dine evner til det næste niveau og blive en professionel webudvikler på 14 uger."
     victory_become_a_viking: "Bliv en Viking"
 #    victory_no_progress_for_teachers: "Progress is not saved for teachers. But, you can add a student account to your classroom for yourself."
-    guide_title: "Instruktioner"
     tome_cast_button_run: "Kør"
     tome_cast_button_running: "Kører"
     tome_cast_button_ran: "Kørt"
@@ -464,13 +465,11 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     tome_reload_method: "Genindlæs den originale kode til denne metode" # {change}
     tome_available_spells: "Tilgængelige trylleformularer"
     tome_your_skills: "Dine evner"
-    tome_current_method: "Nuværende metode"
 #    hints: "Hints"
 #    hints_title: "Hint {{number}}"
     code_saved: "Kode gemt"
     skip_tutorial: "Spring over (esc)"
     keyboard_shortcuts: "Tastaturgenveje"
-    loading_ready: "Klar!"
     loading_start: "Start bane"
     problem_alert_title: "Ret din kode"
     time_current: "Nu:"
@@ -611,6 +610,9 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     prompt_button: "Besøg Butik"
     recovered: "Tidliger ædelstenskøb er genskabt. Opdatér venligst siden."
     price: "x{{gems}} / måned"
+#    buy_premium: "Buy Premium"
+#    purchase: "Purchase"
+#    purchased: "Purchased"
 
   subscribe:
 #    subscribe_modal_title: "CodeCombat Premium"
@@ -618,15 +620,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
 #    premium_pricing_prefix: "Get Premium for just"
 #    premium_pricing_suffix: "and become a master coder."
 #    premium: "Premium" # Make sure the following feature translations don't go onto two lines
-    feature1: "__levelsCount__+ grundlæggende baner på tværs af __worldsCount__ verdener" # {change}
-    feature2: "__heroesCount__ magtfulde <strong> nye helte </strong> med unikke færdigheder!" # {change}
-    feature3: "__bonusLevelsCount__+ bonus baner" # {change}
-    feature4: "<strong>{{gems}} bonus ædelstene</strong> every month!" # {change}
-    feature6: "Premium e-mail support"
-    feature7: "Private <strong>Klaner</strong>"
-    feature8: "<strong>Ingen reklamer!</strong>"
-#    feature_game_dev: "Make games for your friends to play in our <strong>Game Dev Worlds</strong>"
-#    feature_web_dev: "Build websites and apps with HTML, CSS, and jQuery in our <strong>Web Dev Worlds</strong>"
     free: "Gratis"
     month: "måned"
     must_be_logged: "Du skal først være logget ind. Opret en konto eller log ind fra ovenstående menu."
@@ -676,6 +669,44 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     unsubscribing: "Afmelder"
     subscribe_prepaid: "Klik Abonnér at bruge en forudbetalte kode"
     using_prepaid: "Bruger forudbetalt kode til månedligt abonnement"
+#    feature_levels: "Access __premiumLevelsCount__ levels available"
+#    feature_gems: "Receive __gems__ gems per month"
+#    feature_heroes: "Unlock exclusive heroes"
+#    feature_games: "Make games for your friends"
+#    feature_websites: "Build websites and apps"
+#    feature_items: "Equip more powerful items"
+#    month_price: "$__price__/mo"
+#    lifetime: "Lifetime Subscription"
+#    lifetime_price: "$__price__"
+#    year_subscription: "Yearly Subscription"
+#    year_price: "$__price__/year"
+#    kids_message_1: "Kids! We'll send an email to your parents so they can purchase a subscription for you."
+#    kids_message_2: "Ask Your Parent"
+#    support_part1: "Need help with payment options? Email"
+#    support_part2: "support@codecombat.com"
+#    support_part3: "if you have any questions."
+
+#  premium_features:
+#    get_premium: "Get<br>CodeCombat<br>Premium" # Fit into the banner on the /features page
+#    master_coder: "Become a Master Coder by subscribing today!"
+#    subscribe_now: "Subscribe Now"
+#    hero_blurb_1: "Get access to __premiumHeroesCount__ super-charged subscriber-only heroes! Harness the unstoppable power of Okar Stompfoot, the deadly precision of Naria of the Leaf, or summon \"adorable\" skeletons with Nalfar Cryptor."
+#    hero_blurb_2: "Premium Warriors unlock stunning martial skills like Warcry, Stomp, and Hurl Enemy. Or, play as a Ranger, using stealth and bows, throwing knives, traps! Try your skill as a true coding Wizard, and unleash a powerful array of Primordial, Necromantic or Elemental magic!"
+#    hero_caption: "Exciting new heroes!"
+#    pet_blurb_1: "Pets aren't just adorable companions, they also provide unique functionality and methods. The Baby Griffin can fly over obstacles while helping the hero, the Wolf Pup can fetch potions, and the Cougar can speak!"
+#    pet_blurb_2: "Collect all the pets to discover their unique abilities!"
+#    pet_caption: "Adopt pets to accompany your hero!"
+#    game_dev_blurb: "Learn game scripting and build new levels to share with your friends! Place the items you want, write code for unit logic and behavior, and see if your friends can beat the level!"
+#    game_dev_caption: "Design your own games to challenge your friends!"
+#    everything_in_premium: "Everything you get in CodeCombat Premium:"
+#    list_gems: "Receive bonus gems every month to buy gear, pets, and heroes"
+#    list_levels: "Gain access to __premiumLevelsCount__ more levels"
+#    list_heroes: "Unlock exclusive heroes, include Ranger and Wizard classes"
+#    list_game_dev: "Make and share games with friends"
+#    list_web_dev: "Build websites and interactive apps"
+#    list_items: "Equip Premium-only items like pets"
+#    list_support: "Get Premium support to help you debug tricky code"
+#    list_clans: "Create private clans to invite your friends and compete on a group leaderboard"
 
   choose_hero:
     choose_hero: "Vælg din helt"
@@ -905,7 +936,7 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
 #    primary_role_default: "Select Primary Role"
 #    purchaser_role_default: "Select Purchaser Role"
     tech_coordinator: "Teknologikoordinator"
-    advisor: "Rådgiver"
+    advisor: "Rådgiver" # {change}
     principal: "Skoleleder"
     superintendent: "Leder"
     parent: "Forælder"
@@ -929,6 +960,8 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     please_explain: "(uddyb venligst)"
     middle_school: "Mellemskole"
     college_plus: "Vidergående uddannelse eller højere"
+#    referrer: "How did you hear about us?"
+#    referrer_help: "For example: from another teacher, a conference, your students, Code.org, etc."
     anything_else: "Noget andet, vi bør vide?"
     thanks_header: "Tak for at anmode om en demo!" # {change}
 #    thanks_sub_header: "Thanks for expressing interest in CodeCombat for your school."
@@ -974,7 +1007,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
   account_settings:
     title: "Kontoindstillinger"
     not_logged_in: "Log ind eller opret en konto for at ændre dine indstillinger."
-    autosave: "Ændringer Gemmes Automatisk"
     me_tab: "Mig"
     picture_tab: "Billede"
     delete_account_tab: "Slet Din Konto"
@@ -1013,6 +1045,7 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     saved: "Ændringer Gemt"
     password_mismatch: "Password matcher ikke."
     password_repeat: "Gentag venligst dit kodeord."
+#    file_size_limit: "(max file size: 1MB)"
 
   keyboard_shortcuts:
     keyboard_shortcuts: "Keyboard Genvejstaster"
@@ -1114,7 +1147,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     private_require_sub: "Det kræver et abonnement at oprette eller deltage i private klaner."
 
   courses:
-    course: "Kursus"
     create_new_class: "Lav Ny Klasse"
     unnamed_class: "Unavngivet Klasse"
     edit_settings1: "Rediger Klasseindstillinger"
@@ -1126,30 +1158,14 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     average_levels: "Gennemsnitlig antal gennemførte baner:"
     total_levels: "Total antal gennemførte baner:"
     students: "Elever"
-    students1: "elever"
     concepts: "Begreber"
     play_time: "Spiltid:"
     completed: "Gennemført:"
     enter_emails: "Indtast emails på eleverne, der skal inviteres, én pr linje" # {change}
     send_invites: "Send Invitationer" # {change}
-    creating_class: "Opretter klasse..."
-    purchasing_course: "Køber kursus..."
-    buy_course: "Køb Kursus"
-    select_all_courses: "Vælg 'Alle Kurser' og få 50% rabat!"
-    all_courses: "Alle Kurser"
 #    number_programming_students: "Number of Programming Students"
 #    number_total_students: "Total Students in School/District"
-    enter_number_students: "Indtast antallet af elever der skal være plads til i denne klasse."
-    name_class: "Navngiv din klasse"
-    displayed_course_page: "Dette vil blive vist på kursussiden for dig og dine elever. Det kan ændres senere."
-    buy: "Køb"
-    purchasing_for: "Du køber en licens til"
-    creating_for: "Du opretter en klasse til"
-    for: "til" # Like in 'for 30 students'
-    receive_code: "Bagefter vil du modtage en oplåsningskode til dine elever, som de kan bruge til at tilmelde sig din klasse."
-    questions: "Spørgsmål?"
     enroll: "Indskriv"
-    enter: "Indtast"
     enroll_paid: "Tilmeld Elever til Betalte Kurser"
     get_enrollments: "Få flere Tilmeldinger"
     change_language: "Rediger kursussprog"
@@ -1200,13 +1216,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     remove_description2: "Den aktiverede betalte licens vil ikke blive returneret."
     keep_student: "Behold Elev"
     removing_user: "Fjerne elev"
-    to_join_ask: "For at deltage i en klasse skal du spørge din lærer efter en oplåsningskode."
-    join_this_class: "Følg Klasse"
-    enter_here: "<indtaste oplåsningskode her>"
-    successfully_joined: "Du følger nu klassen"
-    click_to_start: "Klik her for at begynde at tage"
-    my_courses: "Mine Kurser"
-    classroom: "Klasseværelse"
 #    subtitle: "Review course overviews and levels" # Flat style redesign
 #    changelog: "View latest changes to course levels."
 #    select_language: "Select language"
@@ -1278,6 +1287,8 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
 #    current_hero: "Current Hero:"
 #    change_hero: "Change Hero"
 #    web_dev_language_transition: "All classes program in HTML / JavaScript for this course.  Classes that have been using Python will start with extra JavaScript intro levels to ease the transition.  Classes that are already using JavaScript will skip the intro levels."
+#    course_membership_required_to_play: "You'll need to join a course to play this level."
+#    license_required_to_play: "Ask your teacher to assign a license to you so you can continue to play CodeCombat!"
 
 #  teacher:
 #    assigning_course: "Assigning course"
@@ -1320,6 +1331,7 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
 #    latest_complete: "Latest completed level"
 #    enroll_student: "Enroll student"
 #    apply_license: "Apply License"
+#    revoke_license: "Revoke License"
 #    course_progress: "Course Progress"
 #    not_applicable: "N/A"
 #    edit: "edit"
@@ -1419,6 +1431,8 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
 #    progress_journal_desc: "Encourage students to keep track of their progress via a progress journal."
 #    cs1_curriculum: "Introduction to Computer Science - Curriculum Guide"
 #    cs1_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 1."
+#    arenas_curriculum: "Arena Levels - Teacher Guide"
+#    arenas_curriculum_desc: "Instructions on how to run Wakka Maul, Cross Bones and Power Peak multiplayer arenas with your class."
 #    cs2_curriculum: "Computer Science 2 - Curriculum Guide"
 #    cs2_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 2."
 #    cs3_curriculum: "Computer Science 3 - Curriculum Guide"
@@ -1484,6 +1498,8 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
 #    hoc_additional_desc1: "For additional CodeCombat resources and activities, see our"
 #    hoc_additional_desc2: "Questions"
 #    hoc_additional_contact: "Get in touch"
+#    revoke_confirm: "Are you sure you want to revoke a Full License from {{student_name}}? The license will become available to assign to another student."
+#    revoking: "Revoking..."
 
 #  sharing:
 #    game: "Game"
@@ -1704,7 +1720,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     helpful_ambassadors: "Vores Hjælpsomme Ambassadørere:"
 
   ladder:
-    please_login: "Du skal logge ind først, før du kan spille."
     my_matches: "Mine kampe"
     simulate: "Simulér"
     simulation_explanation: "Ved at simulere spil kan du få dit spil rangeret hurtigere!"
@@ -1822,9 +1837,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
 #    email_sent: "Email sent! Check your inbox."
 #    verifying_email: "Verifying your email address..."
 #    successfully_verified: "You've successfully verified your email address!"
-#    back_to_student_page: "Go back to student things"
-#    back_to_teacher_page: "Go to My Classes"
-#    back_to_game: "Go play some more levels!"
 #    verify_error: "Something went wrong when verifying your email :("
 
   account_invoices:
@@ -1860,11 +1872,6 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
     you_can1: "Du kan"
     you_can2: "købe en forudbetalt kode"
     you_can3: "der kan anvendes på din egen konto eller gives til andre."
-
-#  coppa_deny:
-#    text1: "Can’t wait to learn programming?"
-#    text2: "Your parents will need to create an account for you to use! Email team@codecombat.com if you have any questions."
-#    close: "Close Window"
 
   loading_error:
     could_not_load: "Fejl ved indlæsning fra server"
@@ -2001,6 +2008,16 @@ module.exports = nativeDescription: "dansk", englishDescription: "Danish", trans
 #    advanced_web_scripting: "Advanced Web Scripting"
     input_handling: "Input Håndtering"
     while_loops: "While Løkker"
+#    place_game_objects: "Place game objects"
+#    construct_mazes: "Construct mazes"
+#    create_playable_game: "Create a playable, sharable game project"
+#    alter_existing_web_pages: "Alter existing web pages"
+#    create_sharable_web_page: "Create a sharable web page"
+#    basic_input_handling: "Basic Input Handling"
+#    basic_game_ai: "Basic Game AI"
+#    basic_javascript: "Basic JavaScript"
+#    basic_event_handling: "Basic Event Handling"
+#    create_sharable_interactive_web_page: "Create a sharable interactive web page"
 
   delta:
     added: "Tilføjet"

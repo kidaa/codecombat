@@ -1,5 +1,9 @@
 go = (path, options) -> -> @routeDirectly path, arguments, options
-redirect = (path) -> -> @navigate(path + document.location.search, { trigger: true, replace: true })
+
+redirect = (path) -> ->
+  delete window.alreadyLoadedView
+  @navigate(path + document.location.search, { trigger: true, replace: true })
+
 utils = require './utils'
 ViewLoadTimer = require 'core/ViewLoadTimer'
 
@@ -20,6 +24,7 @@ module.exports = class CocoRouter extends Backbone.Router
       return @routeDirectly('HomeView', [])
 
     'about': go('AboutView')
+    'premium': go('PremiumFeaturesView')
 
     'account': go('account/MainAccountView')
     'account/settings': go('account/AccountSettingsRootView')
@@ -48,6 +53,8 @@ module.exports = class CocoRouter extends Backbone.Router
     'admin/pending-patches': go('admin/PendingPatchesView')
     'admin/codelogs': go('admin/CodeLogsView')
     'admin/skipped-contacts': go('admin/SkippedContactsView')
+    'admin/outcomes-report-result': go('admin/OutcomeReportResultView')
+    'admin/outcomes-report': go('admin/OutcomesReportView')
 
     'artisans': go('artisans/ArtisansView')
 
@@ -238,7 +245,8 @@ module.exports = class CocoRouter extends Backbone.Router
     @viewLoad.record()
     
   redirectHome: ->
-    homeUrl = switch 
+    delete window.alreadyLoadedView
+    homeUrl = switch
       when me.isStudent() then '/students'
       when me.isTeacher() then '/teachers'
       else '/'

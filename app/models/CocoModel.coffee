@@ -60,7 +60,9 @@ class CocoModel extends Backbone.Model
     @loading = false
     @jqxhr = null
     if jqxhr.status is 402
-      if _.contains(jqxhr.responseText, 'be in a course')
+      if _.contains(jqxhr.responseText, 'must be enrolled')
+        Backbone.Mediator.publish 'level:license-required', {}
+      else if _.contains(jqxhr.responseText, 'be in a course')
         Backbone.Mediator.publish 'level:course-membership-required', {}
       else
         Backbone.Mediator.publish 'level:subscription-required', {}
@@ -418,11 +420,12 @@ class CocoModel extends Backbone.Model
 
   #- Internationalization
 
-  updateI18NCoverage: ->
+  updateI18NCoverage: (attributes) ->
     langCodeArrays = []
     pathToData = {}
+    attributes ?= @attributes
 
-    TreemaUtils.walk(@attributes, @schema(), null, (path, data, workingSchema) ->
+    TreemaUtils.walk(attributes, @schema(), null, (path, data, workingSchema) ->
       # Store parent data for the next block...
       if data?.i18n
         pathToData[path] = data
@@ -436,7 +439,7 @@ class CocoModel extends Backbone.Model
 
         # use it to determine what properties actually need to be translated
         props = workingSchema.props or []
-        props = (prop for prop in props when parentData[prop])
+        props = (prop for prop in props when parentData[prop] and prop isnt 'sound')
         return unless props.length
         return if 'additionalProperties' of i18n  # Workaround for #2630: Programmable is weird
 

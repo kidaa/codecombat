@@ -3,8 +3,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     slogan: "A legvonzóbb játék, amivel megtanulhatsz programozni."
     classroom_edition: "Tantermi változat:"
     learn_to_code: "Tanulj meg kódolni:"
-    teacher: "Tanár"
-    student: "Diák"
     play_now: "Játssz Most"
     im_a_teacher: "Tanár vagyok"
     im_a_student: "Diák vagyok"
@@ -138,6 +136,10 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     change_hero: "Hős váltás" # Go back from choose inventory to choose hero
     buy_gems: "Vásárolj Drágköveket"
     subscription_required: "Előfizetést igényel"
+#    subscribers_only: "Subscribers Only!"
+#    subscribe_unlock: "Subscribe to Unlock!"
+#    subscriber_heroes: "Subscribe today to immediately unlock Amara, Hushbaum, and Hattori!"
+#    subscriber_gems: "Subscribe today to purchase this hero with gems!"
     anonymous: "Anonymus Játékos"
     level_difficulty: "Nehézség: "
     play_classroom_version: "Osztálytermi változat" # Choose a level in campaign version that you also can play in one of your courses
@@ -148,6 +150,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     adjust_volume: "Hangerő beállítása"
     campaign_multiplayer: "Multiplayer Arénák"
     campaign_multiplayer_description: "... amelyekben a kódod felveheti a versenyt más játékosok kódjával"
+#    brain_pop_done: "You’ve defeated the Ogres with code! You win!"
 
   code:
     if: "if" # Keywords--these translations show up on hover, so please translate them all, even if it's kind of long. (In the code editor, they will still be in English.)
@@ -422,7 +425,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     level: "Pálya" # Like "Level: Dungeons of Kithgard"
     skip: "Ugrás"
     game_menu: "Játék Menü"
-    guide: "Segítség"
     restart: "Előlről"
     goals: "Célok"
     goal: "Cél"
@@ -456,7 +458,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     victory_viking_code_school: "Szent ég! Ez a szint brutális volt, de megcsináltad! Ha véletlenül nem programozó vagy, akkor érdemes megpróbálnod. A Viking Code School felfigyelt rád. Ebben a programozó iskolában továbbfejlesztheted a készségeid, és akár 14 hét alatt profi programozó válhat belőled."
     victory_become_a_viking: "Legyél Viking"
     victory_no_progress_for_teachers: "A fejlődés nem lett elmentve a tanár számára. Viszont lehetőséged van arra, hogy tanulói fiókot rendelj az osztályodhoz."
-    guide_title: "Útmutató"
     tome_cast_button_run: "Futtatás"
     tome_cast_button_running: "Futás..."
     tome_cast_button_ran: "Lefutott"
@@ -464,13 +465,11 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     tome_reload_method: "Eredeti Eljárás újratöltése" # {change}
     tome_available_spells: "Elérhető varázslatok"
     tome_your_skills: "Képességeid"
-    tome_current_method: "Aktuális módszer"
     hints: "Tippek"
     hints_title: "Tipp {{number}}"
     code_saved: "Kód mentve"
     skip_tutorial: "Továbblépés (esc)"
     keyboard_shortcuts: "Billentyűparancsok"
-    loading_ready: "Kész!"
     loading_start: "Pálya kezdése"
     problem_alert_title: "Javítsd ki a Kódod"
     time_current: "Most:"
@@ -611,6 +610,9 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     prompt_button: "Lépj be a boltba"
     recovered: "Az előző drágakő vásárlás helyreállt. Kérlek frissítsd az oldalt."
     price: "x {{gems}} / hó"
+#    buy_premium: "Buy Premium"
+#    purchase: "Purchase"
+#    purchased: "Purchased"
 
   subscribe:
 #    subscribe_modal_title: "CodeCombat Premium"
@@ -618,15 +620,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    premium_pricing_prefix: "Get Premium for just"
 #    premium_pricing_suffix: "and become a master coder."
 #    premium: "Premium" # Make sure the following feature translations don't go onto two lines
-    feature1: "__levelsCount__+ alap pálya, __worldsCount__ világon át" # {change}
-    feature2: "__heroesCount__ erőteljes <strong>új hős</strong> egyedi képességekkel!" # {change}
-    feature3: "__bonusLevelsCount__+ bónusz pálya" # {change}
-    feature4: "<strong>{{gems}} bónusz drágakő</strong> minden hónapban!" # {change}
-    feature6: "Prémium e-mail támogatás"
-    feature7: "Privát <strong>Klánok</strong>"
-    feature8: "<strong>Reklámmentes övezet!</strong>"
-#    feature_game_dev: "Make games for your friends to play in our <strong>Game Dev Worlds</strong>"
-#    feature_web_dev: "Build websites and apps with HTML, CSS, and jQuery in our <strong>Web Dev Worlds</strong>"
     free: "Ingyenes"
     month: "hónap"
     must_be_logged: "Ehhez be kell jelentkezned. Kérlek regisztrálj, vagy lépj be a fenti menüben!"
@@ -676,6 +669,44 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     unsubscribing: "Leiratkozás"
     subscribe_prepaid: "Az előre utalt előfizetési kód használatához kattints az Előfizetés lehetőségre"
     using_prepaid: "Előre utalt előfizetési kód használata havi előfizetéshez"
+#    feature_levels: "Access __premiumLevelsCount__ levels available"
+#    feature_gems: "Receive __gems__ gems per month"
+#    feature_heroes: "Unlock exclusive heroes"
+#    feature_games: "Make games for your friends"
+#    feature_websites: "Build websites and apps"
+#    feature_items: "Equip more powerful items"
+#    month_price: "$__price__/mo"
+#    lifetime: "Lifetime Subscription"
+#    lifetime_price: "$__price__"
+#    year_subscription: "Yearly Subscription"
+#    year_price: "$__price__/year"
+#    kids_message_1: "Kids! We'll send an email to your parents so they can purchase a subscription for you."
+#    kids_message_2: "Ask Your Parent"
+#    support_part1: "Need help with payment options? Email"
+#    support_part2: "support@codecombat.com"
+#    support_part3: "if you have any questions."
+
+#  premium_features:
+#    get_premium: "Get<br>CodeCombat<br>Premium" # Fit into the banner on the /features page
+#    master_coder: "Become a Master Coder by subscribing today!"
+#    subscribe_now: "Subscribe Now"
+#    hero_blurb_1: "Get access to __premiumHeroesCount__ super-charged subscriber-only heroes! Harness the unstoppable power of Okar Stompfoot, the deadly precision of Naria of the Leaf, or summon \"adorable\" skeletons with Nalfar Cryptor."
+#    hero_blurb_2: "Premium Warriors unlock stunning martial skills like Warcry, Stomp, and Hurl Enemy. Or, play as a Ranger, using stealth and bows, throwing knives, traps! Try your skill as a true coding Wizard, and unleash a powerful array of Primordial, Necromantic or Elemental magic!"
+#    hero_caption: "Exciting new heroes!"
+#    pet_blurb_1: "Pets aren't just adorable companions, they also provide unique functionality and methods. The Baby Griffin can fly over obstacles while helping the hero, the Wolf Pup can fetch potions, and the Cougar can speak!"
+#    pet_blurb_2: "Collect all the pets to discover their unique abilities!"
+#    pet_caption: "Adopt pets to accompany your hero!"
+#    game_dev_blurb: "Learn game scripting and build new levels to share with your friends! Place the items you want, write code for unit logic and behavior, and see if your friends can beat the level!"
+#    game_dev_caption: "Design your own games to challenge your friends!"
+#    everything_in_premium: "Everything you get in CodeCombat Premium:"
+#    list_gems: "Receive bonus gems every month to buy gear, pets, and heroes"
+#    list_levels: "Gain access to __premiumLevelsCount__ more levels"
+#    list_heroes: "Unlock exclusive heroes, include Ranger and Wizard classes"
+#    list_game_dev: "Make and share games with friends"
+#    list_web_dev: "Build websites and interactive apps"
+#    list_items: "Equip Premium-only items like pets"
+#    list_support: "Get Premium support to help you debug tricky code"
+#    list_clans: "Create private clans to invite your friends and compete on a group leaderboard"
 
   choose_hero:
     choose_hero: "Válassz hőst."
@@ -905,7 +936,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     primary_role_default: "Válassz elsődleges szerepkört"
     purchaser_role_default: "Válassz egy beszerzési szerepkört"
     tech_coordinator: "Műszaki koordinátor"
-    advisor: "Tanácsadó"
+    advisor: "Tanácsadó" # {change}
     principal: "Igazgató"
     superintendent: "Tanfelügyelő"
     parent: "Szülő"
@@ -929,6 +960,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     please_explain: "(kérjük, fejtsd ki bővebben)"
     middle_school: "Középiskola"
     college_plus: "Főiskolai vagy magasabb szintű felsőfokú képzés"
+#    referrer: "How did you hear about us?"
+#    referrer_help: "For example: from another teacher, a conference, your students, Code.org, etc."
     anything_else: "Egyéb tudnivalók"
     thanks_header: "Kérésedet megkaptuk!"
     thanks_sub_header: "Köszönjük az érdeklődésedet, örülünk, hogy fel szeretnéd használni a CodeCombatet az iskoládban."
@@ -974,7 +1007,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
   account_settings:
     title: "Fiók beállítások"
     not_logged_in: "Jelentkezz be, vagy hozz létre egy fiókot, hogy változtathass a beállításokon!"
-    autosave: "A változtatásokat automatikusan elmentjük."
     me_tab: "Rólad"
     picture_tab: "Kép"
     delete_account_tab: "Fiók törlése"
@@ -1013,6 +1045,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     saved: "Változtatások elmentve"
     password_mismatch: "A jelszavak nem egyeznek."
     password_repeat: "Kérlek ismételd meg a jelszavadat"
+#    file_size_limit: "(max file size: 1MB)"
 
   keyboard_shortcuts:
     keyboard_shortcuts: "Billentyűparancsok"
@@ -1114,7 +1147,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     private_require_sub: "A privát klánok létrehozásához, illetve a hozzájuk történő csatlakozáshoz előfizetés szükséges."
 
   courses:
-    course: "Kurzus"
     create_new_class: "Új osztály"
     unnamed_class: "Névtelen osztály"
     edit_settings1: "Osztály szerkesztése"
@@ -1126,30 +1158,14 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     average_levels: "Teljesített pályák átlaga:"
     total_levels: "Teljesített pályák összesen:"
     students: "Tanulók"
-    students1: "tanulók"
     concepts: "Fogalmak"
     play_time: "Játékidő:"
     completed: "Teljesítve:"
     enter_emails: "Írd külön sorba az e-mail címeket, vagy tegyél vesszőt közéjük"
     send_invites: "Tanulók meghívása"
-    creating_class: "Osztály létrehozása..."
-    purchasing_course: "Kurzus megvásárlása..."
-    buy_course: "Kurzus vásárlása"
-    select_all_courses: "Válaszd az „Összes kurzus” lehetőséget ahhoz, hogy 50%-os kedvezményben részesülj!"
-    all_courses: "Összes kurzus"
     number_programming_students: "Programozást tanuló diákok száma"
     number_total_students: "Az iskola/iskolai körzet tanulóinak száma összesen"
-    enter_number_students: "Add meg a tervezett osztálylétszámot."
-    name_class: "Add meg az osztályod nevét"
-    displayed_course_page: "Ez a kurzusok lapján fog megjelenni neked és a diákjaidnak. A későbbiekben módosíthatod."
-    buy: "Vásárlás"
-    purchasing_for: "Jelenleg ennyi tanulónak vásárolsz licencet:"
-    creating_for: "Jelenleg ekkora létszámú osztályt hozol létre:"
-    for: "for" # Like in 'for 30 students'
-    receive_code: "Ezután megkapod a hozzáférési kódot, amelyet továbbküldhetsz a tanulóidnak, hogy beiratkozhassanak az osztályodba."
-    questions: "Kérdésed van?"
     enroll: "Beiratkozás"
-    enter: "Belépés"
     enroll_paid: "Tanulók beíratása térítéses kurzusokra"
     get_enrollments: "További licencek vásárlása"
     change_language: "Kurzus nyelvének megváltoztatása"
@@ -1200,13 +1216,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     remove_description2: "Az aktivált, kifizetett licenc nem kerül vissza hozzád."
     keep_student: "Tanuló megtartása"
     removing_user: "Felhasználó eltávolítása"
-    to_join_ask: "Ha csatlakozni szeretnél egy osztályhoz, kérd el a tanárodtól a hozzáférési kódot."
-    join_this_class: "Osztályhoz csatlakozás"
-    enter_here: "<Add meg a hozzáférési kódot>"
-    successfully_joined: "Sikeres csatlakozás"
-    click_to_start: "Kattints ide a következő elkezdéséhez:"
-    my_courses: "Saját kurzusok"
-    classroom: "Osztályterem"
     subtitle: "Kurzusleírások és pályák áttekintése" # Flat style redesign
     changelog: "Tekintsd meg a kurzus részét képező pályákkal kapcsolatos módosításokat."
     select_language: "Válassz nyelvet"
@@ -1278,6 +1287,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     current_hero: "Aktuális hős:"
     change_hero: "Hős lecserélése"
 #    web_dev_language_transition: "All classes program in HTML / JavaScript for this course.  Classes that have been using Python will start with extra JavaScript intro levels to ease the transition.  Classes that are already using JavaScript will skip the intro levels."
+#    course_membership_required_to_play: "You'll need to join a course to play this level."
+#    license_required_to_play: "Ask your teacher to assign a license to you so you can continue to play CodeCombat!"
 
   teacher:
 #    assigning_course: "Assigning course"
@@ -1320,6 +1331,7 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     latest_complete: "Legkésőbbi teljesített pálya"
     enroll_student: "Tanuló beíratása"
 #    apply_license: "Apply License"
+#    revoke_license: "Revoke License"
     course_progress: "Kurzus állapota"
     not_applicable: "[nem elérhető]"
     edit: "szerkesztés"
@@ -1419,6 +1431,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    progress_journal_desc: "Encourage students to keep track of their progress via a progress journal."
 #    cs1_curriculum: "Introduction to Computer Science - Curriculum Guide"
 #    cs1_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 1."
+#    arenas_curriculum: "Arena Levels - Teacher Guide"
+#    arenas_curriculum_desc: "Instructions on how to run Wakka Maul, Cross Bones and Power Peak multiplayer arenas with your class."
 #    cs2_curriculum: "Computer Science 2 - Curriculum Guide"
 #    cs2_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 2."
 #    cs3_curriculum: "Computer Science 3 - Curriculum Guide"
@@ -1484,6 +1498,8 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
 #    hoc_additional_desc1: "For additional CodeCombat resources and activities, see our"
 #    hoc_additional_desc2: "Questions"
 #    hoc_additional_contact: "Get in touch"
+#    revoke_confirm: "Are you sure you want to revoke a Full License from {{student_name}}? The license will become available to assign to another student."
+#    revoking: "Revoking..."
 
   sharing:
     game: "Játék"
@@ -1704,7 +1720,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     helpful_ambassadors: "Segítőkész nagyköveteink:"
 
   ladder:
-    please_login: "A versenyzéshez kérjük, először jelentkezz be."
     my_matches: "Saját eredmények"
     simulate: "Szimuláció"
     simulation_explanation: "A szimuláció révén hamarabb rangsorolhatod a játékot."
@@ -1822,9 +1837,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     email_sent: "E-mail elküldve! Nézd meg a postfiókod!"
     verifying_email: "E-mail cím hitelesítése..."
     successfully_verified: "E-mail cím sikeres hitelesítése."
-    back_to_student_page: "Ugrás a tanulói fiókhoz"
-    back_to_teacher_page: "Ugrás a saját osztályokhoz"
-    back_to_game: "Játssz magasabb szinten!"
     verify_error: "Hiba történt az e-mail cím hitelesítésekor :("
 
   account_invoices:
@@ -1860,11 +1872,6 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     you_can1: "Vásárolhatsz"
     you_can2: "egy fizetős kódot,"
     you_can3: "amelyet a saját fiókodban is beválthatsz vagy átadhatsz másoknak."
-
-  coppa_deny:
-    text1: "Már alig várod, hogy programozhass?"
-    text2: "A szüleidnek létre kell hoznia számodra egy fiókot. Ha kérdésed van, küldd el a team@codecombat.com címre."
-    close: "Ablak bezárása"
 
   loading_error:
     could_not_load: "A betöltés a szerverről sikertelen"
@@ -2001,6 +2008,16 @@ module.exports = nativeDescription: "magyar", englishDescription: "Hungarian", t
     advanced_web_scripting: "Webscripting haladóknak"
     input_handling: "Inputkezelés"
     while_loops: "While ciklus"
+#    place_game_objects: "Place game objects"
+#    construct_mazes: "Construct mazes"
+#    create_playable_game: "Create a playable, sharable game project"
+#    alter_existing_web_pages: "Alter existing web pages"
+#    create_sharable_web_page: "Create a sharable web page"
+#    basic_input_handling: "Basic Input Handling"
+#    basic_game_ai: "Basic Game AI"
+#    basic_javascript: "Basic JavaScript"
+#    basic_event_handling: "Basic Event Handling"
+#    create_sharable_interactive_web_page: "Create a sharable interactive web page"
 
   delta:
     added: "Hozzáadott"
