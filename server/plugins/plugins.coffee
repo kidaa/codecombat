@@ -1,6 +1,8 @@
 mongoose = require('mongoose')
 log = require 'winston'
 utils = require '../lib/utils'
+co = require 'co'
+errors = require '../commons/errors'
 
 module.exports.MigrationPlugin = (schema, migrations) ->
   # Property name migrations made EZ
@@ -159,6 +161,14 @@ module.exports.VersionedPlugin = (schema) ->
   # Prevent multiple documents with the same version
   # Also used for looking up latest version, or specific versions.
   schema.index({'original': 1, 'version.major': -1, 'version.minor': -1}, {unique: true, name: 'version index'})
+  
+  schema.statics.findCurrentVersion = co.wrap (original, projection) ->
+    if _.isString original
+      try
+        original = mongoose.Types.ObjectId(original)
+      catch e
+        throw new errors.UnprocessableEntity('Invalid id provided.')
+    return @findOne({original, 'version.isLatestMajor': true}, projection)
 
   schema.statics.getLatestMajorVersion = (original, options, done) ->
     options = options or {}
@@ -179,7 +189,7 @@ module.exports.VersionedPlugin = (schema) ->
         latest = latest[0]
 
         # don't fix missing versions by default. In all likelihood, it's about to change anyway
-        if options.autofix
+        if options.autofix # not used
           latest.version.isLatestMajor = true
           latest.version.isLatestMinor = true
           latestObject = latest.toObject()
@@ -204,7 +214,7 @@ module.exports.VersionedPlugin = (schema) ->
         return done(null, null) if latest.length is 0
         latest = latest[0]
 
-        if options.autofix
+        if options.autofix # not used
           latestObject = latest.toObject()
           latestObject.version.isLatestMajor = true
           latestObject.version.isLatestMinor = true
@@ -267,7 +277,7 @@ module.exports.VersionedPlugin = (schema) ->
 
   # Assume every save is a new version, hence an edit
   schema.pre 'save', (next) ->
-    User = require '../users/User'  # Avoid mutual inclusion cycles
+    User = require '../models/User'  # Avoid mutual inclusion cycles
     userID = @get('creator')?.toHexString()
     return next() unless userID?
 

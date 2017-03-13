@@ -18,8 +18,8 @@ ctrlDefaultPrevented = [219, 221, 80, 83]
 preventBackspace = (event) ->
   if event.keyCode is 8 and not elementAcceptsKeystrokes(event.srcElement or event.target)
     event.preventDefault()
-  else if (key.ctrl or key.command) and not key.alt and event.keyCode in ctrlDefaultPrevented
-    console.debug "Prevented keystroke", key
+  else if (event.ctrlKey or event.metaKey) and not event.altKey and event.keyCode in ctrlDefaultPrevented
+    console.debug "Prevented keystroke", key, event
     event.preventDefault()
 
 elementAcceptsKeystrokes = (el) ->
@@ -44,40 +44,90 @@ window.console ?=
   debug: ->
 console.debug ?= console.log  # Needed for IE10 and earlier
 
-Application = initialize: ->
-  Router = require('core/Router')
-  @isProduction = -> document.location.href.search('https?://localhost:3000') is -1
-  @isIPadApp = webkit?.messageHandlers? and navigator.userAgent?.indexOf('CodeCombat-iPad') isnt -1
-  $('body').addClass 'ipad' if @isIPadApp
-  if $.browser.msie and parseInt($.browser.version) is 10
-    $("html").addClass("ie10")
-  @tracker = new Tracker()
-  @facebookHandler = new FacebookHandler()
-  @gplusHandler = new GPlusHandler()
-  @githubHandler = new GitHubHandler()
-  @moduleLoader = new ModuleLoader()
-  @moduleLoader.loadLanguage(me.get('preferredLanguage', true))
-  $(document).bind 'keydown', preventBackspace
-  preload(COMMON_FILES)
-  CocoModel.pollAchievements()
-  $.i18n.init {
-    lng: me.get('preferredLanguage', true)
-    fallbackLng: 'en'
-    resStore: locale
-    #debug: true
-    #sendMissing: true
-    #sendMissingTo: 'current'
-    #resPostPath: '/languages/add/__lng__/__ns__'
-  }, (t) =>
-    @router = new Router()
-    onIdleChanged = (to) => => Backbone.Mediator.publish 'application:idle-changed', idle: @userIsIdle = to
-    @idleTracker = new Idle
-      onAway: onIdleChanged true
-      onAwayBack: onIdleChanged false
-      onHidden: onIdleChanged true
-      onVisible: onIdleChanged false
-      awayTimeout: 5 * 60 * 1000
-    @idleTracker.start()
+Application = {
+  initialize: ->
+#    if features.codePlay and me.isAnonymous()
+#      document.location.href = '//lenovogamestate.com/login/'
+    
+    Router = require('core/Router')
+    @isProduction = -> document.location.href.search('https?://localhost') is -1
+    @isIPadApp = webkit?.messageHandlers? and navigator.userAgent?.indexOf('CodeCombat-iPad') isnt -1
+    $('body').addClass 'ipad' if @isIPadApp
+    $('body').addClass 'picoctf' if window.serverConfig.picoCTF
+    if $.browser.msie and parseInt($.browser.version) is 10
+      $("html").addClass("ie10")
+    @tracker = new Tracker()
+    @facebookHandler = new FacebookHandler()
+    @gplusHandler = new GPlusHandler()
+    @githubHandler = new GitHubHandler()
+    @moduleLoader = new ModuleLoader()
+    @moduleLoader.loadLanguage(me.get('preferredLanguage', true))
+    $(document).bind 'keydown', preventBackspace
+    preload(COMMON_FILES)
+    CocoModel.pollAchievements()
+    unless me.get('anonymous')
+      # TODO: Remove logging later, once this system has proved stable
+      me.on 'change:earned', (user, newEarned) ->
+        newEarned ?= {}
+        oldEarned = user.previous('earned') ? {}
+        if oldEarned.gems isnt newEarned.gems
+          console.log 'Gems changed', oldEarned.gems, '->', newEarned.gems
+        newLevels = _.difference(newEarned.levels, oldEarned.levels)
+        if newLevels.length
+          console.log 'Levels added', newLevels
+        newItems = _.difference(newEarned.items, oldEarned.items)
+        if newItems.length
+          console.log 'Items added', newItems
+        newHeroes = _.difference(newEarned.heroes, oldEarned.heroes)
+        if newHeroes.length
+          console.log 'Heroes added', newHeroes
+      me.on 'change:points', (user, newPoints) ->
+        console.log 'Points changed', user.previous('points'), '->', newPoints
+      @checkForNewAchievement()
+    $.i18n.init {
+      lng: me.get('preferredLanguage', true)
+      fallbackLng: 'en'
+      resStore: locale
+      useDataAttrOptions: true
+      #debug: true
+      #sendMissing: true
+      #sendMissingTo: 'current'
+      #resPostPath: '/languages/add/__lng__/__ns__'
+    }, (t) =>
+      @router = new Router()
+      onIdleChanged = (to) => => Backbone.Mediator.publish 'application:idle-changed', idle: @userIsIdle = to
+      @idleTracker = new Idle
+        onAway: onIdleChanged true
+        onAwayBack: onIdleChanged false
+        onHidden: onIdleChanged true
+        onVisible: onIdleChanged false
+        awayTimeout: 5 * 60 * 1000
+      @idleTracker.start()
+      
+  checkForNewAchievement: ->
+    if me.get('lastAchievementChecked')
+      startFrom = new Date(me.get('lastAchievementChecked'))
+    else
+      startFrom = me.created()
+    
+    daysSince = moment.duration(new Date() - startFrom).asDays()
+    if daysSince > 1
+      me.checkForNewAchievement().then => @checkForNewAchievement()
+      
+  featureMode: {
+    useCodePlay: ->
+      $.ajax({method: 'put', url: '/admin/feature-mode/code-play'}).then(-> document.location.reload())
+      
+    usePicoCtf: ->
+      $.ajax({method: 'put', url: '/admin/feature-mode/pico-ctf'}).then(-> document.location.reload())
+
+    clear: ->
+      $.ajax({method: 'delete', url: '/admin/feature-mode'}).then(-> document.location.reload())
+  }
+      
+  loadedStaticPage: window.alreadyLoadedView?
+  
+}
 
 module.exports = Application
 window.application = Application
