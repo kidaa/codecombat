@@ -8,6 +8,7 @@ locale = require 'locale/locale'
 
 Achievement = require 'models/Achievement'
 AchievementPopup = require 'views/core/AchievementPopup'
+errors = require 'core/errors'
 utils = require 'core/utils'
 
 # TODO remove
@@ -23,6 +24,7 @@ module.exports = class RootView extends CocoView
 
   events:
     'click #logout-button': 'logoutAccount'
+    'click #nav-stop-spying-button': 'stopSpying'
     'change .language-dropdown': 'onLanguageChanged'
     'click .toggle-fullscreen': 'toggleFullscreen'
     'click .signup-button': 'onClickSignupButton'
@@ -30,16 +32,23 @@ module.exports = class RootView extends CocoView
     'click a': 'onClickAnchor'
     'click button': 'toggleModal'
     'click li': 'toggleModal'
+    'treema-error': 'onTreemaError'
+    'click [data-i18n]': 'onClickTranslatedElement'
 
   subscriptions:
     'achievements:new': 'handleNewAchievements'
     'modal:open-modal-view': 'onOpenModalView'
 
+  shortcuts:
+    'ctrl+shift+a': 'navigateToAdmin'
+
   showNewAchievement: (achievement, earnedAchievement) ->
     earnedAchievement.set('notified', true)
     earnedAchievement.patch()
-    return if achievement.get('collection') is 'level.sessions'
+    return if achievement.get('collection') is 'level.sessions' and not achievement.get('query')?.team
     #return if @isIE()  # Some bugs in IE right now, TODO fix soon!  # Maybe working now with not caching achievement fetches in CocoModel?
+    return if window.serverConfig.picoCTF
+    return if achievement.get('hidden')
     new AchievementPopup achievement: achievement, earnedAchievement: earnedAchievement
 
   handleNewAchievements: (e) ->
@@ -50,12 +59,20 @@ module.exports = class RootView extends CocoView
         cache: false
 
   logoutAccount: ->
+    window?.webkit?.messageHandlers?.notification?.postMessage(name: "signOut") if window.application.isIPadApp
     Backbone.Mediator.publish("auth:logging-out", {})
     window.tracker?.trackEvent 'Log Out', category:'Homepage', ['Google Analytics'] if @id is 'home-view'
     logoutUser($('#login-email').val())
 
+  stopSpying: ->
+    me.stopSpying({
+      success: -> document.location.reload()
+      error: ->
+        errors.showNotyNetworkError(arguments...)
+    })
+
   onClickSignupButton: ->
-    AuthModal = require 'views/core/AuthModal'
+    CreateAccountModal = require 'views/core/CreateAccountModal'
     switch @id
       when 'home-view'
         window.tracker?.trackEvent 'Started Signup', category: 'Homepage', label: 'Homepage'
@@ -64,12 +81,12 @@ module.exports = class RootView extends CocoView
         window.tracker?.trackEvent 'Started Signup', category: 'World Map', label: 'World Map'
       else
         window.tracker?.trackEvent 'Started Signup', label: @id
-    @openModalView new AuthModal {mode: 'signup'}
+    @openModalView new CreateAccountModal()
 
   onClickLoginButton: ->
     AuthModal = require 'views/core/AuthModal'
     window.tracker?.trackEvent 'Login', category: 'Homepage', ['Google Analytics'] if @id is 'home-view'
-    @openModalView new AuthModal {mode: 'login'}
+    @openModalView new AuthModal()
 
   onClickAnchor: (e) ->
     return if @destroyed
@@ -94,11 +111,6 @@ module.exports = class RootView extends CocoView
     #location.hash = hash
     @renderScrollbar()
 
-  getRenderData: ->
-    c = super()
-    c.usesSocialMedia = @usesSocialMedia
-    c
-
   afterRender: ->
     if @$el.find('#site-nav').length # hack...
       @$el.addClass('site-chrome')
@@ -110,10 +122,8 @@ module.exports = class RootView extends CocoView
     @buildLanguages()
     $('body').removeClass('is-playing')
 
-    if application.isProduction()
-      title = 'CodeCombat - ' + (@getTitle() or 'Learn how to code by playing a game')
-    else
-      title = @getTitle() or @constructor.name
+    if title = @getTitle() then title += ' | CodeCombat'
+    else title = 'CodeCombat - Learn how to code by playing a game'
 
     $('title').text(title)
 
@@ -136,7 +146,7 @@ module.exports = class RootView extends CocoView
     genericCodes = _.filter codes, (code) ->
       _.find(codes, (code2) ->
         code2 isnt code and code2.split('-')[0] is code)
-    for code, localeInfo of locale when code isnt 'update' and (not (code in genericCodes) or code is initialVal)
+    for code, localeInfo of locale when code not in ['update', 'installVueI18n'] and (not (code in genericCodes) or code is initialVal)
       $select.append(
         $('<option></option>').val(code).text(localeInfo.nativeDescription))
       if code is 'fr'
@@ -170,3 +180,22 @@ module.exports = class RootView extends CocoView
       console.warn 'Error saving language:', errors
     res.success (model, response, options) ->
       #console.log 'Saved language:', newLang
+
+  isOldBrowser: ->
+    if $.browser
+      majorVersion = $.browser.versionNumber
+      return true if $.browser.mozilla && majorVersion < 25
+      return true if $.browser.chrome && majorVersion < 31  # Noticed Gems in the Deep not loading with 30
+      return true if $.browser.safari && majorVersion < 6  # 6 might have problems with Aether, or maybe just old minors of 6: https://errorception.com/projects/51a79585ee207206390002a2/errors/547a202e1ead63ba4e4ac9fd
+    else
+      console.warn 'no more jquery browser version...'
+    return false
+
+  logoutRedirectURL: '/'
+
+  navigateToAdmin: ->
+    if window.serverSession.amActually or me.isAdmin()
+      application.router.navigate('/admin', {trigger: true})
+
+  onTreemaError: (e) ->
+    noty text: e.message, layout: 'topCenter', type: 'error', killer: false, timeout: 5000, dismissQueue: true

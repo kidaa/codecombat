@@ -1,5 +1,5 @@
 mongoose = require 'mongoose'
-EarnedAchievement = require '../achievements/EarnedAchievement'
+EarnedAchievement = require '../models/EarnedAchievement'
 LocalMongo = require '../../app/lib/LocalMongo'
 util = require '../../app/core/utils'
 log = require 'winston'
@@ -9,8 +9,8 @@ log = require 'winston'
 # TODO if this is still a common scenario I could implement a database hit after all, but only
 # on the condition that it's necessary and still not too frequent in occurrence
 AchievablePlugin = (schema, options) ->
-  User = require '../users/User'  # Avoid mutual inclusion cycles
-  Achievement = require '../achievements/Achievement'
+  User = require '../models/User'  # Avoid mutual inclusion cycles
+  Achievement = require '../models/Achievement'
 
   # Keep track the document before it's saved
   schema.post 'init', (doc) ->
@@ -19,7 +19,11 @@ AchievablePlugin = (schema, options) ->
 
   # Check if an achievement has been earned
   schema.post 'save', (doc) ->
-    schema.statics.createNewEarnedAchievements doc
+    promises = schema.statics.createNewEarnedAchievements(doc)
+    if global.testing
+      # Provide a way for tests to know when achievements have been earned
+      doc.achievementsEarning ?= []
+      doc.achievementsEarning = doc.achievementsEarning.concat(promises)
 
   schema.statics.createNewEarnedAchievements = (doc, unchangedCopy) ->
     unchangedCopy ?= doc.unchangedCopy
@@ -30,6 +34,7 @@ AchievablePlugin = (schema, options) ->
 
     category = doc.constructor.collection.name
     loadedAchievements = Achievement.getLoadedAchievements()
+    promises = []
 
     if category of loadedAchievements
       #log.debug 'about to save ' + category + ', number of achievements is ' + loadedAchievements[category].length
@@ -42,7 +47,8 @@ AchievablePlugin = (schema, options) ->
           alreadyAchieved = if isNew then false else LocalMongo.matchesQuery unchangedCopy, query
           newlyAchieved = LocalMongo.matchesQuery(docObj, query)
           return unless newlyAchieved and (not alreadyAchieved or isRepeatable)
-          #log.info "Making an achievement: #{achievement.get('name')} #{achievement.get('_id')} for doc: #{doc.get('name')} #{doc.get('_id')}"
-          EarnedAchievement.createForAchievement(achievement, doc, unchangedCopy)
+          promises.push EarnedAchievement.createForAchievement(achievement, doc, {originalDocObj: unchangedCopy})
+          
+    return promises
 
 module.exports = AchievablePlugin

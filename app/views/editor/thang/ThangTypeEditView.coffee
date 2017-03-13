@@ -20,6 +20,9 @@ VectorIconSetupModal = require 'views/editor/thang/VectorIconSetupModal'
 SaveVersionModal = require 'views/editor/modal/SaveVersionModal'
 template = require 'templates/editor/thang/thang-type-edit-view'
 storage = require 'core/storage'
+ExportThangTypeModal = require './ExportThangTypeModal'
+
+require 'game-libraries'
 
 CENTER = {x: 200, y: 400}
 
@@ -76,6 +79,7 @@ defaultTasks =
     'Set the hero class.'
     'Add Extended Hero Name.'
     'Upload Hero Doll Images.'
+    'Upload Pose Image.'
     'Start a new name category in names.coffee.'
     'Set up hero stats in Equips, Attackable, Moves.'
     'Set Collects collectRange to 2, Sees visualRange to 60.'
@@ -157,6 +161,7 @@ module.exports = class ThangTypeEditView extends RootView
     'mousedown #canvas': 'onCanvasMouseDown'
     'mouseup #canvas': 'onCanvasMouseUp'
     'mousemove #canvas': 'onCanvasMouseMove'
+    'click #export-sprite-sheet-btn': 'onClickExportSpriteSheetButton'
 
   onClickSetVectorIcon: ->
     modal = new VectorIconSetupModal({}, @thangType)
@@ -165,7 +170,6 @@ module.exports = class ThangTypeEditView extends RootView
 
   subscriptions:
     'editor:thang-type-color-groups-changed': 'onColorGroupsChanged'
-    'editor:save-new-version': 'saveNewThangType'
 
   # init / render
 
@@ -173,7 +177,7 @@ module.exports = class ThangTypeEditView extends RootView
     super options
     @mockThang = $.extend(true, {}, @mockThang)
     @thangType = new ThangType(_id: @thangTypeID)
-    @thangType = @supermodel.loadModel(@thangType, 'thang').model
+    @thangType = @supermodel.loadModel(@thangType).model
     @thangType.saveBackups = true
     @listenToOnce @thangType, 'sync', ->
       @files = @supermodel.loadCollection(new DocumentFiles(@thangType), 'files').model
@@ -588,7 +592,10 @@ module.exports = class ThangTypeEditView extends RootView
     _.delay((-> document.location.reload()), 500)
 
   openSaveModal: ->
-    @openModalView new SaveVersionModal model: @thangType
+    modal = new SaveVersionModal model: @thangType
+    @openModalView modal
+    @listenToOnce modal, 'save-new-version', @saveNewThangType
+    @listenToOnce modal, 'hidden', -> @stopListening(modal)
 
   startForking: (e) ->
     @openModalView new ForkModal model: @thangType, editorPath: 'thang'
@@ -650,6 +657,10 @@ module.exports = class ThangTypeEditView extends RootView
     offset.y += Math.round @canvasDragOffset.y
     @canvasDragOffset = null
     node.set '/', offset
+
+  onClickExportSpriteSheetButton: ->
+    modal = new ExportThangTypeModal({}, @thangType)
+    @openModalView(modal)
 
   destroy: ->
     @camera?.destroy()

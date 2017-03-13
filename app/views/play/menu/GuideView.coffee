@@ -2,9 +2,8 @@ CocoView = require 'views/core/CocoView'
 template = require 'templates/play/menu/guide-view'
 Article = require 'models/Article'
 SubscribeModal = require 'views/core/SubscribeModal'
+ace = require 'ace'
 utils = require 'core/utils'
-
-# let's implement this once we have the docs database schema set up
 
 module.exports = class LevelGuideView extends CocoView
   template: template
@@ -17,34 +16,39 @@ module.exports = class LevelGuideView extends CocoView
     'click .start-subscription-button': 'clickSubscribe'
 
   constructor: (options) ->
+    super options
     @levelSlug = options.level.get('slug')
     @sessionID = options.session.get('_id')
     @requiresSubscription = not me.isPremium()
-    @helpVideos = options.level.get('helpVideos') ? []
+    @isCourseLevel = options.level.isType('course', 'course-ladder')
+    @helpVideos = if @isCourseLevel then [] else options.level.get('helpVideos') ? []
     @trackedHelpVideoStart = @trackedHelpVideoFinish = false
     # A/B Testing video tutorial styles
     @helpVideosIndex = me.getVideoTutorialStylesIndex(@helpVideos.length)
-    @helpVideo = @helpVideos[@helpVideosIndex] if @helpVideos.length > 0
-    @videoLocked = not @helpVideo?.free and @requiresSubscription
+    @helpVideo = @helpVideos[@helpVideosIndex] if @helpVideos.length > 0 and not @isCourseLevel
+    @videoLocked = not (@helpVideo?.free or @isCourseLevel) and @requiresSubscription
 
     @firstOnly = options.firstOnly
-    @docs = options?.docs ? options.level.get('documentation') ? {}
-    general = @docs.generalArticles or []
-    specific = @docs.specificArticles or []
+    if window.serverConfig.picoCTF
+      @docs = options?.docs ? options.level.get('documentation') ? {}
+      general = @docs.generalArticles or []
+      specific = @docs.specificArticles or []
 
-    articles = options.supermodel.getModels(Article)
-    articleMap = {}
-    articleMap[article.get('original')] = article for article in articles
-    general = (articleMap[ref.original] for ref in general)
-    general = (article.attributes for article in general when article)
+      articles = options.supermodel.getModels(Article)
+      articleMap = {}
+      articleMap[article.get('original')] = article for article in articles
+      general = (articleMap[ref.original] for ref in general)
+      general = (article.attributes for article in general when article)
 
-    @docs = specific.concat(general)
-    @docs = $.extend(true, [], @docs)
-    @docs = [@docs[0]] if @firstOnly and @docs[0]
-    doc.html = marked(utils.i18n doc, 'body') for doc in @docs
-    doc.name = (utils.i18n doc, 'name') for doc in @docs
-    doc.slug = _.string.slugify(doc.name) for doc in @docs
-    super()
+      @docs = specific.concat(general)
+      @docs = $.extend(true, [], @docs)
+      @docs = [@docs[0]] if @firstOnly and @docs[0]
+      @addPicoCTFProblem() 
+      doc.html = marked(utils.filterMarkdownCodeLanguages(utils.i18n(doc, 'body'), options.session.get('codeLanguage'))) for doc in @docs
+      doc.slug = _.string.slugify(doc.name) for doc in @docs
+      doc.name = (utils.i18n doc, 'name') for doc in @docs
+    else
+      @docs = []
 
   destroy: ->
     if @vimeoListenerAttached
@@ -52,30 +56,47 @@ module.exports = class LevelGuideView extends CocoView
         window.removeEventListener('message', @onMessageReceived, false)
       else
         window.detachEvent('onmessage', @onMessageReceived, false)
+    oldEditor.destroy() for oldEditor in @aceEditors ? []
     super()
 
   getRenderData: ->
     c = super()
     c.docs = @docs
-    c.showVideo = @helpVideos.length > 0
+    c.showVideo = @helpVideos.length > 0 unless @isCourseLevel
     c.videoLocked = @videoLocked
     c
 
   afterRender: ->
     super()
-    if @docs.length is 1 and @helpVideos.length > 0
-      @setupVideoPlayer() unless @videoLocked
-    else
+    @setupVideoPlayer() unless @videoLocked
+    if @docs.length + @helpVideos.length > 1
+      if @helpVideos.length
+        startingTab = 0
+      else
+        startingTab = _.findIndex @docs, slug: 'overview'
+        startingTab = 0 if startingTab is -1
       # incredible hackiness. Getting bootstrap tabs to work shouldn't be this complex
-      @$el.find('.nav-tabs li:first').addClass('active')
-      @$el.find('.tab-content .tab-pane:first').addClass('active')
+      @$el.find(".nav-tabs li:nth(#{startingTab})").addClass('active')
+      @$el.find(".tab-content .tab-pane:nth(#{startingTab})").addClass('active')
       @$el.find('.nav-tabs a').click(@clickTab)
+      @$el.addClass 'has-tabs'
+    @configureACEEditors()
     @playSound 'guide-open'
+
+  configureACEEditors: ->
+    oldEditor.destroy() for oldEditor in @aceEditors ? []
+    @aceEditors = []
+    aceEditors = @aceEditors
+    codeLanguage = @options.session.get('codeLanguage') or me.get('aceConfig')?.language or 'python'
+    @$el.find('pre').each ->
+      aceEditor = utils.initializeACE @, codeLanguage
+      aceEditors.push aceEditor
 
   clickSubscribe: (e) ->
     level = @levelSlug # Save ref to level slug
     @openModalView new SubscribeModal()
-    window.tracker?.trackEvent 'Show subscription modal', category: 'Subscription', label: 'help video clicked', level: level
+    # TODO: Added levelID on 2/9/16. Remove level property and associated AnalyticsLogEvent 'properties.level' index later.
+    window.tracker?.trackEvent 'Show subscription modal', category: 'Subscription', label: 'help video clicked', level: level, levelID: level
 
   clickTab: (e) =>
     @$el.find('li.active').removeClass('active')
@@ -86,6 +107,9 @@ module.exports = class LevelGuideView extends CocoView
     Backbone.Mediator.publish 'level:docs-shown', {}
 
   onHidden: ->
+    if @vimeoListenerAttached
+      player = @$('#help-video-player')[0]
+      player.contentWindow.postMessage JSON.stringify(method: 'pause'), '*'
     createjs?.Sound?.setVolume?(@volume ? ( me.get('volume') ? 1.0))
     Backbone.Mediator.publish 'level:docs-hidden', {}
 
@@ -121,8 +145,11 @@ module.exports = class LevelGuideView extends CocoView
     tag.src = helpVideoURL + "?api=1&badge=0&byline=0&portrait=0&title=0"
     tag.height = @helpVideoHeight
     tag.width = @helpVideoWidth
-    tag.frameborder = '0'
-    @$el.find('#help-video-player').replaceWith(tag)
+    tag.allowFullscreen = true
+    tag.mozAllowFullscreen = true
+    $tag = $(tag)
+    $tag.attr('webkitallowfullscreen', true) # strong arm Safari into working
+    @$el.find('#help-video-player').replaceWith($tag)
 
     @onMessageReceived = (e) =>
       data = JSON.parse(e.data)
@@ -143,3 +170,17 @@ module.exports = class LevelGuideView extends CocoView
     else
       window.attachEvent('onmessage', @onMessageReceived, false)
     @vimeoListenerAttached = true
+
+  addPicoCTFProblem: ->
+    return unless problem = @options.level.picoCTFProblem
+    @docs = [name: 'Intro', body: '', slug: 'intro'] unless @docs.length
+    for doc in @docs when doc.name in ['Overview', 'Intro']
+      doc.body += """
+        ### #{problem.name}
+
+        #{problem.description}
+
+        #{problem.category} - #{problem.score} points
+
+        Hint: #{problem.hints}
+      """.replace /<p>(.*?)<\/p>/gi, '$1'

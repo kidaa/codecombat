@@ -36,7 +36,7 @@ module.exports = class DeltaView extends CocoView
       @[modelName] = options[modelName]
       continue unless @[modelName] and options.loadModels
       if not @[modelName].isLoaded
-        @[modelName] = @supermodel.loadModel(@[modelName], 'document').model
+        @[modelName] = @supermodel.loadModel(@[modelName]).model
 
     @buildDeltas() if @supermodel.finished()
 
@@ -47,8 +47,10 @@ module.exports = class DeltaView extends CocoView
   buildDeltas: ->
     if @comparisonModel
       @expandedDeltas = @model.getExpandedDeltaWith(@comparisonModel)
+      @deltas = @model.getDeltaWith(@comparisonModel)
     else
       @expandedDeltas = @model.getExpandedDelta()
+      @deltas = @model.getDelta()
     [@expandedDeltas, @skippedDeltas] = @filterDeltas(@expandedDeltas)
 
     if @headModel
@@ -71,14 +73,12 @@ module.exports = class DeltaView extends CocoView
       if skip then skippedDeltas.push delta else newDeltas.push delta
     [newDeltas, skippedDeltas]
 
-  getRenderData: ->
-    c = super()
-    c.deltas = @expandedDeltas
-    c.counter = DeltaView.deltaCounter
-    DeltaView.deltaCounter += @expandedDeltas.length
-    c
-
   afterRender: ->
+    expertView = @$el.find('.expert-view')
+    if expertView
+      expertView.html jsondiffpatch.formatters.html.format(@deltas)
+
+    DeltaView.deltaCounter += @expandedDeltas.length
     deltas = @$el.find('.details')
     for delta, i in deltas
       deltaEl = $(delta)

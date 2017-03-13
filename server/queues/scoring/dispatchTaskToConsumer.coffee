@@ -2,8 +2,8 @@ log = require 'winston'
 async = require 'async'
 errors = require '../../commons/errors'
 scoringUtils = require './scoringUtils'
-LevelSession = require '../../levels/sessions/LevelSession'
-TaskLog = require './ScoringTask'
+LevelSession = require '../../models/LevelSession'
+TaskLog = require './../../models/ScoringTask'
 
 module.exports = dispatchTaskToConsumer = (req, res) ->
   yetiGuru = {}
@@ -18,7 +18,7 @@ module.exports = dispatchTaskToConsumer = (req, res) ->
   ], (err, taskObjectToSend) ->
     if err?
       if typeof err is 'string' and err.indexOf 'No more games in the queue' isnt -1
-        res.send(204, 'No games to score.')
+        res.status(204).send('No games to score.')
         return res.end()
       else
         return errors.serverError res, "There was an error dispatching the task: #{err}"
@@ -26,7 +26,7 @@ module.exports = dispatchTaskToConsumer = (req, res) ->
 
 
 checkSimulationPermissions = (req, cb) ->
-  if req.user?.get('email')
+  if req.user and not req.user.isAnonymous()
     cb null
   else
     cb 'You need to be logged in to simulate games'
@@ -57,10 +57,10 @@ constructTaskObject = (taskMessageBody, message, callback) ->
     callback null, taskObject, message
 
 getSessionInformation = (sessionIDString, callback) ->
-  selectString = 'submitDate team submittedCode teamSpells levelID creator creatorName transpiledCode submittedCodeLanguage totalScore'
+  selectString = 'submitDate team submittedCode teamSpells levelID creator creatorName submittedCodeLanguage totalScore'
   LevelSession.findOne(_id: sessionIDString).select(selectString).lean().exec (err, session) ->
     if err? then return callback err, {'error': 'There was an error retrieving the session.'}
-    callback null, session
+    callback null, scoringUtils.formatSessionInformation session
 
 constructTaskLogObject = (calculatorUserID, taskObject, message, callback) ->
   taskLogObject = new TaskLog

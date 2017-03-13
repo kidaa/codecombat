@@ -1,5 +1,5 @@
 app = require 'core/application'
-AuthModal = require 'views/core/AuthModal'
+CreateAccountModal = require 'views/core/CreateAccountModal'
 RootView = require 'views/core/RootView'
 template = require 'templates/clans/clans'
 CocoCollection = require 'collections/CocoCollection'
@@ -13,6 +13,7 @@ SubscribeModal = require 'views/core/SubscribeModal'
 module.exports = class ClansView extends RootView
   id: 'clans-view'
   template: template
+  
 
   events:
     'click .create-clan-btn': 'onClickCreateClan'
@@ -20,31 +21,28 @@ module.exports = class ClansView extends RootView
     'click .leave-clan-btn': 'onLeaveClan'
     'click .private-clan-checkbox': 'onClickPrivateCheckbox'
 
-  constructor: (options) ->
-    super options
-    @initData()
+  initialize: ->
+    @publicClansArray = []
+    @myClansArray = []    
+    @idNameMap = {}
+    @loadData()
 
   destroy: ->
     @stopListening?()
-
-  getRenderData: ->
-    context = super()
-    context.idNameMap = @idNameMap
-    context.publicClans = _.filter(@publicClans.models, (clan) -> clan.get('type') is 'public')
-    context.myClans = @myClans.models
-    context.myClanIDs = me.get('clans') ? []
-    context
 
   afterRender: ->
     super()
     @setupPrivateInfoPopover()
 
-  initData: ->
-    @idNameMap = {}
+  onLoaded: ->
+    super()
+    @publicClansArray = _.filter(@publicClans.models, (clan) -> clan.get('type') is 'public')
+    @myClansArray = @myClans.models
 
+  loadData: ->
     sortClanList = (a, b) ->
-      if a.get('members').length isnt b.get('members').length
-        if a.get('members').length < b.get('members').length then 1 else -1
+      if a.get('memberCount') isnt b.get('memberCount')
+        if a.get('memberCount') < b.get('memberCount') then 1 else -1
       else
         b.id.localeCompare(a.id)
     @publicClans = new CocoCollection([], { url: '/db/clan/-/public', model: Clan, comparator: sortClanList })
@@ -52,12 +50,15 @@ module.exports = class ClansView extends RootView
       @refreshNames @publicClans.models
       @render?()
     @supermodel.loadCollection(@publicClans, 'public_clans', {cache: false})
+
     @myClans = new CocoCollection([], { url: "/db/user/#{me.id}/clans", model: Clan, comparator: sortClanList })
     @listenTo @myClans, 'sync', =>
       @refreshNames @myClans.models
       @render?()
     @supermodel.loadCollection(@myClans, 'my_clans', {cache: false})
+
     @listenTo me, 'sync', => @render?()
+    @myClanIDs = me.get('clans') ? []
 
   refreshNames: (clans) ->
     clanIDs = _.filter(clans, (clan) -> clan.get('type') is 'public')
@@ -72,16 +73,16 @@ module.exports = class ClansView extends RootView
     @supermodel.addRequestResource('user_names', options, 0).load()
 
   setupPrivateInfoPopover: ->
-    popoverTitle = "<h3>Private Clans</h3>"
+    popoverTitle = "<h3>" + $.i18n.t('clans.private_clans') + "</h3>"
     popoverContent = "<ul>"
-    popoverContent += "<li><span style='font-weight:bold;'>Track concepts</span> learned by each member"
-    popoverContent += "<li>Track levels completed for each member"
-    popoverContent += "<li>See your members' <span style='font-weight:bold;'>solutions</span>"
-    popoverContent += "<li>Sort members by name or progress"
-    popoverContent += "<li><span style='font-weight:bold;'>Requires invitation</span> to join"
+    popoverContent += "<li><span style='font-weight:bold;'>" + $.i18n.t('clans.track_concepts1') + "</span> " + $.i18n.t('clans.track_concepts2b')
+    popoverContent += "<li>" + $.i18n.t('clans.track_concepts3b')
+    popoverContent += "<li>" + $.i18n.t('clans.track_concepts4b') + " <span style='font-weight:bold;'>" + $.i18n.t('clans.track_concepts5') + "</span>"
+    popoverContent += "<li>" + $.i18n.t('clans.track_concepts6b')
+    popoverContent += "<li><span style='font-weight:bold;'>" + $.i18n.t('clans.track_concepts7') + "</span> " + $.i18n.t('clans.track_concepts8')
     popoverContent += "</ul>"
     popoverContent += "<p><img src='/images/pages/clans/dashboard_preview.png' height='400'></p>"
-    popoverContent += "<p>Private clans require a subscription to create or join.</p>"
+    popoverContent += "<p>" + $.i18n.t('clans.private_require_sub') + "</p>"
     @$el.find('.private-more-info').popover(
       animation: true
       html: true
@@ -93,7 +94,7 @@ module.exports = class ClansView extends RootView
     )
 
   onClickCreateClan: (e) ->
-    return @openModalView new AuthModal() if me.isAnonymous()
+    return @openModalView new CreateAccountModal() if me.isAnonymous()
     clanType = if $('.private-clan-checkbox').prop('checked') then 'private' else 'public'
     if clanType is 'private' and not me.isPremium()
       @openModalView new SubscribeModal()
@@ -114,7 +115,7 @@ module.exports = class ClansView extends RootView
       console.log 'Invalid name'
 
   onJoinClan: (e) ->
-    return @openModalView(new AuthModal()) if me.isAnonymous()
+    return @openModalView(new CreateAccountModal()) if me.isAnonymous()
     if clanID = $(e.target).data('id')
       options =
         url: "/db/clan/#{clanID}/join"
@@ -144,7 +145,7 @@ module.exports = class ClansView extends RootView
       console.error "No clan ID attached to leave button."
 
   onClickPrivateCheckbox: (e) ->
-    return @openModalView new AuthModal() if me.isAnonymous()
+    return @openModalView new CreateAccountModal() if me.isAnonymous()
     if $('.private-clan-checkbox').prop('checked') and not me.isPremium()
       $('.private-clan-checkbox').attr('checked', false)
       @openModalView new SubscribeModal()

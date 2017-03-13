@@ -20,6 +20,7 @@ module.exports = class LevelBus extends Bus
     'tome:spell-changed': 'onSpellChanged'
     'tome:spell-created': 'onSpellCreated'
     'tome:cast-spells': 'onCastSpells'
+    'tome:winnability-updated': 'onWinnabilityUpdated'
     'application:idle-changed': 'onIdleChanged'
     'goal-manager:new-goal-states': 'onNewGoalStates'
     'god:new-world-created': 'onNewWorldCreated'
@@ -27,10 +28,12 @@ module.exports = class LevelBus extends Bus
   constructor: ->
     super(arguments...)
     @changedSessionProperties = {}
-    if application.isProduction()
-      @saveSession = _.debounce(@reallySaveSession, 4000, {maxWait: 10000})  # Save slower on production.
-    else
-      @saveSession = _.debounce(@reallySaveSession, 1000, {maxWait: 5000})  # Save quickly in development.
+    saveDelay = window.serverConfig?.sessionSaveDelay
+    [wait, maxWait] = switch
+      when not application.isProduction or not saveDelay then [1, 5]  # Save quickly in development.
+      when me.isAnonymous() then [saveDelay.anonymous.min, saveDelay.anonymous.max]
+      else [saveDelay.registered.min, saveDelay.registered.max]
+    @saveSession = _.debounce @reallySaveSession, wait * 1000, {maxWait: maxWait * 1000}
     @playerIsIdle = false
 
   init: ->
@@ -38,7 +41,6 @@ module.exports = class LevelBus extends Bus
     @fireScriptsRef = @fireRef?.child('scripts')
 
   setSession: (@session) ->
-    @listenTo(@session, 'change:multiplayer', @onMultiplayerChanged)
     @timerIntervalID = setInterval(@incrementSessionPlaytime, 1000)
 
   onIdleChanged: (e) ->
@@ -50,8 +52,7 @@ module.exports = class LevelBus extends Bus
     @session.set('playtime', (@session.get('playtime') ? 0) + 1)
 
   onPoint: ->
-    return true unless @session?.get('multiplayer')
-    super()
+    return true
 
   onMeSynced: =>
     super()
@@ -118,6 +119,12 @@ module.exports = class LevelBus extends Bus
     # We have incremented state.submissionCount and reset state.flagHistory.
     @changedSessionProperties.state = true
     @saveSession()
+
+  onWinnabilityUpdated: (e) ->
+    return unless @onPoint() and e.winnable
+    return unless e.level.get('slug') in ['ace-of-coders', 'elemental-wars', 'the-battle-of-sky-span']  # Mirror matches don't otherwise show victory, so we win here.
+    return if @session.get('state')?.complete
+    @onVictory()
 
   onNewWorldCreated: (e) ->
     return unless @onPoint()
@@ -227,17 +234,12 @@ module.exports = class LevelBus extends Bus
     @changedSessionProperties.chat = true
     @saveSession()
 
-  onMultiplayerChanged: ->
-    @changedSessionProperties.multiplayer = true
-    @session.updatePermissions()
-    @changedSessionProperties.permissions = true
-    @saveSession()
-
   # Debounced as saveSession
   reallySaveSession: ->
     return if _.isEmpty @changedSessionProperties
     # don't let peeking admins mess with the session accidentally
-    return unless @session.get('multiplayer') or @session.get('creator') is me.id
+    return unless @session.get('creator') is me.id
+    return if @session.fake
     Backbone.Mediator.publish 'level:session-will-save', session: @session
     patch = {}
     patch[prop] = @session.get(prop) for prop of @changedSessionProperties

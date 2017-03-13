@@ -2,6 +2,7 @@ CocoView = require 'views/core/CocoView'
 template = require 'templates/editor/level/thang/level-thang-edit-view'
 ThangComponentsEditView = require 'views/editor/component/ThangComponentsEditView'
 ThangType = require 'models/ThangType'
+ace = require 'ace'
 
 module.exports = class LevelThangEditView extends CocoView
   ###
@@ -31,11 +32,6 @@ module.exports = class LevelThangEditView extends CocoView
     @oldPath = options.oldPath
     @reportChanges = _.debounce @reportChanges, 1000
 
-  getRenderData: (context={}) ->
-    context = super(context)
-    context.thang = @thangData
-    context
-
   onLoaded: -> @render()
   afterRender: ->
     super()
@@ -46,7 +42,7 @@ module.exports = class LevelThangEditView extends CocoView
       level: @level
       world: @world
 
-    if @level.get('type', true) in ['hero', 'hero-ladder', 'hero-coop', 'course', 'course-ladder'] then options.thangType = thangType
+    if @level.isType('hero', 'hero-ladder', 'hero-coop', 'course', 'course-ladder', 'game-dev', 'web-dev') then options.thangType = thangType
 
     @thangComponentEditView = new ThangComponentsEditView options
     @listenTo @thangComponentEditView, 'components-changed', @onComponentsChanged

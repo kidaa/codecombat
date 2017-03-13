@@ -6,7 +6,7 @@ UserSchema = c.object
   default:
     visa: 'Authorized to work in the US'
     music: true
-    name: 'Anoner'
+    name: 'Anonymous'
     autocastDelay: 5000
     emails: {}
     permissions: []
@@ -50,18 +50,34 @@ visa = c.shortString
 
 _.extend UserSchema.properties,
   email: c.shortString({title: 'Email', format: 'email'})
+  emailVerified: { type: 'boolean' }
   iosIdentifierForVendor: c.shortString({format: 'hidden'})
   firstName: c.shortString({title: 'First Name'})
   lastName: c.shortString({title: 'Last Name'})
-  gender: {type: 'string', 'enum': ['male', 'female', 'secret', 'trans']}
-  ageRange: {type: 'string'}  # 'enum': ['0-13', '14-17', '18-24', '25-34', '35-44', '45-100']
-  password: {type: 'string', maxLength: 256, minLength: 2, title: 'Password'}
+  gender: {type: 'string'} # , 'enum': ['male', 'female', 'secret', 'trans', 'other']
+  # NOTE: ageRange enum changed on 4/27/16 from ['0-13', '14-17', '18-24', '25-34', '35-44', '45-100']
+  ageRange: {type: 'string'}  # 'enum': ['13-15', '16-17', '18-24', '25-34', '35-44', '45-100']
+  password: c.passwordString
   passwordReset: {type: 'string'}
   photoURL: {type: 'string', format: 'image-file', title: 'Profile Picture', description: 'Upload a 256x256px or larger image to serve as your profile picture.'}
 
   facebookID: c.shortString({title: 'Facebook ID'})
   githubID: {type: 'integer', title: 'GitHub ID'}
   gplusID: c.shortString({title: 'G+ ID'})
+  cleverID: c.shortString({title: 'Clever ID'})
+  oAuthIdentities: {
+    description: 'List of OAuth identities this user has.'
+    type: 'array'
+    items: {
+      description: 'A single OAuth identity'
+      type: 'object'
+      properties: {
+        provider: c.objectId()
+        id: { type: 'string', description: 'The service provider\'s id for the user' }
+      }
+    }
+  }
+  clientCreator: c.objectId({description: 'Client which created this user'})
 
   wizardColor1: c.pct({title: 'Wizard Clothes Color'})  # No longer used
   volume: c.pct({title: 'Volume'})
@@ -79,6 +95,7 @@ _.extend UserSchema.properties,
     archmageNews: {$ref: '#/definitions/emailSubscription'}
     artisanNews: {$ref: '#/definitions/emailSubscription'}
     diplomatNews: {$ref: '#/definitions/emailSubscription'}
+    teacherNews: {$ref: '#/definitions/emailSubscription'}
     scribeNews: {$ref: '#/definitions/emailSubscription'}
 
     # notifications
@@ -101,6 +118,7 @@ _.extend UserSchema.properties,
   hourOfCode: {type: 'boolean'}
   hourOfCodeComplete: {type: 'boolean'}
   lastIP: {type: 'string'}
+  createdOnHost: { type: 'string' }
 
   emailLower: c.shortString()
   nameLower: c.shortString()
@@ -117,8 +135,8 @@ _.extend UserSchema.properties,
     colorConfig: c.object {additionalProperties: c.colorConfig()}
 
   aceConfig: c.object { default: { language: 'python', keyBindings: 'default', invisibles: false, indentGuides: false, behaviors: false, liveCompletion: true }},
-    language: {type: 'string', 'enum': ['python', 'javascript', 'coffeescript', 'clojure', 'lua', 'io']}
-    keyBindings: {type: 'string', 'enum': ['default', 'vim', 'emacs']}
+    language: {type: 'string', 'enum': ['python', 'javascript', 'coffeescript', 'clojure', 'lua', 'java', 'io']}
+    keyBindings: {type: 'string', 'enum': ['default', 'vim', 'emacs']}  # Deprecated 2016-05-30; now we just always give them 'default'.
     invisibles: {type: 'boolean' }
     indentGuides: {type: 'boolean' }
     behaviors: {type: 'boolean' }
@@ -127,6 +145,7 @@ _.extend UserSchema.properties,
   simulatedBy: {type: 'integer', minimum: 0 }
   simulatedFor: {type: 'integer', minimum: 0 }
 
+  # Deprecated. TODO: Figure out how to remove.
   jobProfile: c.object {title: 'Job Profile', default: { active: false, lookingFor: 'Full-time', jobTitle: 'Software Developer', city: 'Defaultsville, CA', country: 'USA', skills: ['javascript'], shortDescription: 'Programmer seeking to build great software.', longDescription: '* I write great code.\n* You need great code?\n* Great!' }},
     lookingFor: {title: 'Looking For', type: 'string', enum: ['Full-time', 'Part-time', 'Remote', 'Contracting', 'Internship'], description: 'What kind of developer position do you want?'}
     jobTitle: {type: 'string', maxLength: 50, title: 'Desired Job Title', description: 'What role are you looking for? Ex.: "Full Stack Engineer", "Front-End Developer", "iOS Developer"' }
@@ -280,6 +299,10 @@ _.extend UserSchema.properties,
     pollMiscPatches: c.int()
     campaignTranslationPatches: c.int()
     campaignMiscPatches: c.int()
+    courseTranslationPatches: c.int()
+    courseMiscPatches: c.int()
+    courseEdits: c.int()
+    concepts: {type: 'object', additionalProperties: c.int(), description: 'Number of levels completed using each programming concept.'}
 
   earned: c.RewardSchema 'earned by achievements'
   purchased: c.RewardSchema 'purchased with gems or money'
@@ -311,9 +334,48 @@ _.extend UserSchema.properties,
 
   siteref: { type: 'string' }
   referrer: { type: 'string' }
-  chinaVersion: { type: 'boolean' }
+  country: { type: 'string' }  # Set on new users for certain countries on the server
 
   clans: c.array {}, c.objectId()
+  courseInstances: c.array {}, c.objectId()
+  currentCourse: c.object {}, {  # Old, can be removed after we deploy and delete it from all users
+    courseID: c.objectId({})
+    courseInstanceID: c.objectId({})
+  }
+  coursePrepaidID: c.objectId({
+    description: 'Prepaid which has paid for this user\'s course access'
+  })
+  coursePrepaid: {
+    type: 'object'
+    properties: {
+      _id: c.objectId()
+      startDate: c.stringDate()
+      endDate: c.stringDate()
+      type: { type: ['string', 'null'] }
+      includedCourseIDs: { type: ['array', 'null'], description: 'courseIDs that this prepaid includes access to', items: c.objectId() }
+    }
+  }
+  enrollmentRequestSent: { type: 'boolean' }
+
+  schoolName: {type: 'string', description: 'Deprecated string. Use "school" object instead.'}
+  role: {type: 'string', enum: ["advisor", "parent", "principal", "student", "superintendent", "teacher", "technology coordinator"]}  # unset: home player
+  birthday: c.stringDate({title: "Birthday"})
+  lastAchievementChecked: c.stringDate({ name: 'Last Achievement Checked' })
+
+  israelId: {type: 'string', description: 'ID string used just for il.codecombat.com'}
+  school: {
+    type: 'object',
+    description: 'Generic property for storing school information. Currently
+                  only used by Israel; if/when we use it for other purposes,
+                  think about how to keep the data consistent.',
+    properties: {
+      name: { type: 'string' }
+      city: { type: 'string' }
+      district: { type: 'string' }
+      state: { type: 'string' }
+      country: { type: 'string' }
+    }
+  }
 
 c.extendBasicProperties UserSchema, 'user'
 

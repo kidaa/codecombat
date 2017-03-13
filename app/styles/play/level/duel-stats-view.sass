@@ -3,7 +3,7 @@
 
 #duel-stats-view
   position: absolute
-  right: 44.3%
+  right: calc(45% + 200px)
   bottom: 133px
   z-index: 3
   @include transition(opacity .2s linear)
@@ -15,8 +15,12 @@
 
   width: 500px
   height: 60px
-  display: flex
+  display: none
+  //display: flex  // set if present
   flex-direction: row
+
+  #level-view.no-api &
+    right: 45%
 
   &:hover
     opacity: 0.1
@@ -37,7 +41,7 @@
     &.team-humans
       padding-right: 10px
 
-      .player-power
+      .player-power, .player-gold
         margin-right: 5px
 
     &.team-ogres
@@ -51,7 +55,7 @@
         .player-name
           text-align: right
 
-        .player-power
+        .player-power, .player-gold
           margin-left: 5px
           flex-direction: row-reverse
           text-align: right
@@ -61,6 +65,9 @@
 
         .health-bar-container .health-bar
           background: hsla(205,100%,51%,1)
+
+      .thang-avatar-view
+        @include scaleX(-1)
 
     .name-and-power
       display: flex
@@ -81,14 +88,14 @@
       max-width: 130px
 
     $iconSize: 16px
-    .health-icon, .power-icon
+    .health-icon, .power-icon, .gold-icon
       display: inline-block
       width: $iconSize
       height: $iconSize
       background: transparent url(/images/level/hud_info_icons.png) no-repeat
       background-size: auto $iconSize
 
-    .player-health, .player-power
+    .player-health, .player-power, .player-gold
       height: 50%
       display: flex
       flex-direction: row
@@ -118,37 +125,21 @@
         vertical-align: top
 
     .player-power
-      
+
       .power-icon
         margin-top: 4px
         background-position: (-5 * $iconSize) 0px
-          
+
       .power-value
         min-width: 20px
         margin: 0px 5px
-    
-    //&.team-humans .team-gold
-    //  color: hsla(4,80%,51%,1)
-    //
-    //&.team-ogres .team-gold
-    //  color: hsla(205,100%,51%,1)
-    //
-    //.team-gold
-    //  font-size: 1.4vw
-    //  line-height: 1.4vw
-    //  margin: 0
-    //  color: hsla(205,0%,51%,1)
-    //  display: inline-block
-    //  padding: 0px 4px
-    //
-    //  img
-    //    width: 1.2vw
-    //    height: 1.2vw
-    //    border-radius: 2px
-    //    padding: 0.1vw
-    //    margin-top: -0.2vw
-    //    margin-right: 0.1vw
-    //
-    //  .gold-amount
-    //    display: inline-block
-    //    min-width: 20px
+
+    .player-gold
+
+      .gold-icon
+        margin-top: 4px
+        background-position: (-8 * $iconSize) 0px
+
+      .gold-value
+        min-width: 20px
+        margin: 0px 5px

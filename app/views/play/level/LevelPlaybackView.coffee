@@ -1,5 +1,5 @@
 CocoView = require 'views/core/CocoView'
-template = require 'templates/play/level/playback'
+template = require 'templates/play/level/level-playback-view'
 {me} = require 'core/auth'
 
 module.exports = class LevelPlaybackView extends CocoView
@@ -21,7 +21,6 @@ module.exports = class LevelPlaybackView extends CocoView
     'tome:cast-spells': 'onTomeCast'
     'playback:real-time-playback-ended': 'onRealTimePlaybackEnded'
     'playback:stop-real-time-playback': 'onStopRealTimePlayback'
-    'real-time-multiplayer:manual-cast': 'onRealTimeMultiplayerCast'
 
   events:
     'click #music-button': 'onToggleMusic'
@@ -51,7 +50,7 @@ module.exports = class LevelPlaybackView extends CocoView
   afterRender: ->
     super()
     @$progressScrubber = $('.scrubber .progress', @$el)
-    @hookUpScrubber()
+    @hookUpScrubber() unless @options.level.isType('game-dev')
     @updateMusicButton()
     $(window).on('resize', @onWindowResize)
     ua = navigator.userAgent.toLowerCase()
@@ -108,12 +107,7 @@ module.exports = class LevelPlaybackView extends CocoView
     @realTime = true
     @togglePlaybackControls false
     Backbone.Mediator.publish 'playback:real-time-playback-started', {}
-    Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'real-time-playback-start', volume: 1
-
-  onRealTimeMultiplayerCast: (e) ->
-    @realTime = true
-    @togglePlaybackControls false
-    Backbone.Mediator.publish 'playback:real-time-playback-waiting', {}
+    @playSound 'real-time-playback-start'
 
   onWindowResize: (s...) =>
     @barWidth = $('.progress', @$el).width()
@@ -160,7 +154,7 @@ module.exports = class LevelPlaybackView extends CocoView
     ended = button.hasClass 'ended'
     changed = button.hasClass('playing') isnt @playing
     button.toggleClass('playing', @playing and not ended).toggleClass('paused', not @playing and not ended)
-    Backbone.Mediator.publish 'audio-player:play-sound', trigger: (if @playing then 'playback-play' else 'playback-pause'), volume: 1
+    @playSound (if @playing then 'playback-play' else 'playback-pause') unless @options.level.isType('game-dev')
     return   # don't stripe the bar
     bar = @$el.find '.scrubber .progress'
     bar.toggleClass('progress-striped', @playing and not ended).toggleClass('active', @playing and not ended)
@@ -266,7 +260,7 @@ module.exports = class LevelPlaybackView extends CocoView
     return unless @realTime
     @realTime = false
     @togglePlaybackControls true
-    Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'real-time-playback-end', volume: 1
+    @playSound 'real-time-playback-end'
 
   onStopRealTimePlayback: (e) ->
     Backbone.Mediator.publish 'level:set-letterbox', on: false
@@ -286,14 +280,15 @@ module.exports = class LevelPlaybackView extends CocoView
         @scrubTo ui.value / @sliderIncrements
         if ratioChange = @getScrubRatio() - oldRatio
           sound = "playback-scrub-slide-#{if ratioChange > 0 then 'forward' else 'back'}-#{@slideCount % 3}"
-          Backbone.Mediator.publish 'audio-player:play-sound', trigger: sound, volume: Math.min 1, Math.abs ratioChange * 50
+          unless /back/.test sound  # We don't have the back sounds in yet: http://discourse.codecombat.com/t/bug-some-mp3-lost/4830
+            @playSound sound, (Math.min 1, Math.abs ratioChange * 50)
 
       start: (event, ui) =>
         return if @shouldIgnore()
         @slideCount = 0
         @wasPlaying = @playing and not $('#play-button').hasClass('ended')
         Backbone.Mediator.publish 'level:set-playing', {playing: false}
-        Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'playback-scrub-start', volume: 0.5
+        @playSound 'playback-scrub-start', 0.5
 
 
       stop: (event, ui) =>
@@ -306,7 +301,7 @@ module.exports = class LevelPlaybackView extends CocoView
           Backbone.Mediator.publish 'level:set-playing', {playing: false}
           @$el.find('.scrubber-handle').effect('bounce', {times: 2})
         else
-          Backbone.Mediator.publish 'audio-player:play-sound', trigger: 'playback-scrub-end', volume: 0.5
+          @playSound 'playback-scrub-end', 0.5
 
     )
 
