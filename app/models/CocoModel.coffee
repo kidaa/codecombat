@@ -49,14 +49,20 @@ class CocoModel extends Backbone.Model
   clone: (withChanges=true) ->
     # Backbone does not support nested documents
     clone = super()
-    clone.set($.extend(true, {}, if withChanges then @attributes else @_revertAttributes))
+    clone.set($.extend(true, {}, if withChanges or not @_revertAttributes then @attributes else @_revertAttributes))
+    if @_revertAttributes and not withChanges
+      # remove any keys that are in the current attributes not in the snapshot
+      for key in _.difference(_.keys(clone.attributes), _.keys(@_revertAttributes))
+        clone.unset(key)
     clone
 
   onError: (level, jqxhr) ->
     @loading = false
     @jqxhr = null
     if jqxhr.status is 402
-      if _.contains(jqxhr.responseText, 'be in a course')
+      if _.contains(jqxhr.responseText, 'must be enrolled')
+        Backbone.Mediator.publish 'level:license-required', {}
+      else if _.contains(jqxhr.responseText, 'be in a course')
         Backbone.Mediator.publish 'level:course-membership-required', {}
       else
         Backbone.Mediator.publish 'level:subscription-required', {}
@@ -281,7 +287,8 @@ class CocoModel extends Backbone.Model
     try
       jsondiffpatch.patch newAttributes, delta
     catch error
-      console.error 'Error applying delta\n', JSON.stringify(delta, null, '\t'), '\n\nto attributes\n\n', newAttributes
+      unless application.testing
+        console.error 'Error applying delta\n', JSON.stringify(delta, null, '\t'), '\n\nto attributes\n\n', newAttributes
       return false
     for key, value of newAttributes
       delete newAttributes[key] if _.isEqual value, @attributes[key]
@@ -309,8 +316,8 @@ class CocoModel extends Backbone.Model
     sum = 0
     data ?= $.extend true, {}, @attributes
     schema ?= @schema() or {}
-    if schema.oneOf # get populating the Programmable component config to work 
-      schema = _.find(schema.oneOf, {type: 'object'})
+    if schema.oneOf # get populating the Programmable component config to work
+      schema = _.find(schema.oneOf, {type: 'object'}) or schema
     addedI18N = false
     if schema.properties?.i18n and _.isPlainObject(data) and not data.i18n?
       data.i18n = {'-':{'-':'-'}} # mongoose doesn't work with empty objects
@@ -333,7 +340,7 @@ class CocoModel extends Backbone.Model
       sum += @populateI18N(value, schema.items, path+'/'+index) for value, index in data
 
     @set('i18n', data.i18n) if addedI18N and not path # need special case for root i18n
-    @updateI18NCoverage()
+    @updateI18NCoverage() if not path  # only need to do this at the highest level
     sum
 
   @getReferencedModel: (data, schema) ->
@@ -372,6 +379,22 @@ class CocoModel extends Backbone.Model
 
   getURL: ->
     return if _.isString @url then @url else @url()
+    
+  makePatch: ->
+    Patch = require 'models/Patch'
+    target = {
+      'collection': _.string.underscored @constructor.className
+      'id': @id
+    }
+    # if this document is versioned (has original property) then include version info
+    if @get('original')
+      target.original = @get('original')
+      target.version = @get('version')
+      
+    return new Patch({
+      delta: @getDelta()
+      target 
+    })
 
   @pollAchievements: ->
     return if application.testing
@@ -397,11 +420,12 @@ class CocoModel extends Backbone.Model
 
   #- Internationalization
 
-  updateI18NCoverage: ->
+  updateI18NCoverage: (attributes) ->
     langCodeArrays = []
     pathToData = {}
+    attributes ?= @attributes
 
-    TreemaUtils.walk(@attributes, @schema(), null, (path, data, workingSchema) ->
+    TreemaUtils.walk(attributes, @schema(), null, (path, data, workingSchema) ->
       # Store parent data for the next block...
       if data?.i18n
         pathToData[path] = data
@@ -415,18 +439,14 @@ class CocoModel extends Backbone.Model
 
         # use it to determine what properties actually need to be translated
         props = workingSchema.props or []
-        props = (prop for prop in props when parentData[prop])
-        #unless props.length
-        #  console.log 'props is', props, 'path is', path, 'data is', data, 'parentData is', parentData, 'workingSchema is', workingSchema
-        #  langCodeArrays.push _.without _.keys(locale), 'update'  # Every language has covered a path with no properties to be translated.
-        #  return
-
+        props = (prop for prop in props when parentData[prop] and prop isnt 'sound')
+        return unless props.length
         return if 'additionalProperties' of i18n  # Workaround for #2630: Programmable is weird
 
         # get a list of lang codes where its object has keys for every prop to be translated
         coverage = _.filter(_.keys(i18n), (langCode) ->
           translations = i18n[langCode]
-          _.all((translations[prop] for prop in props))
+          translations and _.all((translations[prop] for prop in props))
         )
         #console.log 'got coverage', coverage, 'for', path, props, workingSchema, parentData
         langCodeArrays.push coverage
@@ -459,5 +479,11 @@ class CocoModel extends Backbone.Model
     return patches
     
   stringify: -> return JSON.stringify(@toJSON())
+
+  wait: (event) -> new Promise((resolve) => @once(event, resolve))
+  
+  fetchLatestVersion: (original, options={}) ->
+    options.url = _.result(@, 'urlRoot') + '/' + original + '/version'
+    @fetch(options)
 
 module.exports = CocoModel

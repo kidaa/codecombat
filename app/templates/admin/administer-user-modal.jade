@@ -12,6 +12,11 @@ block modal-header-content
   h3 Administer User
   h4 #{view.user.get('name') || 'Unnamed'} / #{view.user.get('email')}
   span= view.user.id
+  if view.user.get('cleverID')
+    br
+    b Clever ID:
+    =" "
+    span= view.user.get('cleverID')
 
 block modal-body-content
 
@@ -82,5 +87,25 @@ block modal-body-content
           for coupon in view.coupons.models
             option(value=coupon.id selected=coupon.id===view.currentCouponID)= coupon.formatString()
     button#save-changes.btn.btn-primary Save Changes
+  
+  if view.classrooms.size()
+    h3.m-t-3 Update Classrooms
+    table#classroom-table.table
+      tr
+        th Name
+        th Lang
+        th # Levels / Courses
+        th
+      for classroom in view.classrooms.models
+        tr
+          td
+            = classroom.get('name')
+            if classroom.get('archived')
+              i.spl.text-muted (archived)
+          td= classroom.capitalLanguage
+          td #{classroom.getLevels().size()} / #{classroom.get('courses').length}
+          td
+            button.btn.btn-primary.update-classroom-btn(data-classroom-id=classroom.id) Update All Levels
+            button.btn.btn-primary.add-new-courses-btn(data-classroom-id=classroom.id) Add New Courses
 
 block modal-footer

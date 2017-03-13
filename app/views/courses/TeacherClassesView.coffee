@@ -34,6 +34,7 @@ module.exports = class TeacherClassesView extends RootView
   initialize: (options) ->
     super(options)
     @classrooms = new Classrooms()
+    @classrooms.comparator = (a, b) -> b.id.localeCompare(a.id)
     @classrooms.fetchMine()
     @supermodel.trackCollection(@classrooms)
     @listenTo @classrooms, 'sync', ->
@@ -41,7 +42,7 @@ module.exports = class TeacherClassesView extends RootView
         classroom.sessions = new LevelSessions()
         jqxhrs = classroom.sessions.fetchForAllClassroomMembers(classroom)
         if jqxhrs.length > 0
-          @supermodel.trackCollection(classroom.sessions)
+          @supermodel.trackRequests(jqxhrs)
     window.tracker?.trackEvent 'Teachers Classes Loaded', category: 'Teachers', ['Mixpanel']
 
     @courses = new Courses()

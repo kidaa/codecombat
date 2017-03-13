@@ -18,6 +18,11 @@ module.exports = class CocoCollection extends Backbone.Collection
     if window.application?.testing
       @fakeRequests = []
       @on 'request', -> @fakeRequests.push jasmine.Ajax.requests.mostRecent()
+    if options.saveBackups
+      @on 'sync', ->
+        for model in @models
+          model.saveBackups = true
+          model.loadFromBackup()
 
   getURL: ->
     return if _.isString @url then @url else @url()
@@ -34,3 +39,5 @@ module.exports = class CocoCollection extends Backbone.Collection
   setProjection: (@project) ->
 
   stringify: -> return JSON.stringify(@toJSON())
+  
+  wait: (event) -> new Promise((resolve) => @once(event, resolve))

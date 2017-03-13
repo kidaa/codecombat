@@ -8,9 +8,11 @@ AudioPlayer = require 'lib/AudioPlayer'
 utils = require 'core/utils'
 BuyGemsModal = require 'views/play/modal/BuyGemsModal'
 CreateAccountModal = require 'views/core/CreateAccountModal'
+SubscribeModal = require 'views/core/SubscribeModal'
 Purchase = require 'models/Purchase'
 LayerAdapter = require 'lib/surface/LayerAdapter'
 Lank = require 'lib/surface/Lank'
+store = require 'core/store'
 
 module.exports = class PlayHeroesModal extends ModalView
   className: 'modal fade play-modal'
@@ -23,6 +25,7 @@ module.exports = class PlayHeroesModal extends ModalView
     'click #close-modal': 'hide'
     'click #confirm-button': 'saveAndHide'
     'click .unlock-button': 'onUnlockButtonClicked'
+    'click .subscribe-button': 'onSubscribeButtonClicked'
     'click .buy-gems-prompt-button': 'onBuyGemsPromptButtonClicked'
     'click': 'onClickedSomewhere'
 
@@ -37,7 +40,7 @@ module.exports = class PlayHeroesModal extends ModalView
     @confirmButtonI18N = options.confirmButtonI18N ? "common.save"
     @heroes = new CocoCollection([], {model: ThangType})
     @heroes.url = '/db/thang.type?view=heroes'
-    @heroes.setProjection ['original','name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','unlockLevelName','i18n']
+    @heroes.setProjection ['original','name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','unlockLevelName','i18n','poseImage','tier']
     @heroes.comparator = 'gems'
     @listenToOnce @heroes, 'sync', @onHeroesLoaded
     @supermodel.loadCollection(@heroes, 'heroes')
@@ -46,9 +49,12 @@ module.exports = class PlayHeroesModal extends ModalView
     @session = options.session
     @initCodeLanguageList options.hadEverChosenHero
     @heroAnimationInterval = setInterval @animateHeroes, 1000
+    @trackTimeVisible()
 
   onHeroesLoaded: ->
     @formatHero hero for hero in @heroes.models
+    if store.state.features.freeOnly
+      @heroes.reset(@heroes.filter((hero) => !hero.locked))
 
   formatHero: (hero) ->
     hero.name = utils.i18n hero.attributes, 'extendedName'
@@ -56,12 +62,28 @@ module.exports = class PlayHeroesModal extends ModalView
     hero.description = utils.i18n hero.attributes, 'description'
     hero.unlockLevelName = utils.i18n hero.attributes, 'unlockLevelName'
     original = hero.get('original')
-    hero.locked = not me.ownsHero(original)
-    hero.purchasable = hero.locked and (original in (me.get('earned')?.heroes ? []))
+    hero.free = hero.attributes.slug in ['captain', 'knight', 'champion', 'duelist']
+    hero.unlockBySubscribing = hero.attributes.slug in ['samurai', 'ninja', 'librarian']
+    hero.premium = not hero.free and not hero.unlockBySubscribing
+    hero.locked = not me.ownsHero(original) and not (hero.unlockBySubscribing and me.isPremium())
+    hero.purchasable = hero.locked and me.isPremium()
     if @options.level and allowedHeroes = @options.level.get 'allowedHeroes'
       hero.restricted = not (hero.get('original') in allowedHeroes)
     hero.class = (hero.get('heroClass') or 'warrior').toLowerCase()
     hero.stats = hero.getHeroStats()
+
+  currentVisiblePremiumFeature: ->
+    isPremium = @visibleHero and not (@visibleHero.class is 'warrior' and @visibleHero.get('tier') is 0)
+    if isPremium
+      return {
+        viewName: @.id
+        featureName: 'view-hero'
+        premiumThang:
+          _id: @visibleHero.id
+          slug: @visibleHero.get('slug')
+      }
+    else
+      return null
 
   getRenderData: (context={}) ->
     context = super(context)
@@ -74,6 +96,10 @@ module.exports = class PlayHeroesModal extends ModalView
     context.gems = me.gems()
     context.isIE = @isIE()
     context
+
+  afterInsert: ->
+    @updateViewVisibleTimer()
+    super()
 
   afterRender: ->
     super()
@@ -130,6 +156,7 @@ module.exports = class PlayHeroesModal extends ModalView
     @visibleHero = hero
     @rerenderFooter()
     @trigger 'hero-loaded', {hero: hero}
+    @updateViewVisibleTimer()
 
   getFullHero: (original) ->
     url = "/db/thang.type/#{original}/version"
@@ -147,6 +174,11 @@ module.exports = class PlayHeroesModal extends ModalView
   loadHero: (hero, heroIndex, preloading=false) ->
     createjs.Ticker.removeEventListener 'tick', stage for stage in _.values @stages
     createjs.Ticker.setFPS 30  # In case we paused it from being inactive somewhere else
+    if poseImage = hero.get 'poseImage'
+      $(".hero-item[data-hero-id='#{hero.get('original')}'] canvas").hide()
+      $(".hero-item[data-hero-id='#{hero.get('original')}'] .hero-pose-image").show().find('img').prop('src', '/file/' + poseImage)
+      @playSelectionSound hero unless preloading
+      return hero
     if stage = @stages[heroIndex]
       unless preloading
         _.defer -> createjs.Ticker.addEventListener 'tick', stage  # Deferred, otherwise it won't start updating for some reason.
@@ -180,7 +212,7 @@ module.exports = class PlayHeroesModal extends ModalView
         layer.container.scaleX = layer.container.scaleY = m
         layer.container.children[0].x = 160/m
         layer.container.children[0].y = 250/m
-        if fullHero.get('slug') in ['forest-archer', 'librarian', 'sorcerer', 'potion-master', 'necromancer']
+        if fullHero.get('slug') in ['forest-archer', 'librarian', 'sorcerer', 'potion-master', 'necromancer', 'code-ninja']
           layer.container.children[0].y -= 3
         if fullHero.get('slug') in ['librarian', 'sorcerer', 'potion-master', 'necromancer', 'goliath']
           layer.container.children[0].x -= 3
@@ -221,12 +253,13 @@ module.exports = class PlayHeroesModal extends ModalView
       languageName = $(@).text()
       languageID = $(@).data('value')
       blurb = $.i18n.t("choose_hero.#{languageID}_blurb")
-      $(@).text("#{languageName} - #{blurb}")
+      if languageName.indexOf(blurb) is -1  # Avoid doubling blurb if this is called 2x
+        $(@).text("#{languageName} - #{blurb}")
 
   onCodeLanguageChanged: (e) ->
     @codeLanguage = @$el.find('#option-code-language').val()
     @codeLanguageChanged = true
-
+    window.tracker?.trackEvent 'Campaign changed code language', category: 'Campaign Hero Select', codeLanguage: @codeLanguage, levelSlug: @options.level?.get('slug')
 
   #- Purchasing the hero
 
@@ -236,7 +269,7 @@ module.exports = class PlayHeroesModal extends ModalView
     affordable = @visibleHero.get('gems') <= me.gems()
     if not affordable
       @playSound 'menu-button-click'
-      @askToBuyGems button unless me.isOnFreeOnlyServer()
+      @askToBuyGems button unless features.freeOnly
     else if button.hasClass('confirm')
       @playSound 'menu-button-unlock-end'
       purchase = Purchase.makeFor(@visibleHero)
@@ -289,6 +322,9 @@ module.exports = class PlayHeroesModal extends ModalView
     return if @destroyed
     @$el.find('.unlock-button').popover 'destroy'
 
+  onSubscribeButtonClicked: (e) ->
+    return @askToSignUp() if me.get('anonymous')
+    @openModalView new SubscribeModal()
 
   #- Exiting
 

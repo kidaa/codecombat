@@ -21,17 +21,33 @@ module.exports = class Spell
     @skipProtectAPI = options.skipProtectAPI
     @worker = options.worker
     @level = options.level
+    @createFromProgrammableMethod options.programmableMethod, options.language
+    if @canRead()  # We can avoid creating these views if we'll never use them.
+      @view = new SpellView {spell: @, level: options.level, session: @session, otherSession: @otherSession, worker: @worker, god: options.god, @supermodel, levelID: options.levelID}
+      @view.render()  # Get it ready and code loaded in advance
+      @topBarView = new SpellTopBarView
+        hintsState: options.hintsState
+        spell: @
+        supermodel: @supermodel
+        codeLanguage: @language
+        level: options.level
+        session: options.session
+        courseID: options.courseID
+        courseInstanceID: options.courseInstanceID
+      @topBarView.render()
+    Backbone.Mediator.publish 'tome:spell-created', spell: @
 
-    p = options.programmableMethod
+  createFromProgrammableMethod: (programmableMethod, codeLanguage) ->
+    p = programmableMethod
     @commentI18N = p.i18n
     @commentContext = p.context
     @languages = p.languages ? {}
     @languages.javascript ?= p.source
     @name = p.name
-    @permissions = read: p.permissions?.read ? [], readwrite: p.permissions?.readwrite ? []  # teams
+    @permissions = read: p.permissions?.read ? [], readwrite: p.permissions?.readwrite ? ['humans']  # teams
     @team = @permissions.readwrite[0] ? 'common'
     if @canWrite()
-      @setLanguage options.language
+      @setLanguage codeLanguage
     else if @otherSession and @team is @otherSession.get 'team'
       @setLanguage @otherSession.get('submittedCodeLanguage') or @otherSession.get('codeLanguage')
     else
@@ -45,19 +61,6 @@ module.exports = class Spell
     if p.aiSource and not @otherSession and not @canWrite()
       @source = @originalSource = p.aiSource
       @isAISource = true
-    if @canRead()  # We can avoid creating these views if we'll never use them.
-      @view = new SpellView {spell: @, level: options.level, session: @session, otherSession: @otherSession, worker: @worker, god: options.god, @supermodel, levelID: options.levelID}
-      @view.render()  # Get it ready and code loaded in advance
-      @topBarView = new SpellTopBarView
-        hintsState: options.hintsState
-        spell: @
-        supermodel: @supermodel
-        codeLanguage: @language
-        level: options.level
-        session: options.session
-        courseID: options.courseID
-      @topBarView.render()
-    Backbone.Mediator.publish 'tome:spell-created', spell: @
 
   destroy: ->
     @view?.destroy()
@@ -68,16 +71,12 @@ module.exports = class Spell
   setLanguage: (@language) ->
     @language = 'html' if @level.isType('web-dev')
     @displayCodeLanguage = utils.capitalLanguages[@language]
-    #console.log 'setting language to', @language, 'so using original source', @languages[language] ? @languages.javascript
     @originalSource = @languages[@language] ? @languages.javascript
     @originalSource = @addPicoCTFProblem() if window.serverConfig.picoCTF
 
     if @level.isType('web-dev')
       # Pull apart the structural wrapper code and the player code, remember the wrapper code, and strip indentation on player code.
-      playerCode = @originalSource.match(/<playercode>\n([\s\S]*)\n *<\/playercode>/)[1]
-      playerCodeLines = playerCode.split('\n')
-      indentation = playerCodeLines[0].length - playerCodeLines[0].trim().length
-      playerCode = (line.substr(indentation) for line in playerCodeLines).join('\n')
+      playerCode = utils.extractPlayerCodeTag(@originalSource)
       @wrapperCode = @originalSource.replace /<playercode>[\s\S]*<\/playercode>/, '☃'  # ☃ serves as placeholder for constructHTML
       @originalSource = playerCode
 
@@ -145,6 +144,7 @@ module.exports = class Spell
       @thang?.aether.transpile source
     null
 
+  # NOTE: By default, I think this compares the current source code with the source *last saved to the server* (not the last time it was run)
   hasChanged: (newSource=null, currentSource=null) ->
     (newSource ? @originalSource) isnt (currentSource ? @source)
 
@@ -236,3 +236,8 @@ module.exports = class Spell
     # TODO: See SpellPaletteView.createPalette() for other interesting contextual properties
 
     @problemContext
+
+  reloadCode: ->
+    # We pressed the reload button. Fetch our original source again in case it changed.
+    return unless programmableMethod = @thang?.thang?.programmableMethods?[@name]
+    @createFromProgrammableMethod programmableMethod, @language

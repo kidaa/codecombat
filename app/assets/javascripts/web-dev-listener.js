@@ -1,5 +1,11 @@
 // TODO: don't serve this script from codecombat.com; serve it from a harmless extra domain we don't have yet.
 
+var lastSource = null;
+var lastOrigin = null;
+window.onerror = function(message, url, line, column, error){
+  console.log("User script error on line " + line + ", column " + column + ": ", error);
+  lastSource.postMessage({ type: 'error', message: message, url: url, line: line, column: column }, lastOrigin);
+}
 window.addEventListener('message', receiveMessage, false);
 
 var concreteDom;
@@ -9,14 +15,12 @@ var virtualDom;
 var virtualStyles;
 var virtualScripts;
 var goalStates;
+var createFailed;
 
 var allowedOrigins = [
-    /https:\/\/codecombat\.com/,
-    /http:\/\/localhost:3000/,
-    /http:\/\/direct\.codecombat\.com/,
-    /http:\/\/staging\.codecombat\.com/,
-    /http:\/\/next\.codecombat\.com/,
-    /http:\/\/.*codecombat-staging-codecombat\.runnableapp\.com/,
+    /^https?:\/\/(.*\.)?codecombat\.com$/,
+    /^https?:\/\/localhost:3000$/,
+    /^https?:\/\/.*codecombat-staging-codecombat\.runnableapp\.com$/,
 ];
 
 function receiveMessage(event) {
@@ -29,19 +33,26 @@ function receiveMessage(event) {
         console.log('Ignoring message from bad origin:', origin);
         return;
     }
+    lastOrigin = origin;
     var data = event.data;
-    var source = event.source;
+    var source = lastSource = event.source;
     switch (data.type) {
     case 'create':
         create(_.pick(data, 'dom', 'styles', 'scripts'));
         checkGoals(data.goals, source, origin);
+        $('body').first().off('click', checkRememberedGoals);
+        $('body').first().on('click', checkRememberedGoals);
         break;
     case 'update':
-        if (virtualDom)
+        if (virtualDom && !createFailed)
             update(_.pick(data, 'dom', 'styles', 'scripts'));
         else
             create(_.pick(data, 'dom', 'styles', 'scripts'));
         checkGoals(data.goals, source, origin);
+        break;
+    case 'highlight-css-selector':
+        $('*').css('box-shadow', '');
+        $(data.selector).css('box-shadow', 'inset 0 0 2px 2px rgba(255, 255, 0, 1.0), 0 0 2px 2px rgba(255, 255, 0, 1.0)');
         break;
     case 'log':
         console.log(data.text);
@@ -52,16 +63,24 @@ function receiveMessage(event) {
 }
 
 function create(options) {
-    virtualDom = options.dom;
-    virtualStyles = options.styles;
-    virtualScripts = options.scripts;
-    concreteDom = deku.dom.create(virtualDom);
-    concreteStyles = deku.dom.create(virtualStyles);
-    concreteScripts = deku.dom.create(virtualScripts);
-    // TODO: :after elements don't seem to work? (:before do)
-    $('body').first().empty().append(concreteDom);
-    replaceNodes('[for="player-styles"]', unwrapConcreteNodes(concreteStyles));
-    replaceNodes('[for="player-scripts"]', unwrapConcreteNodes(concreteScripts));
+    try {
+        virtualDom = options.dom;
+        virtualStyles = options.styles;
+        virtualScripts = options.scripts;
+        concreteDom = deku.dom.create(virtualDom);
+        concreteStyles = deku.dom.create(virtualStyles);
+        concreteScripts = deku.dom.create(virtualScripts);
+        // TODO: :after elements don't seem to work? (:before do)
+        $('body').first().empty().append(concreteDom);
+        replaceNodes('[for="player-styles"]', unwrapConcreteNodes(concreteStyles));
+        replaceNodes('[for="player-scripts"]', unwrapConcreteNodes(concreteScripts));
+        createFailed = false;
+    } catch(e) {
+        createFailed = true;
+        $('.loading-message').addClass('hidden')
+        $('.loading-error').removeClass('hidden')
+        throw(e);
+    }
 }
 
 function unwrapConcreteNodes(wrappedNodes) {
@@ -69,20 +88,23 @@ function unwrapConcreteNodes(wrappedNodes) {
 }
 
 function replaceNodes(selector, newNodes){
-    $newNodes = $(newNodes).clone();
+    var $newNodes = $(newNodes).clone();
     $(selector + ':not(:first)').remove();
     
-    firstNode = $(selector).first();
-    $newNodes.attr('for', firstNode.attr('for'));
+    var firstNode = $(selector).first();
+    $newNodes.attr('for', firstNode.attr('for'))
     
-    newFirstNode = $newNodes[0];
-    try {
-      firstNode.replaceWith(newFirstNode); // Removes newFirstNode from its array (!!)
-    } catch (e) {
-      console.log('Failed to update some nodes:', e);
-    }
-    
-    $(newFirstNode).after($newNodes);
+    // Workaround for an IE bug where style nodes created by Deku aren't read
+    // Resetting innerText strips the newlines from it
+    var recreatedNodes = $newNodes.toArray();
+    recreatedNodes.forEach(function(node){
+      node.innerText = node.innerText.trim();
+    })
+
+    var newFirstNode = recreatedNodes[0];
+    firstNode.replaceWith(newFirstNode); // Removes newFirstNode from its array (!!)
+
+    $(newFirstNode).after(recreatedNodes);
 }
 
 function update(options) {
@@ -108,7 +130,13 @@ function update(options) {
     virtualScripts = scripts;
 }
 
+var lastGoalArgs = [];
+function checkRememberedGoals() {
+    checkGoals.apply(this, lastGoalArgs);
+}
+
 function checkGoals(goals, source, origin) {
+    lastGoalArgs = [goals, source, origin]; // Memoize for checkRememberedGoals
     // Check right now and also in one second, since our 1-second CSS transition might be affecting things until it is done.
     doCheckGoals(goals, source, origin);
     _.delay(function() { doCheckGoals(goals, source, origin); }, 1001);

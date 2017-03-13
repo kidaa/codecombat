@@ -19,14 +19,13 @@ class LevelSessionHandler extends Handler
     submittedCode = document.submittedCode ? {}
     unless req.user?.isAdmin() or
        req.user?.id is document.creator or
-       ('employer' in (req.user?.get('permissions') ? [])) or
        not document.submittedCode  # TODO: only allow leaderboard access to non-top-5 solutions
       document = _.omit document, @privateProperties
     if req.query.interpret
       plan = submittedCode[if document.team is 'humans' then 'hero-placeholder' else 'hero-placeholder-1']?.plan ? ''
       plan = LZString.compressToUTF16 plan
       document.interpret = plan
-      document.code = submittedCode
+      document.code = {'hero-placeholder': {plan: ''}, 'hero-placeholder-1': {plan: ''}}
     return document
 
   getActiveSessions: (req, res) ->
@@ -44,12 +43,15 @@ class LevelSessionHandler extends Handler
 
     levelSlug = req.query.slug or req.body.slug
     limit = parseInt req.query.limit or req.body.limit or 7
+    codeLanguage = req.query.codeLanguage or req.body.codeLanguage
 
     return @sendSuccess res, [] unless levelSlug?
 
     today = new Date()
     today.setUTCMinutes(today.getUTCMinutes() - 10)
-    queryParams = {$and: [{"changed": {"$lt": today}}, {"levelID": levelSlug}]}
+    queryParams = {changed: {$lt: today}, levelID: levelSlug}
+    if codeLanguage
+      queryParams.codeLanguage = codeLanguage
     query = @modelClass.find(queryParams).sort({changed: -1}).limit(limit)
     query.exec (err, documents) =>
       return @sendDatabaseError(res, err) if err
@@ -58,7 +60,6 @@ class LevelSessionHandler extends Handler
   hasAccessToDocument: (req, document, method=null) ->
     get = (method ? req.method).toLowerCase() is 'get'
     return true if get and document.get('submitted')
-    return true if get and ('employer' in (req.user?.get('permissions') ? []))
     return true if get and not document.get('submittedCode')  # Allow leaderboard access to non-multiplayer sessions
     super(arguments...)
 

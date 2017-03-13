@@ -29,14 +29,16 @@ module.exports = class MainAdminView extends RootView
     'click #create-free-sub-btn': 'onClickFreeSubLink'
     'click #terminal-create': 'onClickTerminalSubLink'
     'click .classroom-progress-csv': 'onClickExportProgress'
+    'click #clear-feature-mode-btn': 'onClickClearFeatureModeButton'
 
   getTitle: -> return $.i18n.t('account_settings.admin')
 
   initialize: ->
-    if window.amActually
-      @amActually = new User({_id: window.amActually})
+    if window.serverSession.amActually
+      @amActually = new User({_id: window.serverSession.amActually})
       @amActually.fetch()
       @supermodel.trackModel(@amActually)
+    @featureMode = window.serverSession.featureMode
     super()
 
   onClickStopSpyingButton: ->
@@ -48,6 +50,10 @@ module.exports = class MainAdminView extends RootView
         forms.enableSubmit(button)
         errors.showNotyNetworkError(arguments...)
     })
+
+  onClickClearFeatureModeButton: (e) ->
+    e.preventDefault()
+    application.featureMode.clear()
 
   onSubmitEspionageForm: (e) ->
     e.preventDefault()
@@ -79,10 +85,18 @@ module.exports = class MainAdminView extends RootView
     return if searchValue is @lastUserSearchValue
     return @onSearchRequestSuccess [] unless @lastUserSearchValue = searchValue.toLowerCase()
     forms.disableSubmit(@$('#user-search-button'))
+    q = @lastUserSearchValue
+    role = undefined
+    q = q.replace /role:([^ ]+)/, (dummy, m1) ->
+      role = m1
+      return ''
+
+    data = {adminSearch: q}
+    data.role = role if role?
     $.ajax
-      type: 'POST',
-      url: '/db/user/-/admin_search'
-      data: {search: @lastUserSearchValue}
+      type: 'GET',
+      url: '/db/user'
+      data: data
       success: @onSearchRequestSuccess
       error: @onSearchRequestFailure
 
@@ -148,6 +162,11 @@ module.exports = class MainAdminView extends RootView
     options.error = (model, response, options) =>
       console.error 'Failed to create prepaid', response
     @supermodel.addRequestResource('create_prepaid', options, 0).load()
+
+  afterRender: ->
+    super()
+    @$el.find('.search-help-toggle').click () =>
+      @$el.find('.search-help').toggle()
 
   onClickExportProgress: ->
     $('.classroom-progress-csv').prop('disabled', true)

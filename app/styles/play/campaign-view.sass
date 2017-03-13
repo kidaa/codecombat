@@ -59,6 +59,18 @@ $gameControlMargin: 30px
 
   .map
     position: relative
+    
+    #brain-pop-done-banner-wrapper
+      position: absolute
+      top: 30%
+      width: 100%
+      #brain-pop-done-banner
+        background: url("/images/pages/base/modal_background.png")
+        background-size: 100% 100%
+        width: 400px
+        margin: 0 auto
+        padding: 20px 40px
+        text-align: center
 
     .map-background
       width: 100%
@@ -80,16 +92,31 @@ $gameControlMargin: 30px
       margin-bottom: -$levelDotHeight / 3 + $levelDotZ
       border: 2px groove white
       @include transition(margin-bottom 0.5s ease)
+      cursor: pointer
+
+      .treasure-chest
+        position: absolute
+        left: 50%
+        width: 150%
+        transform: translateX(-50%) translateX(50%) translateY(-130%) scaleY(1.33) scale(0.75)
+        cursor: pointer
+        z-index: -1
+        filter: drop-shadow(0px 0px 4px gold)
 
       &.disabled, &.locked
-        background-image: url(/images/pages/game-menu/lock.png)
-        background-size: 75%
-        background-repeat: no-repeat
-        background-position: 50% 50%
+        //background-image: url(/images/pages/game-menu/lock.png)
+        //background-size: 75%
+        //background-repeat: no-repeat
+        //background-position: 50% 50%
         opacity: 0.7
+        width: $levelDotWidth * 0.67
+        height: $levelDotHeight * 0.67
+        margin-left: -0.5 * 0.67 * $levelDotWidth
+        margin-bottom: -$levelDotHeight / 3 * 0.67 + $levelDotZ / 2
 
-        a
-          cursor: default
+        .treasure-chest
+          transform: translateX(-50%) translateY(-200%) scaleY(1.33) scale(0.95)
+
 
       &.started, &.next
         border: 3px solid lightgreen
@@ -107,7 +134,7 @@ $gameControlMargin: 30px
 
       .level-difficulty-banner-text
         position: absolute
-        bottom: 80%
+        bottom: 160%
         pointer-events: none
         color: rgb(246, 208, 2)
         text-shadow: 0px 1px 0px black
@@ -119,25 +146,47 @@ $gameControlMargin: 30px
       img.banner
         position: absolute
         bottom: 38%
-        width: 100%
-        pointer-events: none
+        width: 170%
+        left: -35%
 
       img.star
         width: 100%
-        bottom: 7%
+        bottom: 4%
         position: absolute
         pointer-events: none
 
-      .glyphicon-star
+      .level-acronym, .level-kind
         position: absolute
-        color: lightblue
-        font-size: 21px
-        left: 1.5px
+        pointer-events: none
+        left: 0
+        top: 0
+        right: 0
+        bottom: 0
+        color: black
+        text-align: center
+        font-size: 0.8vw
+        text-shadow: 0px 1px 0px white
 
-      &.started .glyphicon-star
-        left: 0.5px
+      .level-kind
+        bottom: auto
+        top: 100%
+        color: white
+        text-shadow: 0px 1px 0px black, 0px -1px 0px black, -1px 0px 0px black, 1px 0px 0px black
 
-      img.hero-portrait
+        &.demo
+          color: rgb(128, 255, 128)
+        &.usage
+          color: rgb(128, 128, 255)
+        &.mastery
+          color: rgb(255, 128, 128)
+        &.practice
+          color: rgb(128, 128, 255)
+        &.advanced
+          color: rgb(128, 255, 255)
+        &.challenge
+          color: rgb(255, 255, 128)
+
+      img.hero-portrait, img.item-portrait
         width: 120%
         height: auto
         bottom: 75%
@@ -145,7 +194,21 @@ $gameControlMargin: 30px
         margin-left: 0
         margin-bottom: 0
 
-    img.hero-portrait
+    img.premium-hero-banner
+      position: absolute
+      height: 250%
+      transform: translate(-50%, -100%) translateX(-20%) translateY(-10%) scaleY(1.33)
+      filter: drop-shadow(0px 0px 10px black)
+      z-index: 3
+
+    img.pet-banner
+      position: absolute
+      height: 250%
+      transform: translate(-50%, -80%) translateX(-20%) translateY(-10%) scaleY(1.33) scale(0.625)
+      filter: drop-shadow(0px 0px 10px black)
+      z-index: 3
+
+    img.hero-portrait, img.item-portrait
       position: absolute
       border: 1px solid black
       border-radius: 50%
@@ -154,6 +217,16 @@ $gameControlMargin: 30px
       height: $levelDotHeight * 1.5 / 1.75
       margin-left: -0.5 * $levelDotWidth * 1.5
       margin-bottom: -$levelDotHeight / 3 * 1.5 / 1.75
+
+      &.hero-portrait-on-banner, &.item-portrait-on-banner
+        bottom: 170%
+        left: 0%
+        width: 100%
+
+      &.item-portrait-on-banner
+        background: transparent
+        border: 0
+        border-radius: 0
 
     .level-shadow
       z-index: 1
@@ -164,6 +237,13 @@ $gameControlMargin: 30px
       background-color: black
       @include box-shadow(0px 0px 10px black)
       @include opacity(0.75)
+
+      &.locked
+        @include opacity(0.5)
+        width: $levelDotShadowWidth * 0.67
+        height: $levelDotShadowHeight * 0.67
+        margin-left: -0.5 * 0.67 * $levelDotShadowWidth
+        margin-bottom: -$levelDotShadowHeight / 3 * 0.67
 
     .level:hover
       // TODO: This rotate stops Firefox from flickering, but also disables the scaleY(0.75)
@@ -287,12 +367,11 @@ $gameControlMargin: 30px
         text-decoration: none
 
   .next-level-line
-    transform-origin: 0 100%
     height: 8px
     position: absolute
 
     .line
-      width: calc(100% - 12px - 10px)
+      width: calc(100% - 24px)
       float: left
       margin-top: 2px
       margin-bottom: 2px
@@ -301,12 +380,13 @@ $gameControlMargin: 30px
       box-shadow: 0px 0px 4px black
 
     .point
-      width: 12px
-      float: left
-      margin-top: -4px
-      border-top: 8px solid transparent
-      border-bottom: 8px solid transparent
-      border-left: 12px solid lighten(#F1EAC0, 10%)
+      width: 24px
+      height: 24px
+      float: right
+      margin-top: -8px
+      border-top: 12px solid transparent
+      border-bottom: 12px solid transparent
+      border-left: 24px solid lighten(#F1EAC0, 10%)
 
   .game-controls
     position: absolute
@@ -524,7 +604,6 @@ $gameControlMargin: 30px
       $campaignWidth: 317px
       $campaignHeight: 634px
       $campaignHoverScale: 1.2
-      width: 6 * $campaignWidth
       height: $campaignHeight * $campaignHoverScale
       flex-wrap: nowrap
       display: flex
@@ -566,7 +645,7 @@ $gameControlMargin: 30px
 
         .campaign-label
           position: absolute
-          top: 55%
+          top: 45%
           width: 100%
           text-align: center
 
@@ -663,6 +742,10 @@ $gameControlMargin: 30px
               background-position: -151px 0px
             &.campaign-game-dev-1
               background-position: -454px 0px
+            &.campaign-web-dev-2
+              background-position: -291px 0px
+            &.campaign-game-dev-2
+              background-position: -628px 0px
 
 
   .small-nav-logo, .picoctf-powered-by
@@ -683,6 +766,15 @@ $gameControlMargin: 30px
     img
       height: 30px
 
+  .code-ninjas-logo
+    top: calc(1% + 5px)
+    left: calc(1% + 200px)
+    
+  .codeplay-logo
+    top: calc(1% + 5px)
+    left: calc(1% + 5px)
+    height: 100px
+
   .ad-container
     width: 100%
     height: 90px
@@ -692,6 +784,13 @@ $gameControlMargin: 30px
     position: absolute
     height: 100%
     width: 100%
+    
+  #codeplay-ad
+    position: absolute
+    right: 10px
+    top: 60px
+    height: calc(100% - 160px)
+    z-index: 2
 
 body.ipad #campaign-view
   // iPad only supports up to Kithgard Gates for now.

@@ -123,6 +123,7 @@ module.exports = class Classroom extends CocoModel
     levelsTotal = 0
     levelsLeft = 0
     lastPlayed = null
+    lastPlayedNumber = null
     playtime = 0
     levels = []
     for level, index in courseLevels.models
@@ -132,7 +133,7 @@ module.exports = class Classroom extends CocoModel
         complete = session.get('state').complete ? false
         playtime += session.get('playtime') ? 0
         lastPlayed = level
-        lastPlayedNumber = index + 1
+        lastPlayedNumber = @getLevelNumber(level.get('original'), index + 1)
         if complete
           currentIndex = index
         else
@@ -162,7 +163,7 @@ module.exports = class Classroom extends CocoModel
         numDone: levelsTotal - levelsLeft
         pctDone: (100 * (levelsTotal - levelsLeft) / levelsTotal).toFixed(1) + '%'
         lastPlayed: lastPlayed
-        lastPlayedNumber: lastPlayedNumber ? 1
+        lastPlayedNumber: lastPlayedNumber
         next: nextLevel
         first: courseLevels.first()
         arena: arena
@@ -185,6 +186,9 @@ module.exports = class Classroom extends CocoModel
     options.url = @url() + '/invite-members'
     options.type = 'POST'
     @fetch(options)
+
+  getSortedCourses: ->
+    utils.sortCourses(@get('courses') ? [])
 
   updateCourses: (options={}) ->
     options.url = @url() + '/update-courses'

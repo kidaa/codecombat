@@ -14,7 +14,7 @@ block content
     form#request-form(class=showDone ? 'hide' : '')
       .row
         .col-md-offset-2.col-md-8
-          h3.text-center(data-i18n="teachers_quote.title")
+          h3.text-center(data-i18n="new_home.request_demo")
           h4.text-center(data-i18n="[html]teachers_quote.subtitle")
 
       if !me.isAnonymous()
@@ -40,12 +40,35 @@ block content
                   span(data-i18n="general.username")
                   span.spl.text-muted(data-i18n="signup.optional")
                 - var name = me.get('name') || '';
+                span.name-check.fancy-error.pull-right
+                  - var checkNameState = view.state.get('checkNameState');
+                  if checkNameState === 'checking'
+                    span.small(data-i18n="signup.checking")
+                  if checkNameState === 'exists'
+                    span.small
+                      span= view.state.get('suggestedNameText')
+                  if checkNameState === 'available'
+                    span.small
+                      span(data-i18n="signup.name_available")
                 input.form-control(name="name" value=name, disabled=!!name)
 
             .col-md-4.col-sm-6
               .form-group
                 span.control-label(data-i18n="share_progress_modal.form_label")
                 - var email = me.get('email') || '';
+                span.email-check.fancy-error.pull-right
+                  - var checkEmailState = view.state.get('checkEmailState');
+                  if checkEmailState === 'checking'
+                    span.small(data-i18n="signup.checking")
+                  if checkEmailState === 'exists'
+                    span.small
+                      span(data-i18n="signup.account_exists")
+                      =" "
+                      a#email-exists-login-link.login-link(data-i18n="signup.sign_in")
+
+                  if checkEmailState === 'available'
+                    span.small
+                      span(data-i18n="signup.email_good")
                 input.form-control(name="email" value=email, disabled=!!email)
 
         .row
@@ -74,6 +97,19 @@ block content
               #email-form-group.form-group
                 span.control-label(data-i18n="general.email")
                 - var email = me.get('email') || '';
+                span.email-check.fancy-error.pull-right
+                  - var checkEmailState = view.state.get('checkEmailState');
+                  if checkEmailState === 'checking'
+                    span.small(data-i18n="signup.checking")
+                  if checkEmailState === 'exists'
+                    span.small
+                      span(data-i18n="signup.account_exists")
+                      =" "
+                      a#email-exists-login-link.login-link(data-i18n="signup.sign_in")
+
+                  if checkEmailState === 'available'
+                    span.small
+                      span(data-i18n="signup.email_good")
                 input.form-control(name="email" type="email", value=email, disabled=!!email)
 
             .col-md-4.col-sm-6
@@ -215,7 +251,7 @@ block content
           input(type="hidden" name="nces_phone")
 
       #buttons-row.row.m-y-2.text-center
-        input#submit-request-btn.btn.btn-lg.btn-primary(type="submit" data-i18n="[value]teachers_quote.title")
+        input#submit-request-btn.btn.btn-lg.btn-primary(type="submit" data-i18n="[value]new_home.request_demo")
 
     #form-submit-success.text-center(class=showDone ? '' : 'hide')
       h3(data-i18n="teachers_quote.thanks_header")
@@ -239,7 +275,7 @@ block content
             img.m-l-1(src='/images/pages/community/logo_facebook.png')
           button#gplus-signup-btn.btn.btn-gplus.btn-lg.spr
             span.spr(data-i18n="teachers_quote.signup_with")
-            | G+
+            | Google
             img.m-l-1(src='/images/pages/community/logo_g+.png')
 
         .text-h1.text-uppercase(data-i18n="general.or")
@@ -249,6 +285,16 @@ block content
             .col-md-offset-2.col-md-4
               .form-group
                 span.control-label(data-i18n="general.username")
+                span.name-check.fancy-error.pull-right
+                  - var checkNameState = view.state.get('checkNameState');
+                  if checkNameState === 'checking'
+                    span.small(data-i18n="signup.checking")
+                  if checkNameState === 'exists'
+                    span.small
+                      span= view.state.get('suggestedNameText')
+                  if checkNameState === 'available'
+                    span.small
+                      span(data-i18n="signup.name_available")
                 input.form-control(name="name")
 
           .row

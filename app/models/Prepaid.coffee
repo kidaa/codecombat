@@ -1,6 +1,8 @@
 CocoModel = require './CocoModel'
 schema = require 'schemas/models/prepaid.schema'
 
+{ STARTER_LICENSE_COURSE_IDS } = require 'core/constants'
+
 module.exports = class Prepaid extends CocoModel
   @className: "Prepaid"
   urlRoot: '/db/prepaid'
@@ -19,6 +21,7 @@ module.exports = class Prepaid extends CocoModel
       maxRedeemers = @get('maxRedeemers')
       if _.isString(maxRedeemers)
         @set 'maxRedeemers', parseInt(maxRedeemers)
+    super(arguments...)
         
   status: ->
     endDate = @get('endDate')
@@ -37,6 +40,20 @@ module.exports = class Prepaid extends CocoModel
   redeem: (user, options={}) ->
     options.url = _.result(@, 'url')+'/redeemers'
     options.type = 'POST'
+    options.data ?= {}
+    options.data.userID = user.id or user
+    @fetch(options)
+
+  includesCourse: (course) ->
+    courseID = course.get?('name') or course
+    if @get('type') is 'starter_license'
+      return courseID in @get('includedCourseIDs')
+    else
+      return true
+
+  revoke: (user, options={}) ->
+    options.url = _.result(@, 'url')+'/redeemers'
+    options.type = 'DELETE'
     options.data ?= {}
     options.data.userID = user.id or user
     @fetch(options)
