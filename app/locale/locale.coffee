@@ -33,6 +33,7 @@ module.exports =
   'et': { nativeDescription: 'Eesti', englishDescription: 'Estonian' }
   'el': { nativeDescription: 'Ελληνικά', englishDescription: 'Greek' }
   'eo': { nativeDescription: 'Esperanto', englishDescription: 'Esperanto' }
+  'fil': { nativeDescription: 'Filipino', englishDescription: 'Filipino' }
   'fa': { nativeDescription: 'فارسی', englishDescription: 'Persian' }
   'gl': { nativeDescription: 'Galego', englishDescription: 'Galician' }
   'ko': { nativeDescription: '한국어', englishDescription: 'Korean' }
@@ -66,7 +67,7 @@ module.exports =
   'sv': { nativeDescription: 'Svenska', englishDescription: 'Swedish' }
   'th': { nativeDescription: 'ไทย', englishDescription: 'Thai' }
   'tr': { nativeDescription: 'Türkçe', englishDescription: 'Turkish' }
-  'uk': { nativeDescription: 'українська мова', englishDescription: 'Ukrainian' }
+  'uk': { nativeDescription: 'українська', englishDescription: 'Ukrainian' }
   'ur': { nativeDescription: 'اُردُو', englishDescription: 'Urdu' }
   'vi': { nativeDescription: 'Tiếng Việt', englishDescription: 'Vietnamese' }
   'zh-WUU-HANS': { nativeDescription: '吴语', englishDescription: 'Wuu (Simplified)' }

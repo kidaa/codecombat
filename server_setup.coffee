@@ -5,12 +5,13 @@ useragent = require 'express-useragent'
 fs = require 'graceful-fs'
 log = require 'winston'
 compressible = require 'compressible'
+compression = require 'compression'
+
 geoip = require '@basicer/geoip-lite'
 
 database = require './server/commons/database'
 perfmon = require './server/commons/perfmon'
 baseRoute = require './server/routes/base'
-user = require './server/handlers/user_handler'
 logging = require './server/commons/logging'
 config = require './server_config'
 auth = require './server/commons/auth'
@@ -25,7 +26,10 @@ errors = require './server/commons/errors'
 request = require 'request'
 Promise = require 'bluebird'
 Promise.promisifyAll(request, {multiArgs: true})
+Promise.promisifyAll(fs)
+wrap = require 'co-express'
 codePlayTags = require './server/lib/code-play-tags'
+morgan = require 'morgan'
 
 {countries} = require './app/core/utils'
 
@@ -99,17 +103,26 @@ setupErrorMiddleware = (app) ->
 
 setupExpressMiddleware = (app) ->
   if config.isProduction
-    express.logger.format('prod', productionLogging)
-    app.use(express.logger('prod'))
-    app.use express.compress filter: (req, res) ->
+    morgan.format('prod', productionLogging)
+    app.use(morgan('prod'))
+    app.use compression filter: (req, res) ->
       return false if req.headers.host is 'codecombat.com'  # CloudFlare will gzip it for us on codecombat.com
       compressible res.getHeader('Content-Type')
   else if not global.testing
-    express.logger.format('dev', developmentLogging)
-    app.use(express.logger('dev'))
-  app.use('/'+config.buildInfo.sha, express.static(path.join(__dirname, 'public'), maxAge: 0))  # CloudFlare overrides maxAge, and we don't want local development caching.
-  app.use(express.static(path.join(__dirname, 'public'), maxAge: 0))
+    morgan.format('dev', developmentLogging)
+    app.use(morgan('dev'))
+
+  public_path = path.join(__dirname, 'public')
   
+  app.use('/', express.static(path.join(public_path, 'templates', 'static')))
+
+  if config.buildInfo.sha isnt 'dev' and config.isProduction
+    app.use("/#{config.buildInfo.sha}", express.static(public_path, maxAge: '1y'))
+  else
+    app.use('/dev', express.static(public_path, maxAge: 0))  # CloudFlare overrides maxAge, and we don't want local development caching.
+
+  app.use(express.static(public_path, maxAge: 0))
+
   if config.proxy
     # Don't proxy static files with sha prefixes, redirect them
     regex = /\/[0-9a-f]{40}\/.*/
@@ -121,14 +134,15 @@ setupExpressMiddleware = (app) ->
 
   setupProxyMiddleware app # TODO: Flatten setup into one function. This doesn't fit its function name.
 
-  app.use(express.favicon())
-  app.use(express.cookieParser())
-  app.use(express.bodyParser())
-  app.use(express.methodOverride())
-  app.use(express.cookieSession({
-    key:'codecombat.sess'
-    secret:config.cookie_secret
-  }))
+  app.use require('serve-favicon') path.join(__dirname, 'public', 'images', 'favicon.ico')
+  app.use require('cookie-parser')()
+  app.use require('body-parser').json limit: '25mb'
+  app.use require('body-parser').urlencoded extended: true, limit: '25mb'
+  app.use require('method-override')()
+  app.use require('cookie-session')
+    key: 'codecombat.sess'
+    secret: config.cookie_secret
+
 
 setupPassportMiddleware = (app) ->
   app.use(authentication.initialize())
@@ -194,16 +208,14 @@ setupRedirectMiddleware = (app) ->
   app.all '/account/profile/*', (req, res, next) ->
     nameOrID = req.path.split('/')[3]
     res.redirect 301, "/user/#{nameOrID}/profile"
-    
+
 setupFeaturesMiddleware = (app) ->
   app.use (req, res, next) ->
     # TODO: Share these defaults with run-tests.js
     req.features = features = {
       freeOnly: false
     }
-    
-    if config.picoCTF or req.session.featureMode is 'pico-ctf'
-      features.playOnly = true
+
 
     if req.headers.host is 'cp.codecombat.com' or req.session.featureMode is 'code-play'
       features.freeOnly = true
@@ -211,11 +223,13 @@ setupFeaturesMiddleware = (app) ->
       features.playViewsOnly = true
       features.codePlay = true # for one-off changes. If they're shared across different scenarios, refactor
 
+    if config.picoCTF or req.session.featureMode is 'pico-ctf'
+      features.playOnly = true
     if req.user
       { user } = req
       if user.get('country') in ['china'] and not (user.isPremium() or user.get('stripe'))
         features.freeOnly = true
-        
+
     next()
 
 setupSecureMiddleware = (app) ->
@@ -242,19 +256,26 @@ setupAPIDocs = (app) ->
 exports.setupMiddleware = (app) ->
   setupSecureMiddleware app
   setupPerfMonMiddleware app
+
   setupDomainFilterMiddleware app
+  setupQuickBailToMainHTML app
+
+  
   setupCountryTaggingMiddleware app
-  setupCountryRedirectMiddleware app, 'china', config.chinaDomain
-  setupCountryRedirectMiddleware app, 'brazil', config.brazilDomain
+  
   setupMiddlewareToSendOldBrowserWarningWhenPlayersViewLevelDirectly app
   setupExpressMiddleware app
   setupAPIDocs app # should happen after serving static files, so we serve the right favicon
   setupPassportMiddleware app
   setupFeaturesMiddleware app
+
+  setupUserDataRoute app
+  setupCountryRedirectMiddleware app, 'china', config.chinaDomain
+  setupCountryRedirectMiddleware app, 'brazil', config.brazilDomain
+  
   setupOneSecondDelayMiddleware app
   setupRedirectMiddleware app
   setupAjaxCaching app
-  setupErrorMiddleware app
   setupJavascript404s app
 
 ###Routing function implementations###
@@ -279,50 +300,137 @@ setupJavascript404s = (app) ->
     res.status(404).send('Wrong hash')
   )
 
+templates = {}
+getStaticTemplate = (file) ->
+  # Don't cache templates in devlopment so you can just edit then.
+  return templates[file] if templates[file] and config.isProduction
+  templates[file] = fs.readFileAsync(path.join(__dirname, 'public', 'templates', 'static', file), 'utf8')
 
-setupFallbackRouteToIndex = (app) ->
-  app.all '*', (req, res) ->
-    fs.readFile path.join(__dirname, 'public', 'main.html'), 'utf8', (err, data) ->
-      log.error "Error modifying main.html: #{err}" if err
-      # insert the user object directly into the html so the application can have it immediately. Sanitize </script>
-      user = if req.user then JSON.stringify(UserHandler.formatEntity(req, req.user)).replace(/\//g, '\\/') else '{}'
+renderMain = wrap (template, req, res) ->
+  template = yield getStaticTemplate(template)
+  if req.features.codePlay
+   template = template.replace '<!-- CodePlay Tags Header -->', codePlayTags.header
+   template = template.replace '<!-- CodePlay Tags Footer -->', codePlayTags.footer
 
-      Mandate.findOne({}).cache(5 * 60 * 1000).exec (err, mandate) ->
-        if err
-          log.error "Error getting mandate config: #{err}"
-          configData = {}
-        else
-          configData =  _.omit mandate?.toObject() or {}, '_id'
-        configData.picoCTF = config.picoCTF
-        configData.production = config.isProduction
-        configData.codeNinjas = (req.hostname ? req.host) is 'coco.code.ninja'
-        domainRegex = new RegExp("(.*\.)?(#{config.mainHostname}|#{config.unsafeContentHostname})")
-        domainPrefix = req.host.match(domainRegex)?[1] or ''
-        configData.fullUnsafeContentHostname = domainPrefix + config.unsafeContentHostname
-        configData.buildInfo = config.buildInfo
-        data = data.replace '"environmentTag"', if config.isProduction then '"production"' else '"development"'
-        data = data.replace /shaTag/g, config.buildInfo.sha
-        data = data.replace '"serverConfigTag"', JSON.stringify configData
-        data = data.replace('"userObjectTag"', user)
-        data = data.replace('"serverSessionTag"', JSON.stringify(_.pick(req.session ? {}, 'amActually', 'featureMode')))
-        data = data.replace('"featuresTag"', JSON.stringify(req.features))
-        data = data.replace('<!-- CodePlay Tags -->', codePlayTags) if req.features.codePlay
+  res.status(200).send template
+
+setupQuickBailToMainHTML = (app) ->
+  
+  fast = (template) ->
+    (req, res, next) ->
+      req.features = features = {}
+
+      if config.isProduction or true
+        res.header 'Cache-Control', 'public, max-age=60'
+        res.header 'Expires', 60
+      else
         res.header 'Cache-Control', 'no-cache, no-store, must-revalidate'
         res.header 'Pragma', 'no-cache'
         res.header 'Expires', 0
-        res.send 200, data
+
+      if req.headers.host is 'cp.codecombat.com'
+        features.codePlay = true # for one-off changes. If they're shared across different scenarios, refactor
+
+      renderMain(template, req, res)
+
+  app.get '/', fast('home.html')
+  app.get '/about', fast('about.html')
+  app.get '/features', fast('premium-features.html')
+  app.get '/privacy', fast('privacy.html')
+  app.get '/legal', fast('legal.html')
+  app.get '/play', fast('overworld.html')
+  app.get '/play/level/:slug', fast('main.html')
+  app.get '/play/:slug', fast('main.html')
+
+# Mongo-cache doesnt support the .exec() promise, so we manually wrap it.
+getMandate = (app) ->
+  return new Promise (res, rej) ->
+    Mandate.findOne({}).cache(5 * 60 * 1000).exec (err, data) ->
+      return rej(err) if err
+      res(data)
+
+setupUserDataRoute = (app) ->
+
+  shouldRedirectToCountryServer = (req, country, host) ->
+    reqHost = (req.hostname ? req.host).toLowerCase()  # Work around express 3.0
+    hosts = host.split /;/g
+    if req.country is country and reqHost not in hosts and reqHost.indexOf(config.unsafeContentHostname) is -1
+      hosts[0]
+    else
+      undefined
+
+  app.get '/user-data', wrap (req, res) ->
+    res.header 'Cache-Control', 'no-cache, no-store, must-revalidate'
+    res.header 'Pragma', 'no-cache'
+    res.header 'Expires', 0
+
+    targetDomain = undefined
+    targetDomain ?= shouldRedirectToCountryServer(req, 'china', config.chinaDomain)
+    targetDomain ?= shouldRedirectToCountryServer(req, 'brazil', config.brazilDomain)
+
+    redirect = "window.location = 'https://#{targetDomain}' + window.location.pathname;" if targetDomain
+
+
+    # IMPORTANT: If you edit here, make sure app/assets/javascripts/run-tests.js puts in placeholders for
+    # running client tests on Travis.
+
+
+    sst = JSON.stringify(_.pick(req.session ? {}, 'amActually', 'featureMode'))
+    formattedUser = if req.user then JSON.stringify(UserHandler.formatEntity(req, req.user)).replace(/\//g, '\\/') else '{}'
+    try
+      mandate = yield getMandate()
+      configData =  _.omit mandate?.toObject() or {}, '_id'
+    catch err
+      log.error "Error getting mandate config: #{err}"
+      configData = {}
+
+    domainRegex = new RegExp("(.*\.)?(#{config.mainHostname}|#{config.unsafeContentHostname})")
+    domainPrefix = (req.hostname ? req.host).match(domainRegex)?[1] or ''
+
+    configData.picoCTF = config.picoCTF
+    configData.production = config.isProduction
+    configData.codeNinjas = (req.hostname ? req.host) is 'coco.code.ninja'
+    configData.fullUnsafeContentHostname = domainPrefix + config.unsafeContentHostname
+    configData.buildInfo = config.buildInfo
+
+    if not _.isString(formattedUser)
+      throw new Error('Error serving user: #{formattedUser}')
+    res.header 'Content-Type', 'application/javascript; charset=utf8'
+    res.send [
+      "window.serverConfig = #{JSON.stringify(configData)};"
+      "window.userObject = #{formattedUser};",
+      "window.serverSession = #{sst};",
+      "window.features = #{JSON.stringify(req.features)};"
+      "window.me = {"
+      "\tget: function(attribute) { return window.userObject[attribute]; }"
+      "};"
+      redirect or ''
+    ].join "\n"
+
+setupFallbackRouteToIndex = (app) ->
+  app.all '*', (req, res) =>
+    res.header 'Cache-Control', 'no-cache, no-store, must-revalidate'
+    res.header 'Pragma', 'no-cache'
+    res.header 'Expires', 0
+    renderMain 'main.html', req, res
+
 
 setupFacebookCrossDomainCommunicationRoute = (app) ->
   app.get '/channel.html', (req, res) ->
     res.sendfile path.join(__dirname, 'public', 'channel.html')
 
+setupUpdateBillingRoute = (app) ->
+  app.get '/update-billing', (req, res) ->
+    res.sendfile path.join(__dirname, 'public', 'update-billing.html')
+
 exports.setupRoutes = (app) ->
   routes.setup(app)
-  app.use app.router
 
   baseRoute.setup app
   setupFacebookCrossDomainCommunicationRoute app
+  setupUpdateBillingRoute app
   setupFallbackRouteToIndex app
+  setupErrorMiddleware app
 
 ###Miscellaneous configuration functions###
 
@@ -346,7 +454,7 @@ setupProxyMiddleware = (app) ->
   return unless config.proxy
   httpProxy = require 'http-proxy'
   proxy = httpProxy.createProxyServer({
-    target: 'https://direct.codecombat.com'
+    target: 'https://very.direct.codecombat.com'
     secure: false
   })
   log.info 'Using dev proxy server'

@@ -22,7 +22,8 @@ module.exports = class AnalyticsView extends RootView
     @activeClasses = []
     @activeClassGroups = {}
     @activeUsers = []
-    @yearMonthMrrMap = {}
+    @dayMrrMap = {}
+    @monthMrrMap = {}
     @revenue = []
     @revenueGroups = {}
     @dayEnrollmentsMap = {}
@@ -169,6 +170,21 @@ module.exports = class AnalyticsView extends RootView
               @revenue[i].groups.push(_.reduce(monthlyValues, (s, num) -> s + num))
         for monthlyGroup, dailyGroup of monthlyDailyGroupMap
           @revenueGroups.push monthlyGroup
+
+        # Calculate real monthly revenue instead of 30 days estimation
+        @monthMrrMap = {}
+        for revenue in @revenue
+          month = revenue.day.substring(0, 7)
+          @monthMrrMap[month] ?= {gems: 0, yearly: 0, monthly: 0, total: 0}
+          for group, i in @revenueGroups
+            if group is 'DRR gems'
+              @monthMrrMap[month].gems += revenue.groups[i]
+            else if group is 'DRR monthly subs'
+              @monthMrrMap[month].monthly += revenue.groups[i]
+            else if group is 'DRR yearly subs'
+              @monthMrrMap[month].yearly += revenue.groups[i]
+            if group in ['DRR gems', 'DRR monthly subs', 'DRR yearly subs']
+              @monthMrrMap[month].total += revenue.groups[i]
 
         @updateAllKPIChartData()
         @updateRevenueChartData()
@@ -441,39 +457,21 @@ module.exports = class AnalyticsView extends RootView
     d3Utils.createLineChart('.recurring-monthly-revenue-chart-365', @revenueMonthlyChartLines365Days, visibleWidth)
 
   updateAllKPIChartData: ->
+    # Calculate daily mrr based on previous 30 days, attribute full year sub purchase to purchase day
+    # Do not include gem purchases
+    @dayMrrMap = {}
     if @revenue?.length > 0
-      # For a given day, add monthly to current month, and yearly / 12 to this month and next 11 months
-      # Estimate current incomplete month by multiplying by total days / days so far
-      @yearMonthMrrMap = {}
-      thisMonth = new Date().toISOString().substring(0, 7)
-      currentMonthMultipler = 30 / new Date().getUTCDate()
-      for entry in @revenue
+      daysInMonth = 30
+      currentMrr = 0
+      currentMonthlyValues = []
+      for i in [@revenue.length - 1..0] when i >= 0
+        entry = @revenue[i]
         monthlySubAmount = entry.groups[@revenueGroups.indexOf('DRR monthly subs')] ? 0
-        currentYearMonth = entry.day.substring(0, 7)
-        @yearMonthMrrMap[currentYearMonth] ?= 0
-        if currentYearMonth is thisMonth
-          @yearMonthMrrMap[currentYearMonth] += monthlySubAmount * currentMonthMultipler
-        else
-          @yearMonthMrrMap[currentYearMonth] += monthlySubAmount
-
-        yearlySubAmount = (entry.groups[@revenueGroups.indexOf('DRR yearly subs')] ? 0) / 12
-        if yearlySubAmount > 0
-          currentYear = parseInt(entry.day.substring(0, 4))
-          currentMonth = parseInt(entry.day.substring(5, 7))
-          for i in [0...12]
-            if currentMonth > 9
-              currentYearMonth = "#{currentYear}-#{currentMonth}"
-            else
-              currentYearMonth = "#{currentYear}-0#{currentMonth}"
-            @yearMonthMrrMap[currentYearMonth] ?= 0
-            if currentYearMonth is thisMonth
-              @yearMonthMrrMap[currentYearMonth] += yearlySubAmount * currentMonthMultipler
-            else
-              @yearMonthMrrMap[currentYearMonth] += yearlySubAmount
-            currentMonth++
-            if currentMonth is 13
-              currentYear++
-              currentMonth = 1
+        yearlySubAmount = entry.groups[@revenueGroups.indexOf('DRR yearly subs')] ? 0
+        currentMonthlyValues.push monthlySubAmount + yearlySubAmount
+        currentMrr += monthlySubAmount + yearlySubAmount
+        currentMrr -= currentMonthlyValues.shift() while currentMonthlyValues.length > daysInMonth
+        @dayMrrMap[entry.day] = currentMrr if currentMonthlyValues.length is daysInMonth
 
     @kpiRecentChartLines = []
     @kpiChartLines = []
@@ -505,8 +503,7 @@ module.exports = class AnalyticsView extends RootView
     if @revenue?.length > 0
       data = []
       for entry in @revenue
-        currentMonth = entry.day.substring(0, 7)
-        value = @yearMonthMrrMap[currentMonth]
+        value = @dayMrrMap[entry.day]
         data.push
           day: entry.day
           value: value / 100 / 1000

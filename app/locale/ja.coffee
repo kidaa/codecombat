@@ -3,8 +3,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     slogan: "一番ステキなプログラミング学習ゲーム"
     classroom_edition: "教室版:"
     learn_to_code: "コードを学ぼう:"
-    teacher: "先生"
-    student: "学生"
     play_now: "今すぐプレイ"
     im_a_teacher: "私は先生です"
     im_a_student: "私は学生です"
@@ -78,12 +76,12 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     home: "ホーム"
     contribute: "コントリビュート"
     legal: "規約"
-#    privacy: "Privacy"
+    privacy: "プライバシー"
     about: "CoCoについて"
     contact: "お問い合わせ"
     twitter_follow: "フォロー"
-#    my_classrooms: "My Classes"
-#    my_courses: "My Courses"
+    my_classrooms: "マイクラス"
+    my_courses: "マイコース"
     careers: "経歴"
     facebook: "Facebook"
     twitter: "Twitter"
@@ -99,7 +97,7 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     faqs: "FAQ"
     help_pref: "ヘルプが必要ですか? Email"
     help_suff: "をくれれば協力します！"
-#    resource_hub: "Resource Hub"
+    resource_hub: "Resource Hub"
 
   modal:
     close: "閉じる"
@@ -234,11 +232,11 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     school_name: "学校名と市名"
     optional: "オプション"
     school_name_placeholder: "ほにゃらら高校, なんとか市, 日本"
-#    connected_gplus_header: "You've successfully connected with Google+!"
-#    connected_gplus_p: "Finish signing up so you can log in with your Google+ account."
-#    gplus_exists: "You already have an account associated with Google+!"
-#    connected_facebook_header: "You've successfully connected with Facebook!"
-#    connected_facebook_p: "Finish signing up so you can log in with your Facebook account."
+    connected_gplus_header: "Google+との連携に成功しました!"
+    connected_gplus_p: "Google+での登録が完了しました。"
+    gplus_exists: "Google+によるアカウントをすでにもっています!"
+    connected_facebook_header: "Facebookとの連携に成功しました!"
+    connected_facebook_p: "Facebookでの登録が完了しました。."
 #    facebook_exists: "You already have an account associated with Facebook!"
 #    hey_students: "Students, enter the class code from your teacher."
 #    birthday: "Birthday"
@@ -383,9 +381,9 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     last_name: "Last Name(姓)"
     last_initial: "イニシヤル"
     username: "ユーザー名"
-#    contact_us: "Contact Us"
-#    close_window: "Close Window"
-#    learn_more: "Learn More"
+    contact_us: "私たちにコンタクトをとる"
+    close_window: "ウィンドウを閉じる"
+    learn_more: "もっとみる"
 
   units:
     second: "秒"
@@ -404,11 +402,11 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     years: "年"
 
   play_level:
-#    directions: "Directions"
-#    edit_level: "Edit Level"
-#    explore_codecombat: "Explore CodeCombat"
-#    finished_hoc: "I'm finished with my Hour of Code"
-#    get_certificate: "Get your certificate!"
+    directions: "使用法"
+    edit_level: "編集レベル"
+    explore_codecombat: "CodeCombatを探検"
+    finished_hoc: "コードの時間は終了"
+    get_certificate: "証明書をゲットしよう!"
     level_complete: "レベルコンプリート"
     completed_level: "コンプリートレベル:"
     course: "コース:"
@@ -422,7 +420,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     level: "ゲームレベル" # Like "Level: Dungeons of Kithgard"
     skip: "スキップ"
     game_menu: "ゲームメニュー"
-    guide: "ガイド"
     restart: "再始動"
     goals: "目標"
     goal: "目標"
@@ -435,7 +432,7 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     reload_title: "コードを再読み込ますか？"
     reload_really: "レベルをリセットします。よろしいですか？"
     reload_confirm: "リセットする"
-#    test_level: "Test Level"
+    test_level: "テストレベル"
     victory: "勝利"
     victory_title_prefix: ""
     victory_title_suffix: "クリア"
@@ -456,7 +453,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     victory_viking_code_school: "あなたはハードレベルのホーリー・スモークを打ち破りました! もしあなたが既にソフトウェア開発者でないなら, ぜひやってみましょう. あなたはちょうどViking Code Scoolで受け入れられるための出世街道にいます,そこでは次のレベルへのスキルを取得でき、14週間でプロのWeb開発者になれます。"
     victory_become_a_viking: "バイキングになる"
     victory_no_progress_for_teachers: "教師用の進捗は保存されません。しかし自分の教室に学生アカウントを加えることができます."
-    guide_title: "ガイド"
     tome_cast_button_run: "実行"
     tome_cast_button_running: "実行中"
     tome_cast_button_ran: "実行済み"
@@ -464,13 +460,11 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     tome_reload_method: "このメソッドの元のコードをリロードする" # {change}
     tome_available_spells: "利用できる呪文"
     tome_your_skills: "あなたのスキル"
-    tome_current_method: "現在のメソッド"
     hints: "ヒント"
     hints_title: "ヒント {{number}}"
     code_saved: "コードがセーブされました"
     skip_tutorial: "スキップ (esc)"
     keyboard_shortcuts: "キーショートカット"
-    loading_ready: "準備完了！"
     loading_start: "レベルスタート"
     problem_alert_title: "コードを修正して下さい"
     time_current: "今："
@@ -613,20 +607,11 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     price: "x{{gems}} / 月"
 
   subscribe:
-#    subscribe_modal_title: "CodeCombat Premium"
+    subscribe_modal_title: "CodeCombatプレミアム"
     comparison_blurb: "CodeCombatへ課金してスキルを磨きましょう！" # {change}
-#    premium_pricing_prefix: "Get Premium for just"
-#    premium_pricing_suffix: "and become a master coder."
-#    premium: "Premium" # Make sure the following feature translations don't go onto two lines
-    feature1: "__levelsCount__以上の基本レベルが__worldsCount__つの世界に" # {change}
-    feature2: "__heroesCount__人のパワフルな <strong>ニューヒーロー</strong> とユニークなスキル!" # {change}
-    feature3: "__bonusLevelsCount__以上のボーナスレベル" # {change}
-    feature4: "<strong>{{gems}}のジェム</strong>が毎月ボーナス!" # {change}
-    feature6: "プレミアムメールサポート"
-    feature7: "プライベート<strong>クラン</strong>"
-    feature8: "<strong>広告非表示!</strong>"
-#    feature_game_dev: "Make games for your friends to play in our <strong>Game Dev Worlds</strong>"
-#    feature_web_dev: "Build websites and apps with HTML, CSS, and jQuery in our <strong>Web Dev Worlds</strong>"
+    premium_pricing_prefix: "プレミアムにするだけで"
+    premium_pricing_suffix: "マスターコーダーになれる"
+    premium: "プレミアム" # Make sure the following feature translations don't go onto two lines
     free: "無料"
     month: "月"
     must_be_logged: "まずログインしてください。 アカウントを作るかメニューの上からログインをお願いします。"
@@ -676,6 +661,22 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    unsubscribing: "Unsubscribing"
 #    subscribe_prepaid: "Click Subscribe to use prepaid code"
 #    using_prepaid: "Using prepaid code for monthly subscription"
+#    feature_levels: "Access __levelsCount__ levels available"
+#    feature_gems: "Receive __gems__ gems per month"
+#    feature_heroes: "Unlock exclusive heroes"
+#    feature_games: "Make games for your friends"
+#    feature_websites: "Build websites and apps"
+#    feature_items: "Equip more powerful items"
+#    month_price: "$__price__/mo"
+#    lifetime: "Lifetime Subscription"
+#    lifetime_price: "$__price__"
+#    year_subscription: "Yearly Subscription"
+#    year_price: "$__price__/year"
+#    kids_message_1: "Kids! We'll send an email to your parents so they can purchase a subscription for you."
+#    kids_message_2: "Ask Your Parent"
+#    support_part1: "Need help with payment options? Email"
+#    support_part2: "support@codecombat.com"
+#    support_part3: "if you have any questions."
 
   choose_hero:
     choose_hero: "ヒーロー選択"
@@ -768,7 +769,7 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     team_link: "チーム"
     story_link: "ストーリー"
     press_link: "記事"
-#    mission_title: "Our mission: make programming accessible to every student on Earth."
+    mission_title: "私たちのミッション: プログラミングを地球上の学生にとどけること."
 #    mission_description_1: "<strong>Programming is magic</strong>. It's the ability to create things from pure imagination. We started CodeCombat to give learners the feeling of wizardly power at their fingertips by using <strong>typed code</strong>."
 #    mission_description_2: "As it turns out, that enables them to learn faster too. WAY faster. It's like having a conversation instead of reading a manual. We want to bring that conversation to every school and to <strong>every student</strong>, because everyone should have the chance to learn the magic of programming."
 #    team_title: "Meet the CodeCombat team"
@@ -929,6 +930,8 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    please_explain: "(please explain)"
 #    middle_school: "Middle School"
 #    college_plus: "College or higher"
+#    referrer: "How did you hear about us?"
+#    referrer_help: "For example: from another teacher, a conference, your students, Code.org, etc."
 #    anything_else: "Anything else we should know?"
 #    thanks_header: "Request Received!"
 #    thanks_sub_header: "Thanks for expressing interest in CodeCombat for your school."
@@ -974,7 +977,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
   account_settings:
     title: "アカウント設定"
     not_logged_in: "設定を変更するにはログインまたはアカウント登録してください"
-    autosave: "変更は自動的にセーブします"
     me_tab: "自分"
     picture_tab: "画像"
     delete_account_tab: "アカウントの削除"
@@ -1114,7 +1116,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    private_require_sub: "Private clans require a subscription to create or join."
 
 #  courses:
-#    course: "Course"
 #    create_new_class: "Create New Class"
 #    unnamed_class: "Unnamed Class"
 #    edit_settings1: "Edit Class Settings"
@@ -1126,30 +1127,14 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    average_levels: "Average levels completed:"
 #    total_levels: "Total levels completed:"
 #    students: "Students"
-#    students1: "students"
 #    concepts: "Concepts"
 #    play_time: "Play time:"
 #    completed: "Completed:"
 #    enter_emails: "Separate each email address by a line break or commas"
 #    send_invites: "Invite Students"
-#    creating_class: "Creating class..."
-#    purchasing_course: "Purchasing course..."
-#    buy_course: "Buy Course"
-#    select_all_courses: "Select 'All Courses' for a 50% discount!"
-#    all_courses: "All Courses"
 #    number_programming_students: "Number of Programming Students"
 #    number_total_students: "Total Students in School/District"
-#    enter_number_students: "Enter the number of students you need for this class."
-#    name_class: "Name your class"
-#    displayed_course_page: "This will be displayed on the course page for you and your students. It can be changed later."
-#    buy: "Buy"
-#    purchasing_for: "You are purchasing a license for"
-#    creating_for: "You are creating a class for"
-#    for: "for" # Like in 'for 30 students'
-#    receive_code: "Afterwards you will receive an unlock code to distribute to your students, which they can use to enroll in your class."
-#    questions: "Questions?"
 #    enroll: "Enroll"
-#    enter: "Enter"
 #    enroll_paid: "Enroll Students in Paid Courses"
 #    get_enrollments: "Get More Licenses"
 #    change_language: "Change Course Language"
@@ -1200,13 +1185,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    remove_description2: "The activated paid license will not be returned."
 #    keep_student: "Keep Student"
 #    removing_user: "Removing user"
-#    to_join_ask: "To join a class, ask your teacher for an unlock code."
-#    join_this_class: "Join Class"
-#    enter_here: "<enter unlock code here>"
-#    successfully_joined: "Successfully joined"
-#    click_to_start: "Click here to start taking"
-#    my_courses: "My Courses"
-#    classroom: "Classroom"
 #    subtitle: "Review course overviews and levels" # Flat style redesign
 #    changelog: "View latest changes to course levels."
 #    select_language: "Select language"
@@ -1278,6 +1256,8 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    current_hero: "Current Hero:"
 #    change_hero: "Change Hero"
 #    web_dev_language_transition: "All classes program in HTML / JavaScript for this course.  Classes that have been using Python will start with extra JavaScript intro levels to ease the transition.  Classes that are already using JavaScript will skip the intro levels."
+#    course_membership_required_to_play: "You'll need to join a course to play this level."
+#    license_required_to_play: "Ask your teacher to assign a license to you so you can continue to play CodeCombat!"
 
 #  teacher:
 #    assigning_course: "Assigning course"
@@ -1320,6 +1300,7 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    latest_complete: "Latest completed level"
 #    enroll_student: "Enroll student"
 #    apply_license: "Apply License"
+#    revoke_license: "Revoke License"
 #    course_progress: "Course Progress"
 #    not_applicable: "N/A"
 #    edit: "edit"
@@ -1419,6 +1400,8 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    progress_journal_desc: "Encourage students to keep track of their progress via a progress journal."
 #    cs1_curriculum: "Introduction to Computer Science - Curriculum Guide"
 #    cs1_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 1."
+#    arenas_curriculum: "Arena Levels - Teacher Guide"
+#    arenas_curriculum_desc: "Instructions on how to run Wakka Maul, Cross Bones and Power Peak multiplayer arenas with your class."
 #    cs2_curriculum: "Computer Science 2 - Curriculum Guide"
 #    cs2_curriculum_desc: "Scope and sequence, lesson plans, activities and more for Course 2."
 #    cs3_curriculum: "Computer Science 3 - Curriculum Guide"
@@ -1484,6 +1467,8 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    hoc_additional_desc1: "For additional CodeCombat resources and activities, see our"
 #    hoc_additional_desc2: "Questions"
 #    hoc_additional_contact: "Get in touch"
+#    revoke_confirm: "Are you sure you want to revoke a Full License from {{student_name}}? The license will become available to assign to another student."
+#    revoking: "Revoking..."
 
 #  sharing:
 #    game: "Game"
@@ -1502,8 +1487,8 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    victory_course_share_suffix: "you just created."
 #    copy_url: "Copy URL"
 
-#  game_dev:
-#    creator: "Creator"
+  game_dev:
+    creator: "クリエーター"
 
 #  web_dev:
 #    image_gallery_title: "Image Gallery"
@@ -1704,7 +1689,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
     helpful_ambassadors: "私たちの有能な大使たち:"
 
   ladder:
-    please_login: "ラダーゲームのプレイ前にログインしてください。"
     my_matches: "勝負"
     simulate: "シミュレート"
     simulation_explanation: "試合のシミュレートはより早くランク付けすることができます!"
@@ -1822,9 +1806,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    email_sent: "Email sent! Check your inbox."
 #    verifying_email: "Verifying your email address..."
 #    successfully_verified: "You've successfully verified your email address!"
-#    back_to_student_page: "Go back to student things"
-#    back_to_teacher_page: "Go to My Classes"
-#    back_to_game: "Go play some more levels!"
 #    verify_error: "Something went wrong when verifying your email :("
 
 #  account_invoices:
@@ -1860,11 +1841,6 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    you_can1: "You can"
 #    you_can2: "purchase a prepaid code"
 #    you_can3: "that can be applied to your own account or given to others."
-
-#  coppa_deny:
-#    text1: "Can’t wait to learn programming?"
-#    text2: "Your parents will need to create an account for you to use! Email team@codecombat.com if you have any questions."
-#    close: "Close Window"
 
 #  loading_error:
 #    could_not_load: "Error loading from server"
@@ -2001,6 +1977,16 @@ module.exports = nativeDescription: "日本語", englishDescription: "Japanese",
 #    advanced_web_scripting: "Advanced Web Scripting"
 #    input_handling: "Input Handling"
 #    while_loops: "While Loops"
+#    place_game_objects: "Place game objects"
+#    construct_mazes: "Construct mazes"
+#    create_playable_game: "Create a playable, sharable game project"
+#    alter_existing_web_pages: "Alter existing web pages"
+#    create_sharable_web_page: "Create a sharable web page"
+#    basic_input_handling: "Basic Input Handling"
+#    basic_game_ai: "Basic Game AI"
+#    basic_javascript: "Basic JavaScript"
+#    basic_event_handling: "Basic Event Handling"
+#    create_sharable_interactive_web_page: "Create a sharable interactive web page"
 
 #  delta:
 #    added: "Added"

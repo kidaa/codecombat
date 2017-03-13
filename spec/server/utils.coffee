@@ -13,7 +13,7 @@ LevelSession = require '../../server/models/LevelSession'
 Achievement = require '../../server/models/Achievement'
 Campaign = require '../../server/models/Campaign'
 Product = require '../../server/models/Product'
-{ productStubs } = require '../../server/routes/db/product'
+{ productStubs } = require '../../server/middleware/products'
 Course = require '../../server/models/Course'
 Prepaid = require '../../server/models/Prepaid'
 Payment = require '../../server/models/Payment'
@@ -30,6 +30,7 @@ campaignAdjacentCampaignProperties = _.keys(campaignSchema.properties.adjacentCa
 module.exports = mw =
   getURL: (path) -> 'http://localhost:3001' + path
 
+  getUrl: (path) -> 'http://localhost:3001' + path
   clearModels: Promise.promisify (models, done) ->
     funcs = []
     for model in models
@@ -243,7 +244,7 @@ module.exports = mw =
     
     unless mw.lastLogin?.isAdmin()
       # TODO: Make this function transparently turn into an admin if necessary
-      done("Must be logged in as an admin to create a campaign") 
+      done("Must be logged in as an admin to create a campaign")
 
     data = _.extend({}, {
       name: _.uniqueId('Campaign ')

@@ -1,6 +1,7 @@
 # Analytics tags added to main.html when on cp.codecombat.com
 
-module.exports = '''
+module.exports =
+    header: '''
     <!-- Facebook Pixel Code -->
     <script>
         !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -48,4 +49,6 @@ module.exports = '''
             '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-NBV9T9');</script>
     <!-- End Google Tag Manager -->
+
 '''
+    footer: ''

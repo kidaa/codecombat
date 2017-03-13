@@ -21,6 +21,9 @@ UserPollsRecord = require 'models/UserPollsRecord'
 Poll = require 'models/Poll'
 PollModal = require 'views/play/modal/PollModal'
 CourseInstance = require 'models/CourseInstance'
+codePlay = require('lib/code-play')
+
+require 'game-libraries'
 
 class LevelSessionsCollection extends CocoCollection
   url: ''
@@ -44,8 +47,8 @@ module.exports = class CampaignView extends RootView
 
   events:
     'click .map-background': 'onClickMap'
-    'click .level a': 'onClickLevel'
-    'dblclick .level a': 'onDoubleClickLevel'
+    'click .level': 'onClickLevel'
+    'dblclick .level': 'onDoubleClickLevel'
     'click .level-info-container .start-level': 'onClickStartLevel'
     'click .level-info-container .view-solutions': 'onClickViewSolutions'
     'click .level-info-container .course-version button': 'onClickCourseVersion'
@@ -59,6 +62,8 @@ module.exports = class CampaignView extends RootView
     'mouseleave .portals': 'onMouseLeavePortals'
     'mousemove .portals': 'onMouseMovePortals'
     'click .poll': 'showPoll'
+  shortcuts:
+    'shift+s': 'onShiftS'
 
   constructor: (options, @terrain) ->
     super options
@@ -191,7 +196,9 @@ module.exports = class CampaignView extends RootView
       reject = if me.getFourthLevelGroup() is 'signs-and-portents' then 'forgetful-gemsmith' else 'signs-and-portents'
       context.levels = _.reject context.levels, slug: reject
     if features.freeOnly
-      context.levels = _.reject context.levels, 'requiresSubscription'
+      context.levels = _.reject context.levels, (level) ->
+        return false if features.codePlay and codePlay.canPlay(level.slug)
+        return level.requiresSubscription
     @annotateLevels(context.levels)
     count = @countLevels context.levels
     context.levelsCompleted = count.completed
@@ -231,6 +238,10 @@ module.exports = class CampaignView extends RootView
         context.campaigns[campaign.get('slug')] = campaign
         if @sessions?.loaded
           levels = _.values($.extend true, {}, campaign.get('levels') ? {})
+          if features.freeOnly
+            levels = _.reject levels, (level) ->
+              return false if features.codePlay and codePlay.canPlay(level.slug)
+              return level.requiresSubscription
           count = @countLevels levels
           campaign.levelsTotal = count.total
           campaign.levelsCompleted = count.completed
@@ -273,6 +284,52 @@ module.exports = class CampaignView extends RootView
     @applyCampaignStyles()
     @testParticles()
 
+  onShiftS: (e) ->
+    @generateCompletionRates() if @editorMode
+
+  generateCompletionRates: ->
+    return unless me.isAdmin()
+    startDay = utils.getUTCDay -14
+    endDay = utils.getUTCDay -1
+    $(".map-background").css('background-image','none')
+    $(".gradient").remove()
+    $("#campaign-view").css("background-color", "black")
+    for level in @campaign?.renderedLevels ? []
+      $("div[data-level-slug=#{level.slug}] .level-kind").text("Loading...")
+      request = @supermodel.addRequestResource 'level_completions', {
+        url: '/db/analytics_perday/-/level_completions'
+        data: {startDay: startDay, endDay: endDay, slug: level.slug}
+        method: 'POST'
+        success: @onLevelCompletionsLoaded.bind(@, level)
+      }, 0
+      request.load()
+
+  onLevelCompletionsLoaded: (level, data) ->
+    return if @destroyed
+    started = 0
+    finished = 0
+    for day in data
+      started += day.started ? 0
+      finished += day.finished ? 0
+    if started is 0
+      ratio = 0
+    else
+      ratio = finished / started
+    rateDisplay = (ratio * 100).toFixed(1) + '%'
+    $("div[data-level-slug=#{level.slug}] .level-kind").html((if started < 1000 then started else (started / 1000).toFixed(1) + "k") + "<br>" + rateDisplay)
+    if ratio <= 0.5
+      color = "rgb(255, 0, 0)"
+    else if ratio > 0.5 and ratio <= 0.85
+      offset = (ratio - 0.5) / 0.35
+      color = "rgb(255, #{Math.round(256 * offset)}, 0)"
+    else if ratio > 0.85 and ratio <= 0.95
+      offset = (ratio - 0.85) / 0.1
+      color = "rgb(#{Math.round(256 * (1-offset))}, 256, 0)"
+    else
+      color = "rgb(0, 256, 0)"
+    $("div[data-level-slug=#{level.slug}] .level-kind").css({"color":color, "width":256+"px", "transform":"translateX(-50%) translateX(15px)"})
+    $("div[data-level-slug=#{level.slug}]").css("background-color", color)
+
   afterInsert: ->
     super()
     if @getQueryVariable('signup') and not me.get('email')
@@ -312,7 +369,6 @@ module.exports = class CampaignView extends RootView
       level.locked = not me.ownsLevel(level.original) or previousIncompletePracticeLevel
       level.locked = true if level.slug is 'kithgard-mastery' and @calculateExperienceScore() is 0
       level.locked = true if level.requiresSubscription and @requiresSubscription and me.get('hourOfCode')
-      level.locked = true if level.slug in me.getDungeonLevelsHidden()
       level.locked = false if @levelStatusMap[level.slug] in ['started', 'complete']
       level.locked = false if @editorMode
       level.locked = false if @campaign?.get('name') in ['Auditions', 'Intro']
@@ -320,13 +376,15 @@ module.exports = class CampaignView extends RootView
       level.disabled = true if level.adminOnly and @levelStatusMap[level.slug] not in ['started', 'complete']
       level.disabled = false if me.isInGodMode()
       level.color = 'rgb(255, 80, 60)'
-      level.color = 'rgb(80, 130, 200)' if level.requiresSubscription
+      level.color = 'rgb(80, 130, 200)' if level.requiresSubscription and not features.codePlay
       level.color = 'rgb(200, 80, 200)' if level.adventurer
       level.color = 'rgb(193, 193, 193)' if level.locked
       level.unlocksHero = _.find(level.rewards, 'hero')?.hero
       if level.unlocksHero
         level.purchasedHero = level.unlocksHero in (me.get('purchased')?.heroes or [])
+
       level.unlocksItem = _.find(level.rewards, 'item')?.item
+      level.unlocksPet = utils.petThangIDs.indexOf(level.unlocksItem) isnt -1
 
       if window.serverConfig.picoCTF
         if problem = _.find(@picoCTFProblems or [], pid: level.picoCTFProblem)
@@ -355,7 +413,6 @@ module.exports = class CampaignView extends RootView
       for otherLevel in orderedLevels when not level.unlockedInSameCampaign and otherLevel isnt level
         for reward in (otherLevel.rewards ? []) when reward.level
           level.unlockedInSameCampaign ||= reward.level is level.original
-      level.unlockedInSameCampaign = false if level.slug in me.getDungeonLevelsHidden()
 
   countLevels: (orderedLevels) ->
     count = total: 0, completed: 0
@@ -422,9 +479,17 @@ module.exports = class CampaignView extends RootView
       false
 
     foundNext = false
-    for level in orderedLevels
+    for level, levelIndex in orderedLevels
       # Iterate through all levels in order and look to find the first unlocked one that meets all our criteria for being pointed out as the next level.
-      level.nextLevels = (reward.level for reward in level.rewards ? [] when reward.level)
+      if @campaign.get('type') is 'course'
+        level.nextLevels = []
+        for nextLevel, nextLevelIndex in orderedLevels when nextLevelIndex > levelIndex
+          continue if nextLevel.practice and level.nextLevels.length
+          break if level.practice and not nextLevel.practice
+          level.nextLevels.push nextLevel.original
+          break unless nextLevel.practice
+      else
+        level.nextLevels = (reward.level for reward in level.rewards ? [] when reward.level)
       foundNext = findNextLevel(level.nextLevels, true) unless foundNext # Check practice levels first
       foundNext = findNextLevel(level.nextLevels, false) unless foundNext
 
@@ -451,11 +516,11 @@ module.exports = class CampaignView extends RootView
     mapWidth = parseFloat($(".map").css("width"))
     return unless mapHeight > 0
     ratio =  mapWidth / mapHeight
-    p1 = x: o1.x, y: o1.y / ratio - 0.5
+    p1 = x: o1.x, y: o1.y / ratio
     p2 = x: o2.x, y: o2.y / ratio
-    length = Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y))
+    length = Math.sqrt(Math.pow(p1.x - p2.x , 2) + Math.pow(p1.y - p2.y, 2))
     angle = Math.atan2(p1.y - p2.y, p2.x - p1.x) * 180 / Math.PI
-    transform = "rotate(#{angle}deg)"
+    transform = "translateY(-50%) translateX(-50%) rotate(#{angle}deg) translateX(50%)"
     line = $('<div>').appendTo('.map').addClass('next-level-line').css(transform: transform, width: length + '%', left: o1.x + '%', bottom: (o1.y - 0.5) + '%')
     line.append($('<div class="line">')).append($('<div class="point">'))
 
@@ -588,7 +653,7 @@ module.exports = class CampaignView extends RootView
     level = _.find _.values(@campaign.get('levels')), slug: levelSlug
 
     requiresSubscription = level.requiresSubscription or (me.isOnPremiumServer() and not (level.slug in ['dungeons-of-kithgard', 'gems-in-the-deep', 'shadow-guard', 'forgetful-gemsmith', 'signs-and-portents', 'true-names']))
-    canPlayAnyway = not @requiresSubscription or level.adventurer or @levelStatusMap[level.slug]
+    canPlayAnyway = not @requiresSubscription or level.adventurer or @levelStatusMap[level.slug] or (features.codePlay and codePlay.canPlay(level.slug))
     if requiresSubscription and not canPlayAnyway
       @promptForSubscription levelSlug, 'map level clicked'
     else
@@ -640,7 +705,7 @@ module.exports = class CampaignView extends RootView
 
   onWindowResize: (e) =>
     mapHeight = iPadHeight = 1536
-    mapWidth = {dungeon: 2350, forest: 2500, auditions: 2500, desert: 2350, mountain: 2422, glacier: 2421}[@terrain] or 2350
+    mapWidth = {dungeon: 2350, forest: 2500, auditions: 2500, desert: 2411, mountain: 2422, glacier: 2421}[@terrain] or 2350
     aspectRatio = mapWidth / mapHeight
     pageWidth = @$el.width()
     pageHeight = @$el.height()
@@ -815,3 +880,11 @@ module.exports = class CampaignView extends RootView
     $pollButton = @$el.find 'button.poll'
     pollModal.on 'vote-updated', ->
       $pollButton.removeClass('highlighted').tooltip 'hide'
+
+
+  getLoadTrackingTag: () ->
+    @campaign?.get?('slug') or 'overworld'
+
+  mergeWithPrerendered: (el) ->
+    true
+

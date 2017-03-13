@@ -32,14 +32,14 @@ describe 'TeacherClassView', ->
       ])
       @releasedCourses = new Courses(@courses.where({ releasePhase: 'released' }))
       @available1 = factories.makePrepaid({maxRedeemers: 1})
-      @available2 = factories.makePrepaid({maxRedeemers: 1})
+      @available2 = factories.makePrepaid({maxRedeemers: 1, type: 'starter_license', includedCourseIDs: [@courses.at(0).id]})
       expired = factories.makePrepaid({endDate: moment().subtract(1, 'day').toISOString()})
       @prepaids = new Prepaids([@available1, @available2, expired])
       @students = new Users([
         factories.makeUser({name: 'Abner'})
         factories.makeUser({name: 'Abigail'})
         factories.makeUser({name: 'Abby'}, {prepaid: @available1})
-        factories.makeUser({name: 'Ben'}, {prepaid: @available1})
+        factories.makeUser({name: 'Ben'}, {prepaid: @available2})
         factories.makeUser({name: 'Ned'}, {prepaid: expired})
         factories.makeUser({name: 'Ebner'}, {prepaid: expired})
       ])
@@ -132,6 +132,33 @@ describe 'TeacherClassView', ->
             users = @view.enrollStudents.calls.argsFor(0)[0]
             expect(users.size()).toBe(1)
             expect(users.first().id).toBe(@view.students.first().id)
+            
+      ###
+        describe 'Revoke button', ->
+          it 'opens a confirm modal once clicked', ->
+            spyOn(window, 'confirm').and.returnValue(true)
+            @view.$('.revoke-student-button:first').click()
+            expect(window.confirm).toHaveBeenCalled()
+  
+          describe 'once the prepaid is successfully revoked', ->
+            beforeEach ->
+              spyOn(window, 'confirm').and.returnValue(true)
+              button = @view.$('.revoke-student-button:first')
+              @revokedUser = @view.students.get(button.data('user-id'))
+              @view.$('.revoke-student-button:first').click()
+              request = jasmine.Ajax.requests.mostRecent()
+              request.respondWith({
+                status: 200
+                responseText: '{}'
+              })
+              
+            it 'updates the user and rerenders the page', ->
+              if @view.$(".enroll-student-button[data-user-id='#{@revokedUser.id}']").length isnt 1
+                fail('Could not find enroll student button for user whose enrollment was revoked')
+       ###
+            
+            
+            
 
       describe 'Export Student Progress (CSV) button', ->
         it 'downloads a CSV file', ->
@@ -216,6 +243,53 @@ describe 'TeacherClassView', ->
           @view.$el.find('.export-student-progress-btn').click()
           expect(window.open).toHaveBeenCalled()
 
+    describe '.assignCourse(courseID, members)', ->
+      beforeEach (done) ->
+        @classroom = factories.makeClassroom({ aceConfig: { language: 'javascript' }}, { courses: @releasedCourses, members: @students, levels: [@levels, new Levels()]})
+        @courseInstances = new CourseInstances([
+          factories.makeCourseInstance({}, { course: @releasedCourses.first(), @classroom, members: new Users() })
+          factories.makeCourseInstance({}, { course: @releasedCourses.last(), @classroom, members: new Users() })
+        ])
+
+        sessions = []
+        @finishedStudent = @students.first()
+        @unfinishedStudent = @students.last()
+        classLanguage = @classroom.get('aceConfig')?.language
+        for level in @levels.models
+          continue if classLanguage and classLanguage is level.get('primerLanguage')
+          sessions.push(factories.makeLevelSession(
+              {state: {complete: true}, playtime: 60},
+              {level, creator: @finishedStudent})
+          )
+        sessions.push(factories.makeLevelSession(
+            {state: {complete: true}, playtime: 60},
+            {level: @levels.first(), creator: @unfinishedStudent})
+        )
+        @levelSessions = new LevelSessions(sessions)
+
+        @view = new TeacherClassView({}, @courseInstances.first().id)
+        @view.classroom.fakeRequests[0].respondWith({ status: 200, responseText: @classroom.stringify() })
+        @view.courses.fakeRequests[0].respondWith({ status: 200, responseText: @courses.stringify() })
+        @view.courseInstances.fakeRequests[0].respondWith({ status: 200, responseText: @courseInstances.stringify() })
+        @view.students.fakeRequests[0].respondWith({ status: 200, responseText: @students.stringify() })
+        @view.classroom.sessions.fakeRequests[0].respondWith({ status: 200, responseText: @levelSessions.stringify() })
+        @view.levels.fakeRequests[0].respondWith({ status: 200, responseText: @levels.stringify() })
+        @view.prepaids.fakeRequests[0].respondWith({ status: 200, responseText: @prepaids.stringify() })
+
+        jasmine.demoEl(@view.$el)
+        _.defer done
+        
+      describe 'when the student has a starter license', ->
+        describe 'and the course is NOT covered by starter licenses', ->
+          beforeEach (done) ->
+            spyOn(@view.prepaids.at(1), 'redeem')
+            @starterStudent = @students.find (s) -> s.prepaidType() is 'starter_license'
+            @view.assignCourse(@courses.at(1).id, [@starterStudent.id])
+            @view.wait('begin-redeem-for-assign-course').then(done)
+
+          it 'replaces their license with a full license', (done) ->
+            expect(@view.prepaids.at(1).redeem).toHaveBeenCalled()
+            done()
 
     describe '.assignCourse(courseID, members)', ->
       beforeEach (done) ->
@@ -265,7 +339,7 @@ describe 'TeacherClassView', ->
           expect(request.url).toBe('/db/course_instance')
 
         it 'shows a noty if the course instance request fails', (done) ->
-          spyOn(window, 'noty').and.callFake(done)
+          @notySpy.and.callFake(done)
           request = jasmine.Ajax.requests.mostRecent()
           request.respondWith({
             status: 500,
@@ -286,7 +360,7 @@ describe 'TeacherClassView', ->
           done()
 
         it 'shows a noty if a redeem request fails', (done) ->
-          spyOn(window, 'noty').and.callFake(done)
+          @notySpy.and.callFake(done)
           request = jasmine.Ajax.requests.mostRecent()
           request.respondWith({
             status: 500,
@@ -316,7 +390,7 @@ describe 'TeacherClassView', ->
           expect(request.method).toBe('POST')
 
         it 'shows a noty if POSTing students fails', (done) ->
-          spyOn(window, 'noty').and.callFake(done)
+          @notySpy.and.callFake(done)
           request = jasmine.Ajax.requests.mostRecent()
           request.respondWith({
             status: 500,
