@@ -1,9 +1,10 @@
 # Caller needs require 'vendor/d3'
 
-module.exports.createContiguousDays = (timeframeDays, skipToday=true) ->
+module.exports.createContiguousDays = (timeframeDays, skipToday=true, dayOffset=0) ->
   # Return list of last 'timeframeDays' contiguous days in yyyy-mm-dd format
   days = []
   currentDate = new Date()
+  currentDate.setUTCDate(currentDate.getUTCDate() - dayOffset)
   currentDate.setUTCDate(currentDate.getUTCDate() - timeframeDays + 1)
   currentDate.setUTCDate(currentDate.getUTCDate() - 1) if skipToday
   for i in [0...timeframeDays]
@@ -12,15 +13,15 @@ module.exports.createContiguousDays = (timeframeDays, skipToday=true) ->
     currentDate.setUTCDate(currentDate.getUTCDate() + 1)
   days
 
-module.exports.createLineChart = (containerSelector, chartLines) ->
+module.exports.createLineChart = (containerSelector, chartLines, containerWidth) ->
   # Creates a line chart within 'containerSelector' based on chartLines
   return unless chartLines?.length > 0 and containerSelector
 
   margin = 20
-  keyHeight = 20
+  keyHeight = 35
   xAxisHeight = 20
   yAxisWidth = 40
-  containerWidth = $(containerSelector).width()
+  containerWidth = $(containerSelector).width() unless containerWidth
   containerHeight = $(containerSelector).height()
 
   yScaleCount = 0
@@ -66,11 +67,12 @@ module.exports.createLineChart = (containerSelector, chartLines) ->
         .call(xAxis)
         .selectAll("text")
         .attr("dy", ".35em")
-        .attr("transform", "translate(" + (margin + yAxisWidth) + "," + (height + margin) + ")")
+        .attr("transform", "translate(" + (margin + yAxisWidth * yScaleCount) + "," + (height + margin) + ")")
         .style("text-anchor", "start")
 
     if line.showYScale
       # y-Axis
+      lineColor = if yScaleCount > 1 then line.lineColor else 'black' 
       yAxisRange = d3.scale.linear().range([height, 0]).domain([line.min, line.max])
       yAxis = d3.svg.axis()
         .scale(yRange)
@@ -78,12 +80,12 @@ module.exports.createLineChart = (containerSelector, chartLines) ->
       svg.append("g")
         .attr("class", "y axis")
         .attr("transform", "translate(" + (margin + yAxisWidth * currentYScale) + "," + margin + ")")
-        .style("color", line.lineColor)
+        .style("color", lineColor)
         .call(yAxis)
         .selectAll("text")
         .attr("y", 0)
         .attr("x", 0)
-        .attr("fill", line.lineColor)
+        .attr("fill", lineColor)
         .style("text-anchor", "start")
       currentYScale++
 
@@ -102,6 +104,7 @@ module.exports.createLineChart = (containerSelector, chartLines) ->
       .attr("class", "key-text")
       .text(line.description)
 
+    pointRadius = line.pointRadius ? 2
     # Path and points
     svg.selectAll(".circle")
       .data(line.points)
@@ -110,7 +113,7 @@ module.exports.createLineChart = (containerSelector, chartLines) ->
       .attr("transform", "translate(" + (margin + yAxisWidth * yScaleCount) + "," + margin + ")")
       .attr("cx", (d) -> xRange(d.x))
       .attr("cy", (d) -> yRange(d.y))
-      .attr("r", 2)
+      .attr("r", pointRadius)
       .attr("fill", line.lineColor)
       .attr("stroke-width", 1)
       .attr("class", "graph-point")

@@ -129,6 +129,5 @@ commentStarts =
   javascript: '// '
   python: '# '
   coffeescript: '# '
-  clojure: '; '
   lua: '-- '
-  io: '// '
+  java: '// '

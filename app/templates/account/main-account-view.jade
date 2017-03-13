@@ -28,10 +28,12 @@ block content
         #account-links
 >>>>>>> refs/remotes/codecombat/master
           a.btn.btn-lg.btn-primary(href="/account/settings", data-i18n="play.settings")
-      div.col-md-4
-        #account-links
-          a.btn.btn-lg.btn-primary(href="/account/payments", data-i18n="account.payments")
+      if !features.freeOnly
+        div.col-md-4
+          #account-links
+            a.btn.btn-lg.btn-primary(href="/account/payments", data-i18n="account.payments")
     div.row.row-bot-buffer
+<<<<<<< HEAD
       div.col-md-4
         #account-links
           a.btn.btn-lg.btn-primary(href="/account/subscription", data-i18n="account.subscription")
@@ -43,6 +45,15 @@ block content
       div.col-md-4
         #account-links
           a.btn.btn-lg.btn-primary(href="/account/prepaid", data-i18n="account.prepaid_codes") Prepaid Codes
+=======
+      if !features.freeOnly
+        div.col-md-4
+          #account-links
+            a.btn.btn-lg.btn-primary(href="/account/subscription", data-i18n="account.subscription")
+        div.col-md-4
+          #account-links
+            a.btn.btn-lg.btn-primary(href="/account/prepaid", data-i18n="account.prepaid_codes") Prepaid Codes
+>>>>>>> refs/remotes/codecombat/master
       div.col-md-4
         #account-links
          a.btn.btn-lg.btn-primary.logout-btn(href="/account", data-i18n="login.log_out")

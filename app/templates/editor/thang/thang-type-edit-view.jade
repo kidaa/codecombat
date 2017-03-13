@@ -42,7 +42,7 @@ block header
               for level in recentlyPlayedLevels
                 a.play-with-level-button(data-level=level)= level
               input.play-with-level-input(placeholder="Type in a level name")
-      
+
         if authorized
           li#save-button
             a
@@ -70,8 +70,9 @@ block header
               a(href='https://coco-slack-invite.herokuapp.com/', data-i18n="editor.live_chat", target="_blank") Live Chat
             li
               a(href='http://discourse.codecombat.com/category/artisan', data-i18n="nav.forum", target="_blank") Forum
-            li
-              a(data-toggle="coco-modal", data-target="core/ContactModal", data-i18n="nav.contact") Email
+            if !me.isStudent()
+              li
+                a.contact-modal(data-i18n="nav.contact")
 
 block outer_content
   .outer-content
@@ -138,6 +139,5 @@ block outer_content
         div#spritesheets
       div.tab-pane#editor-thang-patches-view
         div.patches-view
-    div#error-view
     .clearfix
 block footer
