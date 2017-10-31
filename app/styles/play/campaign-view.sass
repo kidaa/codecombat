@@ -59,6 +59,102 @@ $gameControlMargin: 30px
 
   .map
     position: relative
+    
+    #brain-pop-done-banner-wrapper
+      position: absolute
+      top: 20%
+      width: 100%
+      z-index: 3
+      #brain-pop-done-banner
+        background: url("/images/pages/base/modal_background.png")
+        background-size: 100% 100%
+        width: 400px
+        margin: 0 auto
+        padding: 20px 40px
+        text-align: center
+        img
+          margin-bottom: 10px
+
+    // Minecraft modal
+    #cube-level-container
+      position: absolute
+      left: 30%
+      top: 15%
+      background-color: rgb(80, 130, 200)
+
+      #spinning-cube
+        position: absolute
+        top: -32px
+        width: 32px
+        height: 32px
+        transform: translateX(-50%) scaleY(1.33)
+        left: 50%
+        perspective: 800px
+        perspective-origin: 50% 100px
+        filter: drop-shadow(0px 0px 4px purple) drop-shadow(0px 0px 4px purple) drop-shadow(0px 0px 4px purple)
+
+        .cube
+          position: relative
+          width: 32px
+          transform-style: preserve-3d
+          animation: spin 5s infinite linear
+
+          +keyframes(spin)
+            from
+              -moz-transform: rotateX(180deg) rotateY(0deg)
+              -o-transform: rotateX(180deg) rotateY(0deg)
+              -webkit-transform: rotateX(180deg) rotateY(0deg)
+              transform: rotateX(180deg) rotateY(0deg)
+            to
+              -moz-transform: rotateX(540deg) rotateY(360deg)
+              -o-transform: rotateX(540deg) rotateY(360deg)
+              -webkit-transform: rotateX(540deg) rotateY(360deg)
+              transform: rotateX(540deg) rotateY(360deg)
+
+          div
+            width: 32px
+            height: 32px
+            position: absolute
+            background-size: 100% 100%
+            color: white
+
+          .front, .back, .left, .right
+            background-image: url('/images/minecraft/grass_side.png')
+          .top
+            background-image: url('/images/minecraft/grass_top.png')
+          .bottom
+            background-image: url('/images/minecraft/dirt.png')
+          .front
+            -moz-transform: translateY(-16px) rotateY(0deg) translateZ(-16px) rotateX(180deg)
+            -o-transform: translateY(-16px) rotateY(0deg) translateZ(-16px) rotateX(180deg)
+            -webkit-transform: translateY(-16px) rotateY(0deg) translateZ(-16px) rotateX(180deg)
+            transform: translateY(-16px) rotateY(0deg) translateZ(-16px) rotateX(180deg)
+          .back
+            -moz-transform: translateY(-16px) rotateX(180deg) translateZ(-16px)
+            -o-transform: translateY(-16px) rotateX(180deg) translateZ(-16px)
+            -webkit-transform: translateY(-16px) rotateX(180deg) translateZ(-16px)
+            transform: translateY(-16px) rotateX(180deg) translateZ(-16px)
+          .left
+            -moz-transform: translateY(-16px) rotateY(-89.9deg) translateZ(-16px) rotateX(180deg)
+            -o-transform: translateY(-16px) rotateY(-89.9deg) translateZ(-16px) rotateX(180deg)
+            -webkit-transform: translateY(-16px) rotateY(-89.9deg) translateZ(-16px) rotateX(180deg)
+            transform: translateY(-16px) rotateY(-89.9deg) translateZ(-16px) rotateX(180deg)
+          .right
+            -moz-transform: translateY(-16px) rotateY(89.9deg) translateZ(-16px) rotateX(180deg)
+            -o-transform: translateY(-16px) rotateY(89.9deg) translateZ(-16px) rotateX(180deg)
+            -webkit-transform: translateY(-16px) rotateY(89.9deg) translateZ(-16px) rotateX(180deg)
+            transform: translateY(-16px) rotateY(89.9deg) translateZ(-16px) rotateX(180deg)
+          .top
+            -moz-transform: translateY(-16px) rotateX(89.9deg) translateZ(-16px)
+            -o-transform: translateY(-16px) rotateX(89.9deg) translateZ(-16px)
+            -webkit-transform: translateY(-16px) rotateX(89.9deg) translateZ(-16px)
+            transform: translateY(-16px) rotateX(89.9deg) translateZ(-16px)
+          .bottom
+            -moz-transform: translateY(-16px) rotateX(-89.9deg) translateZ(-16px)
+            -o-transform: translateY(-16px) rotateX(-89.9deg) translateZ(-16px)
+            -webkit-transform: translateY(-16px) rotateX(-89.9deg) translateZ(-16px)
+            transform: translateY(-16px) rotateX(-89.9deg) translateZ(-16px)
+
 
     .map-background
       width: 100%
@@ -387,6 +483,7 @@ $gameControlMargin: 30px
         margin-left: $gameControlMargin
         @media only screen and (max-height: 650px)
           margin-left: 0
+
       width: $gameControlSize
       height: $gameControlSize
 
@@ -424,7 +521,6 @@ $gameControlMargin: 30px
       &.achievements
         background-position: (-3 * $gameControlSize) 0px
       &.account
-        //background-position: (-4 * $gameControlSize) 0px
         background-position: (-5 * $gameControlSize) 0px
       &.settings
         background-position: (-5 * $gameControlSize) 0px
@@ -432,6 +528,19 @@ $gameControlMargin: 30px
         background-position: (-6 * $gameControlSize) 0px
       &.poll
         background-position: (-4 * $gameControlSize) 0px
+      &.premium-menu-icon
+        background: url(/images/pages/play/premium-menu-icon.png) no-repeat
+        background-position: 50% 50%
+        background-size: 100%
+        transform: scale(1.31) translateY(-5px) translateX(-6px)
+        @media only screen and (max-height: 650px)
+          transform: scale(0.67) scale(1.31) translateY(-5px) translateX(-6px)
+        box-shadow: initial
+        filter: drop-shadow(2px 2px 4px black)
+        outline: none
+        &:hover
+          filter: drop-shadow(0 0 2px #bbf)
+
 
     .tooltip
       font-size: 24px
@@ -745,6 +854,13 @@ $gameControlMargin: 30px
 
   .picoctf-logo .small-nav-logo
     height: 90px
+
+  .under-logo
+    position: absolute
+    top: calc(1% + 64px)
+    left: 1%
+    z-index: 1
+    width: 193px
 
   .picoctf-powered-by
     color: rgb(227, 173, 53)

@@ -77,6 +77,7 @@ module.exports = class Classroom extends CocoModel
 
   getLevels: (options={}) ->
     # options: courseID, withoutLadderLevels, projectLevels
+    # TODO: find a way to get the i18n in here so that level names can be translated (Courses don't include in their denormalized copy of levels)
     Levels = require 'collections/Levels'
     courses = @get('courses')
     return new Levels() unless courses
@@ -123,6 +124,7 @@ module.exports = class Classroom extends CocoModel
     levelsTotal = 0
     levelsLeft = 0
     lastPlayed = null
+    lastPlayedNumber = null
     playtime = 0
     levels = []
     for level, index in courseLevels.models
@@ -132,7 +134,7 @@ module.exports = class Classroom extends CocoModel
         complete = session.get('state').complete ? false
         playtime += session.get('playtime') ? 0
         lastPlayed = level
-        lastPlayedNumber = index + 1
+        lastPlayedNumber = @getLevelNumber(level.get('original'), index + 1)
         if complete
           currentIndex = index
         else
@@ -152,11 +154,9 @@ module.exports = class Classroom extends CocoModel
       needsPractice = utils.needsPractice(currentPlaytime, currentLevel.get('practiceThresholdMinutes'))
       nextIndex = utils.findNextLevel(levels, currentIndex, needsPractice)
     nextLevel = courseLevels.models[nextIndex]
+    nextLevel = arena if levelsLeft is 0
     nextLevel ?= _.find courseLevels.models, (level) -> not levelSessionMap[level.get('original')]?.get('state')?.complete
 
-    lastPlayedNumber ?= 1
-    if courseLevels.length >= 1 and lastPlayedNumber < courseLevels.length
-      lastPlayedNumber = @getLevelNumber(courseLevels.models[lastPlayedNumber - 1].get('original'), lastPlayedNumber)
     stats =
       levels:
         size: levelsTotal
@@ -196,3 +196,12 @@ module.exports = class Classroom extends CocoModel
     options.url = @url() + '/update-courses'
     options.type = 'POST'
     @fetch(options)
+
+  getSetting: (name) =>
+    settings = @get('settings') or {}
+    propInfo = Classroom.schema.properties.settings.properties
+    return settings[name] if name in Object.keys(settings)
+    if name in Object.keys(propInfo)
+      return propInfo[name].default
+
+    return false

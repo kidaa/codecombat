@@ -8,9 +8,11 @@ AudioPlayer = require 'lib/AudioPlayer'
 utils = require 'core/utils'
 BuyGemsModal = require 'views/play/modal/BuyGemsModal'
 CreateAccountModal = require 'views/core/CreateAccountModal'
+SubscribeModal = require 'views/core/SubscribeModal'
 Purchase = require 'models/Purchase'
 LayerAdapter = require 'lib/surface/LayerAdapter'
 Lank = require 'lib/surface/Lank'
+store = require 'core/store'
 
 module.exports = class PlayHeroesModal extends ModalView
   className: 'modal fade play-modal'
@@ -23,6 +25,7 @@ module.exports = class PlayHeroesModal extends ModalView
     'click #close-modal': 'hide'
     'click #confirm-button': 'saveAndHide'
     'click .unlock-button': 'onUnlockButtonClicked'
+    'click .subscribe-button': 'onSubscribeButtonClicked'
     'click .buy-gems-prompt-button': 'onBuyGemsPromptButtonClicked'
     'click': 'onClickedSomewhere'
 
@@ -37,7 +40,7 @@ module.exports = class PlayHeroesModal extends ModalView
     @confirmButtonI18N = options.confirmButtonI18N ? "common.save"
     @heroes = new CocoCollection([], {model: ThangType})
     @heroes.url = '/db/thang.type?view=heroes'
-    @heroes.setProjection ['original','name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','unlockLevelName','i18n','poseImage','tier']
+    @heroes.setProjection ['original','name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','unlockLevelName','i18n','poseImage','tier','releasePhase']
     @heroes.comparator = 'gems'
     @listenToOnce @heroes, 'sync', @onHeroesLoaded
     @supermodel.loadCollection(@heroes, 'heroes')
@@ -50,6 +53,10 @@ module.exports = class PlayHeroesModal extends ModalView
 
   onHeroesLoaded: ->
     @formatHero hero for hero in @heroes.models
+    if me.freeOnly() or application.getHocCampaign()
+      @heroes.reset(@heroes.filter((hero) => !hero.locked))
+    unless me.isAdmin()
+      @heroes.reset(@heroes.filter((hero) => hero.get('releasePhase') isnt 'beta'))
 
   formatHero: (hero) ->
     hero.name = utils.i18n hero.attributes, 'extendedName'
@@ -57,8 +64,11 @@ module.exports = class PlayHeroesModal extends ModalView
     hero.description = utils.i18n hero.attributes, 'description'
     hero.unlockLevelName = utils.i18n hero.attributes, 'unlockLevelName'
     original = hero.get('original')
-    hero.locked = not me.ownsHero(original)
-    hero.purchasable = hero.locked and (original in (me.get('earned')?.heroes ? []))
+    hero.free = hero.attributes.slug in ['captain', 'knight', 'champion', 'duelist']
+    hero.unlockBySubscribing = hero.attributes.slug in ['samurai', 'ninja', 'librarian']
+    hero.premium = not hero.free and not hero.unlockBySubscribing
+    hero.locked = not me.ownsHero(original) and not (hero.unlockBySubscribing and me.isPremium())
+    hero.purchasable = hero.locked and me.isPremium()
     if @options.level and allowedHeroes = @options.level.get 'allowedHeroes'
       hero.restricted = not (hero.get('original') in allowedHeroes)
     hero.class = (hero.get('heroClass') or 'warrior').toLowerCase()
@@ -232,7 +242,8 @@ module.exports = class PlayHeroesModal extends ModalView
   playSelectionSound: (hero) ->
     return if @$el.hasClass 'secret'
     @currentSoundInstance?.stop()
-    return unless sounds = hero.get('soundTriggers')?.selected
+    return unless soundTriggers = utils.i18n hero.attributes, 'soundTriggers'
+    return unless sounds = soundTriggers.selected
     return unless sound = sounds[Math.floor Math.random() * sounds.length]
     name = AudioPlayer.nameForSoundReference sound
     AudioPlayer.preloadSoundReference sound
@@ -261,7 +272,7 @@ module.exports = class PlayHeroesModal extends ModalView
     affordable = @visibleHero.get('gems') <= me.gems()
     if not affordable
       @playSound 'menu-button-click'
-      @askToBuyGems button unless features.freeOnly
+      @askToBuyGems button unless me.freeOnly()
     else if button.hasClass('confirm')
       @playSound 'menu-button-unlock-end'
       purchase = Purchase.makeFor(@visibleHero)
@@ -314,6 +325,11 @@ module.exports = class PlayHeroesModal extends ModalView
     return if @destroyed
     @$el.find('.unlock-button').popover 'destroy'
 
+  onSubscribeButtonClicked: (e) ->
+    return @askToSignUp() if me.get('anonymous')
+    @openModalView new SubscribeModal()
+    console.log $(e.target).data('heroSlug')
+    window.tracker?.trackEvent 'Show subscription modal', category: 'Subscription', label: 'hero subscribe modal: ' + ($(e.target).data('heroSlug') or 'unknown')
 
   #- Exiting
 

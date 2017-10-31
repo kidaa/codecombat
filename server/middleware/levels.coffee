@@ -1,13 +1,18 @@
+mongoose = require 'mongoose'
 wrap = require 'co-express'
+co = require 'co'
 errors = require '../commons/errors'
 Level = require '../models/Level'
 LevelSession = require '../models/LevelSession'
 Prepaid = require '../models/Prepaid'
 CourseInstance = require '../models/CourseInstance'
 Classroom = require '../models/Classroom'
+Campaign = require '../models/Campaign'
 Course = require '../models/Course'
+User = require '../models/User'
 database = require '../commons/database'
 codePlay = require '../../app/lib/code-play'
+log = require 'winston'
 
 module.exports =
   upsertSession: wrap (req, res) ->
@@ -24,8 +29,10 @@ module.exports =
 
     if req.query.team?
       sessionQuery.team = req.query.team
-      
+
     if req.query.courseInstance
+      unless mongoose.Types.ObjectId.isValid(req.query.courseInstance)
+        throw new errors.UnprocessableEntity('Invalid course instance id')
       courseInstance = yield CourseInstance.findById(req.query.courseInstance)
       if not courseInstance
         throw new errors.NotFound('Course Instance not found.')
@@ -50,7 +57,7 @@ module.exports =
     session = yield LevelSession.findOne(sessionQuery)
     if session
       return res.send(session.toObject({req: req}))
-      
+
     attrs = sessionQuery
     _.extend(attrs, {
       state:
@@ -65,7 +72,7 @@ module.exports =
     })
 
     if level.get('type') in ['course', 'course-ladder'] or req.query.course?
-      
+
       # Find the course and classroom that has assigned this level, verify access
       # Handle either being given the courseInstance, or having to deduce it
       if courseInstance and classroom
@@ -95,22 +102,22 @@ module.exports =
             classroomWithLevel = classroom
             break
         break if classroomWithLevel
-      
+
       if course?.id
         prepaidIncludesCourse = req.user.prepaidIncludesCourse(course?.id)
       else
         prepaidIncludesCourse = true
-      
+
       unless classroomWithLevel and prepaidIncludesCourse
         throw new errors.PaymentRequired('You must be in a course which includes this level to play it')
-      
+
       course = yield Course.findById(courseID).select('free')
       unless course.get('free') or req.user.isEnrolled()
         throw new errors.PaymentRequired('You must be enrolled to access this content')
-        
+
       lang = targetLevel.primerLanguage or classroomWithLevel.get('aceConfig')?.language
       attrs.codeLanguage = lang if lang
-      
+
     else
       requiresSubscription = level.get('requiresSubscription') or (req.user.isOnPremiumServer() and level.get('campaign') and not (level.slug in ['dungeons-of-kithgard', 'gems-in-the-deep', 'shadow-guard', 'forgetful-gemsmith', 'signs-and-portents', 'true-names']))
       canPlayAnyway = _.any([
@@ -118,10 +125,55 @@ module.exports =
         level.get('adventurer'),
         req.features.codePlay and codePlay.canPlay(level.get('slug'))
       ])
+
+      if req.query.campaign and not canPlayAnyway
+        # check if the campaign requesting this is game dev hoc, if so then let it work
+        query = {
+          _id: mongoose.Types.ObjectId(req.query.campaign),
+          type: 'hoc'
+          "levels.#{level.get('original')}": {$exists: true} 
+        }
+        campaign = yield Campaign.count(query)
+        if campaign
+          canPlayAnyway = true
+
       if requiresSubscription and not canPlayAnyway
         throw new errors.PaymentRequired('This level requires a subscription to play')
-    
+
     attrs.isForClassroom = course?
     session = new LevelSession(attrs)
+    if classroom # Potentially set intercom trigger flag on teacher
+      teacher = yield User.findOne({ _id: classroom.get('ownerID') })
+      reportLevelStarted({teacher, level})
     yield session.save()
     res.status(201).send(session.toObject({req: req}))
+
+# Notes on the teacher object that the relevant intercom trigger should be activated.
+reportLevelStarted = co.wrap ({teacher, level}) ->
+  intercom = require('../lib/intercom')
+  if level.get('slug') is 'wakka-maul'
+    yield teacher.update({ $set: { "studentMilestones.studentStartedWakkaMaul": true } })
+    update = {
+      user_id: teacher.get('_id') + '',
+      email: teacher.get('email'),
+      custom_attributes:
+        studentStartedWakkaMaul: true
+    }
+  if level.get('slug') is 'a-mayhem-of-munchkins'
+    yield teacher.update({ $set: { "studentMilestones.studentStartedMayhemOfMunchkins": true } })
+    update = {
+      user_id: teacher.get('_id') + '',
+      email: teacher.get('email'),
+      custom_attributes:
+        studentStartedMayhemOfMunchkins: true
+    }
+  if update
+    tries = 0
+    while tries < 100
+      tries += 1
+      try
+        yield intercom.users.create update
+        return
+      catch e
+        yield new Promise (accept, reject) -> setTimeout(accept, 1000)
+    log.error "Couldn't update intercom for user #{teacher.get('email')} in 100 tries"

@@ -15,7 +15,7 @@ module.exports.api =
 
 if swuAPIKey
   module.exports.api = new sendwithusAPI swuAPIKey, debug
-  
+
 Promise.promisifyAll(module.exports.api)
 
 module.exports.templates =
@@ -37,3 +37,5 @@ module.exports.templates =
   teacher_free_trial: 'tem_R7d9Hpoba9SceQNiYSXBak'
   teacher_request_demo: 'tem_cwG3HZjEyb6QE493hZuUra'
   password_reset: 'tem_wbQUMRtLY9xhec8BSCykLA'
+  sunburst_referral: 'tem_MWgdKKv7JwD8c6WdbRyRSG89'
+  share_licenses_joiner: 'tem_7brGYfbJpYkx3qHXx33Yb8xQ'

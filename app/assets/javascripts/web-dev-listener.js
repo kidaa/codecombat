@@ -4,7 +4,13 @@ var lastSource = null;
 var lastOrigin = null;
 window.onerror = function(message, url, line, column, error){
   console.log("User script error on line " + line + ", column " + column + ": ", error);
-  lastSource.postMessage({ type: 'error', message: message, url: url, line: line, column: column }, lastOrigin);
+  lastSource.postMessage({
+    type: 'error',
+    message: message,
+    url: url,
+    line: line || 0,
+    column: column || 0,
+  }, lastOrigin);
 }
 window.addEventListener('message', receiveMessage, false);
 
@@ -19,7 +25,9 @@ var createFailed;
 
 var allowedOrigins = [
     /^https?:\/\/(.*\.)?codecombat\.com$/,
-    /^https?:\/\/localhost:3000$/,
+    /^https?:\/\/localhost:[\d]+$/, // For local development
+    /^https?:\/\/10.0.2.2:[\d]+$/, // For local virtual machines
+    /^https?:\/\/coco\.code\.ninja$/,
     /^https?:\/\/.*codecombat-staging-codecombat\.runnableapp\.com$/,
 ];
 
@@ -79,8 +87,38 @@ function create(options) {
         createFailed = true;
         $('.loading-message').addClass('hidden')
         $('.loading-error').removeClass('hidden')
-        throw(e);
+        const errPos = parseStackTrace(e.stack);
+        lastSource.postMessage({
+          type: 'error',
+          message: e.name+": "+e.message,
+          line: errPos.line,
+          column: errPos.column,
+        }, lastOrigin);
     }
+}
+
+function parseStackTrace(trace) {
+    const lines = trace.split('\n')
+    const regexes = [
+      /.*?at .*? \(eval at globalEval.*?\).*?,.*?(\d+):(\d+)\)$/, // Chrome stacktrace formatting
+      /@.*eval:(\d+):(\d+)$/, // Firefox stacktrace formatting
+      /at eval code \(eval code:(\d+):(\d+)\)$/, // Internet Explorer stacktrace formatting
+      // Safari doesn't include line numbers for eval in stack trace
+    ]
+    var matchedLine;
+    for (var i = 0; i < regexes.length; i++) {
+        var regex = regexes[i];
+        matchedLine = _.find(lines, function(line) {
+            return regex.test(line)
+        })
+        if (!matchedLine) continue;
+        const match = matchedLine.match(regex);
+        return {
+            line: Number(match[1]),
+            column: Number(match[2]),
+        }
+    }
+    if (!matchedLine) return { line: 0, column: 0 };
 }
 
 function unwrapConcreteNodes(wrappedNodes) {
@@ -88,16 +126,23 @@ function unwrapConcreteNodes(wrappedNodes) {
 }
 
 function replaceNodes(selector, newNodes){
-    $newNodes = $(newNodes).clone();
+    var $newNodes = $(newNodes).clone();
     $(selector + ':not(:first)').remove();
     
-    firstNode = $(selector).first();
-    $newNodes.attr('for', firstNode.attr('for'));
+    var firstNode = $(selector).first();
+    $newNodes.attr('for', firstNode.attr('for'))
     
-    newFirstNode = $newNodes[0];
-    firstNode.replaceWith(newFirstNode); // Removes newFirstNode from its array (!!)
+    // Workaround for an IE bug where style nodes created by Deku aren't read
+    // Resetting innerText strips the newlines from it
+    var recreatedNodes = $newNodes.toArray();
+    recreatedNodes.forEach(function(node){
+      node.innerHTML = node.innerHTML.trim();
+    })
 
-    $(newFirstNode).after($newNodes);
+    var newFirstNode = recreatedNodes[0];
+    firstNode.replaceWith(newFirstNode);
+    
+    $(newFirstNode).after(_.tail(recreatedNodes));
 }
 
 function update(options) {

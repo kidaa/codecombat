@@ -31,6 +31,7 @@ ThangTypeHandler = class ThangTypeHandler extends Handler
     'i18n'
     'description'
     'gems'
+    'subscriber'
     'heroClass'
     'tier'
     'extendedName'
@@ -39,6 +40,7 @@ ThangTypeHandler = class ThangTypeHandler extends Handler
     'terrains'
     'prerenderedSpriteSheetData'
     'restricted'
+    'releasePhase'
   ]
 
   hasAccess: (req) ->

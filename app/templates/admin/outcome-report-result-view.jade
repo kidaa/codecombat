@@ -11,12 +11,22 @@ style.
   }
 
   body {
-        user-select: none;
-        -moz-user-select: none;
-        -khtml-user-select: none;
-        -webkit-user-select: none;
-        -o-user-select: none;
+    user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
   } 
+
+  @media print {
+    a[href]:after {
+      content:none
+    }
+    a[href] {
+      color: #0b63bc !important;
+      text-decoration: underline;
+    }
+  }
 
 div.style-flat
   div.menu
@@ -127,9 +137,9 @@ div.style-flat
       p.
         At CodeCombat, we believe that students will be most prepared for both
         real-world computing jobs and further study of computer science by using
-        real, typed code in full programming languages, so instead of using blockbased
+        real, typed code in full programming languages, so instead of using block-based
         visual programming languages for beginners, we teach Python and
-        JavaScript –the same languages used widely today by companies ranging
+        JavaScript – the same languages used widely today by companies ranging
         from Google to the New York Times.
 
     div.bottom

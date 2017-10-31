@@ -52,7 +52,9 @@ module.exports = class ControlBarView extends CocoView
       @supermodel.trackRequest(jqxhr)
       new Promise(jqxhr.then).then(=>
         @classroom = new Classroom(_id: @courseInstance.get('classroomID'))
+        @course = new Course(_id: @courseInstance.get('courseID'))
         @supermodel.trackRequest @classroom.fetch()
+        @supermodel.trackRequest @course.fetch()
       )
     else if @courseID
       @course = new Course(_id: @courseID)
@@ -71,6 +73,8 @@ module.exports = class ControlBarView extends CocoView
       @levelNumber = @classroom.getLevelNumber(@level.get('original'), @levelNumber)
     else if @campaign
       @levelNumber = @campaign.getLevelNumber(@level.get('original'), @levelNumber)
+    if application.getHocCampaign()
+      @levelNumber = null
     super()
 
   setBus: (@bus) ->
@@ -88,11 +92,11 @@ module.exports = class ControlBarView extends CocoView
     c.spectateGame = @spectateGame
     c.observing = @observing
     @homeViewArgs = [{supermodel: if @hasReceivedMemoryWarning then null else @supermodel}]
-    gameDevHoc = storage.load('should-return-to-game-dev-hoc')
-    if gameDevHoc
-      @homeLink = "/play/game-dev-hoc"
+    gameDevCampaign = application.getHocCampaign()
+    if gameDevCampaign
+      @homeLink = "/play/#{gameDevCampaign}"
       @homeViewClass = 'views/play/CampaignView'
-      @homeViewArgs.push 'game-dev-hoc'
+      @homeViewArgs.push gameDevCampaign
     else if me.isSessionless()
       @homeLink = "/teachers/courses"
       @homeViewClass = "views/courses/TeacherCoursesView"
@@ -107,15 +111,14 @@ module.exports = class ControlBarView extends CocoView
         @homeViewArgs.push leagueID
         @homeLink += "/#{leagueType}/#{leagueID}"
     else if @level.isType('course') or @courseID
-      @homeLink = '/students'
-      @homeViewClass = 'views/courses/CoursesView'
-      if @courseID
-        @homeLink += "/#{@courseID}"
-        @homeViewArgs.push @courseID
-        @homeViewClass = 'views/courses/CourseDetailsView'
-        if @courseInstanceID
-          @homeLink += "/#{@courseInstanceID}"
-          @homeViewArgs.push @courseInstanceID
+      @homeLink = "/play"
+      if @course?
+        @homeLink += "/#{@course.get('campaignID')}"
+        @homeViewArgs.push @course.get('campaignID')
+      if @courseInstanceID
+        @homeLink += "?course-instance=#{@courseInstanceID}"
+        
+      @homeViewClass = 'views/play/CampaignView'
     else if @level.isType('hero', 'hero-coop', 'game-dev', 'web-dev') or window.serverConfig.picoCTF
       @homeLink = '/play'
       @homeViewClass = 'views/play/CampaignView'

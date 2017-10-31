@@ -130,7 +130,14 @@ describe 'GET /db/level/:handle/session', ->
       @primerLevel = yield utils.makeLevel({type: 'course', primerLanguage: 'javascript'})
       @campaign = yield utils.makeCampaign({}, {levels: [@level, @primerLevel]})
       @course = yield utils.makeCourse({free: true, releasePhase: 'released'}, {campaign: @campaign})
-      @student = yield utils.initUser({role: 'student'})
+      @student = yield utils.initUser({
+        role: 'student'
+        coursePrepaid: {
+          _id: {}
+          startDate: moment().subtract(1, 'month').toISOString()
+          endDate: moment().add(1, 'month').toISOString()
+        }
+      })
       @members = [@student]
       @teacher = yield utils.initUser({role: 'teacher'})
       yield utils.loginUser(@teacher)
@@ -215,20 +222,20 @@ describe 'GET /db/level/:handle/session', ->
         done()
       
       it 'returns 402 if the user is not enrolled', utils.wrap (done) ->
+        @student.set({
+          coursePrepaid: {
+            _id: {}
+            startDate: moment().subtract(2, 'month').toISOString()
+            endDate: moment().subtract(1, 'month').toISOString()
+          }
+        })
+        yield @student.save()
         [res, body] = yield request.getAsync({ uri: @url, json: true })
         expect(res.statusCode).toBe(402)
         expect(res.body.message).toBe('You must be enrolled to access this content')
         done()
         
       it 'creates the session if the user is enrolled', utils.wrap (done) ->
-        @student.set({
-          coursePrepaid: {
-            _id: {}
-            startDate: moment().subtract(1, 'month').toISOString()
-            endDate: moment().add(1, 'month').toISOString()
-          }
-        })
-        @student.save()
         [res, body] = yield request.getAsync({ uri: @url, json: true })
         expect(res.statusCode).toBe(201)
         done()
@@ -241,7 +248,7 @@ describe 'GET /db/level/:handle/session', ->
             endDate: moment().subtract(1, 'month').toISOString()
           }
         })
-        @student.save()
+        yield @student.save()
         [res, body] = yield request.getAsync({ uri: @url, json: true })
         expect(res.statusCode).toBe(402)
         expect(res.body.message).toBe('You must be enrolled to access this content')
@@ -252,8 +259,8 @@ describe 'GET /db/level/:handle/session', ->
     
     beforeEach utils.wrap (done) ->
       yield utils.clearModels([Level, User])
-      admin = yield utils.initAdmin()
-      yield utils.loginUser(admin)
+      @admin = yield utils.initAdmin()
+      yield utils.loginUser(@admin)
       @level = yield utils.makeLevel()
       
       @player = yield utils.initUser()
@@ -296,6 +303,30 @@ describe 'GET /db/level/:handle/session', ->
         [res, body] = yield request.getAsync { uri: @url, json: true }
         expect(res.statusCode).toBe(201)
         done()
+        
+      it 'returns 201 if the campaign included in the campaign is type "hoc" and the level is in that campaign', utils.wrap ->
+        yield utils.loginUser(@admin)
+        @otherLevel = yield utils.makeLevel({requiresSubscription: true})
+        @campaign = yield utils.makeCampaign({}, {levels: [@level]})
+        @gameDevHocCampaign = yield utils.makeCampaign({type: 'hoc'}, {levels: [@otherLevel]})
+        yield utils.loginUser(@player)
+        otherLevelUrl = getURL("/db/level/#{@otherLevel.id}/session")
+        
+        # test using the wrong campaign
+        [res, body] = yield request.getAsync { uri: otherLevelUrl, json: true, qs: { campaign: @campaign.id } }
+        expect(res.statusCode).toBe(402)
+
+        # test using the right campaign and level
+        [res, body] = yield request.getAsync { uri: otherLevelUrl, json: true, qs: { campaign: @gameDevHocCampaign.id } }
+        expect(res.statusCode).toBe(201)
+
+        # test using the wrong level
+        [res, body] = yield request.getAsync { uri: @url, json: true, qs: { campaign: @gameDevHocCampaign.id } }
+        expect(res.statusCode).toBe(402)
+
+        # test trying to use a campaign that isn't the game dev hoc campaign
+        [res, body] = yield request.getAsync { uri: @url, json: true, qs: { campaign: @campaign.id } }
+        expect(res.statusCode).toBe(402)
         
         
 describe 'POST /db/level/names', ->
@@ -369,3 +400,30 @@ describe 'POST /db/level/:handle/patch', ->
     [res, body] = yield request.postAsync({url, json})
     expect(res.statusCode).toBe(422)
     done()
+
+describe 'DELETE /db/level/:handle/i18n-coverage', ->
+  it 'removes the i18nCoverage property from the level', utils.wrap ->
+    level = yield utils.makeLevel({
+      i18nCoverage: []
+    })
+    level = yield Level.findById(level.id)
+    expect(level.get('i18nCoverage')).toDeepEqual([])
+    
+    admin = yield utils.initAdmin()
+    yield utils.loginUser(admin)
+
+    url = utils.getURL("/db/level/#{level.id}/i18n-coverage")
+    [res] = yield request.delAsync({url, json: true})
+    expect(res.statusCode).toBe(200)
+    level = yield Level.findById(level.id)
+    expect(level.get('i18nCoverage')).toBeUndefined()
+
+  it 'returns 403 unless you are an admin or artisan', utils.wrap ->
+    level = yield utils.makeLevel()
+    
+    user = yield utils.initUser()
+    yield utils.loginUser(user)
+
+    url = utils.getURL("/db/level/#{level.id}/i18n-coverage")
+    [res] = yield request.delAsync({url, json: true})
+    expect(res.statusCode).toBe(403)

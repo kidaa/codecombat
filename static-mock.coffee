@@ -13,6 +13,7 @@ exports.features =
 exports.me =
   isStudent: () -> false
   isAnonymous: () -> @get('anonymous')
+  hasSubscription: () -> false
   isTeacher: () -> false
   isAdmin: () -> false
   level: () -> 1
@@ -22,6 +23,7 @@ exports.me =
   broadName: () -> ''
   get: (prop) -> props[prop]
   isOnPremiumServer: () -> false
+  freeOnly: -> false
 
 exports.view = 
   forumLink: () -> 'http://discourse.codecombat.com/'

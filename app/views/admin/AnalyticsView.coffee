@@ -17,6 +17,7 @@ module.exports = class AnalyticsView extends RootView
   furthestCourseDayRange: 365
   lineColors: ['red', 'blue', 'green', 'purple', 'goldenrod', 'brown', 'darkcyan']
   minSchoolCount: 20
+  allTimeStartDate: new Date("2014-11-12")
 
   initialize: ->
     @activeClasses = []
@@ -120,31 +121,108 @@ module.exports = class AnalyticsView extends RootView
     }, 0).load()
 
     @supermodel.addRequestResource({
-      url: '/db/analytics_perday/-/recurring_revenue'
-      method: 'POST'
+      url: '/db/payments/-/all?nofree=true&project=created,gems,service,amount,productID,prepaidID'
+      method: 'GET'
       success: (data) =>
-        # Amounts in cents, 'DRR yearly subs', 'DRR monthly subs'
+
+        revenueGroupFromPayment = (payment) ->
+          product = payment.productID or payment.service
+          if payment.productID is 'lifetime_subscription'
+            product = "usa lifetime"
+          else if /_lifetime_subscription/.test(payment.productID)
+            product = "intl lifetime"
+          else if payment.productID is 'basic_subscription'
+            product = "usa monthly"
+          else if /_basic_subscription/.test(payment.productID)
+            product = "intl monthly"
+          else if /gems/.test(payment.productID)
+            product = "gems"
+          else if payment.prepaidID
+            if price % 9.99 is 0
+              product = "usa monthly"
+            else
+              # NOTE: assumed to be classroom starter licenses
+              product = 'classroom'
+          else if payment.service is 'stripe' && (price is 399 || price is 400)
+            product = "intl monthly"
+          else if payment.service is 'stripe' && (price is 999 || price is 799)
+            product = "usa monthly"
+          else if price is 9900 || price >= 5999 && payment.gems is 42000
+            product = "usa lifetime"
+          else if price is 0
+            product = "free"
+          else if payment.service is 'stripe' && price is 599 && payment.gems is 3500
+            product = 'intl monthly'
+          else if payment.service is 'paypal' && payment.gems is 42000 && price < 5999
+            product = "intl lifetime"
+          else if payment.service is 'paypal' && payment.gems is 10500 && price is 2997
+            product = "usa monthly"
+
+          product = payment.service if product is 'custom'
+          product ?= "unknown"
+
+          product = 'gems' if product is 'ios'
+          # product = 'usa lifetime' if product is 'stripe'
+          product = 'unknown' if product in ['external', 'bitcoin', 'iem', 'paypal']
+
+          return product
 
         # Organize data by day, then group
         groupMap = {}
         dayGroupCountMap = {}
-        for dailyRevenue in data
-          dayGroupCountMap[dailyRevenue.day] ?= {}
-          dayGroupCountMap[dailyRevenue.day]['DRR Total'] = 0
-          for group, val of dailyRevenue.groups
-            groupMap[group] = true
-            dayGroupCountMap[dailyRevenue.day][group] = val
-            dayGroupCountMap[dailyRevenue.day]['DRR Total'] += val
+        for payment in data
+          continue unless payment.service in ['paypal', 'stripe']
+          if !payment.created
+            day = utils.objectIdToDate(payment._id).toISOString().substring(0, 10)
+          else
+            day = payment.created.substring(0, 10)
+          continue if day is new Date().toISOString().substring(0, 10)
+          price = parseInt(payment.amount)
+          dayGroupCountMap[day] ?= {'DRR Total': 0}
+          dayGroupCountMap[day]['DRR Total'] ?= 0
+          group = revenueGroupFromPayment(payment)
+          continue if group in ['free', 'classroom', 'unknown']
+          group = 'DRR ' + group
+          groupMap[group] = true
+          dayGroupCountMap[day][group] ?= 0
+          dayGroupCountMap[day][group] += price
+          dayGroupCountMap[day]['DRR Total'] += price
         @revenueGroups = Object.keys(groupMap)
         @revenueGroups.push 'DRR Total'
 
+        # Split lifetime values across 8 months based on 12% monthly churn
+        lifetimeDurationMonths = 8 # Needs to be an integer
+        daysPerMonth = 30 #Close enough (needs to be an integer)
+        lifetimeDaySplit = lifetimeDurationMonths * daysPerMonth
+
         # Build list of recurring revenue entries, where each entry is a day of individual group values
         @revenue = []
+        serviceCarryForwardMap = {}
         for day of dayGroupCountMap
-          dashedDay = "#{day.substring(0, 4)}-#{day.substring(4, 6)}-#{day.substring(6, 8)}"
-          data = day: dashedDay, groups: []
+          data = {day, groups: []}
           for group in @revenueGroups
-            data.groups.push(dayGroupCountMap[day][group] ? 0)
+            if group in ['DRR intl lifetime', 'DRR usa lifetime']
+              serviceCarryForwardMap[group] ?= []
+              if dayGroupCountMap[day][group]
+                serviceCarryForwardMap[group].push({remaining: lifetimeDaySplit, value: (dayGroupCountMap[day][group] ? 0) / lifetimeDurationMonths})
+              data.groups.push(0)
+            else if group is 'DRR Total'
+              # Add total, minus deferred lifetime values for this day
+              data.groups.push((dayGroupCountMap[day][group] ? 0) - (dayGroupCountMap[day]['DRR intl lifetime'] ? 0) - (dayGroupCountMap[day]['DRR usa lifetime'] ? 0))
+            else
+              data.groups.push(dayGroupCountMap[day][group] ? 0)
+
+          # Add previous lifetime sub contributions
+          for group of serviceCarryForwardMap
+            for carryData in serviceCarryForwardMap[group]
+              # Add deferred lifetime value every 30 days
+              # Deferred value = (lifetime purchase value) / lifetimeDurationMonths
+              if carryData.remaining > 0 and carryData.remaining % 30 is 0
+                data.groups[@revenueGroups.indexOf(group)] += carryData.value
+                data.groups[@revenueGroups.indexOf('DRR Total')] += carryData.value
+              if carryData.remaining > 0
+                carryData.remaining--
+
           @revenue.push data
 
         # Order present to past
@@ -179,11 +257,11 @@ module.exports = class AnalyticsView extends RootView
           for group, i in @revenueGroups
             if group is 'DRR gems'
               @monthMrrMap[month].gems += revenue.groups[i]
-            else if group is 'DRR monthly subs'
+            else if group in ['DRR usa monthly', 'DRR intl monthly']
               @monthMrrMap[month].monthly += revenue.groups[i]
-            else if group is 'DRR yearly subs'
+            else if group in ['DRR usa lifetime', 'DRR intl lifetime']
               @monthMrrMap[month].yearly += revenue.groups[i]
-            if group in ['DRR gems', 'DRR monthly subs', 'DRR yearly subs']
+            else if group is 'DRR Total'
               @monthMrrMap[month].total += revenue.groups[i]
 
         @updateAllKPIChartData()
@@ -422,6 +500,17 @@ module.exports = class AnalyticsView extends RootView
             points.splice(0, i)
             break
 
+    # Trim points following days
+    if points.length and days.length and points[points.length - 1].day.localeCompare(days[days.length - 1]) > 0
+      if points[0].day.localeCompare(days[days.length - 1]) > 0
+        points = []
+      else
+        for i in [points.length - 1..0]
+          point = points[i]
+          if point.day.localeCompare(days[days.length - 1]) <= 0
+            points.splice(i)
+            break
+
     # Ensure points for each day
     for day, i in days
       if points.length <= i or points[i]?.day isnt day
@@ -429,6 +518,7 @@ module.exports = class AnalyticsView extends RootView
         points.splice i, 0,
           day: day
           y: prevY
+      points[i].y = 0.0 if isNaN(points[i].y)
       points[i].x = i
 
     points.splice(0, points.length - days.length) if points.length > days.length
@@ -438,6 +528,7 @@ module.exports = class AnalyticsView extends RootView
     visibleWidth = $('.kpi-recent-chart').width()
     d3Utils.createLineChart('.kpi-recent-chart', @kpiRecentChartLines, visibleWidth)
     d3Utils.createLineChart('.kpi-chart', @kpiChartLines, visibleWidth)
+    d3Utils.createLineChart('.kpi-all-time-chart', @kpiAllTimeChartLines, visibleWidth)
     d3Utils.createLineChart('.active-classes-chart-90', @activeClassesChartLines90, visibleWidth)
     d3Utils.createLineChart('.active-classes-chart-365', @activeClassesChartLines365, visibleWidth)
     d3Utils.createLineChart('.classroom-daily-active-users-chart-90', @classroomDailyActiveUsersChartLines90, visibleWidth)
@@ -465,21 +556,97 @@ module.exports = class AnalyticsView extends RootView
       currentMrr = 0
       currentMonthlyValues = []
       for i in [@revenue.length - 1..0] when i >= 0
-        entry = @revenue[i]
-        monthlySubAmount = entry.groups[@revenueGroups.indexOf('DRR monthly subs')] ? 0
-        yearlySubAmount = entry.groups[@revenueGroups.indexOf('DRR yearly subs')] ? 0
-        currentMonthlyValues.push monthlySubAmount + yearlySubAmount
-        currentMrr += monthlySubAmount + yearlySubAmount
+        total = @revenue[i].groups[@revenueGroups.indexOf('DRR Total')]
+        currentMonthlyValues.push total
+        currentMrr += total
         currentMrr -= currentMonthlyValues.shift() while currentMonthlyValues.length > daysInMonth
-        @dayMrrMap[entry.day] = currentMrr if currentMonthlyValues.length is daysInMonth
+        @dayMrrMap[@revenue[i].day] = currentMrr if currentMonthlyValues.length is daysInMonth
 
     @kpiRecentChartLines = []
     @kpiChartLines = []
+    @kpiAllTimeChartLines = []
     @updateKPIChartData(60, @kpiRecentChartLines)
     @updateKPIChartData(365, @kpiChartLines)
+    @numAllDays = Math.round((new Date() - @allTimeStartDate) / 1000 / 60 / 60 / 24)
+    @updateKPIChartData(@numAllDays, @kpiAllTimeChartLines)
 
   updateKPIChartData: (timeframeDays, chartLines) ->
-    days = d3Utils.createContiguousDays(timeframeDays)
+
+    if timeframeDays is 365
+      # Add previous year too
+      days = d3Utils.createContiguousDays(timeframeDays, true, 365)
+      pointRadius = 0.5
+
+      # Build active classes KPI line
+      if @activeClasses?.length > 0
+        data = []
+        for entry in @activeClasses
+          data.push
+            day: entry.day
+            value: entry.groups[entry.groups.length - 1]
+        data.reverse()
+        points = @createLineChartPoints(days, data)
+        chartLines.push
+          points: points
+          description: 'Monthly Active Classes (last year)'
+          lineColor: 'lightskyblue'
+          strokeWidth: 1
+          min: 0
+          max: _.max(points, 'y').y
+          showYScale: false
+          pointRadius: pointRadius
+
+      # Build recurring revenue KPI line
+      if @revenue?.length > 0
+        data = []
+        for entry in @revenue
+          value = @dayMrrMap[entry.day]
+          data.push
+            day: entry.day
+            value: value / 100 / 1000
+        data.reverse()
+        points = @createLineChartPoints(days, data)
+        chartLines.push
+          points: points
+          description: 'Monthly Recurring Revenue (in thousands) (last year)'
+          lineColor: 'mediumseagreen'
+          strokeWidth: 1
+          min: 0
+          max: _.max(points, 'y').y
+          showYScale: false
+          pointRadius: pointRadius
+
+      # Build campaign MAU KPI line
+      if @activeUsers?.length > 0
+        eventDayDataMap = {}
+        for entry in @activeUsers
+          day = entry.day
+          for event, count of entry.events
+            if event.indexOf('MAU campaign') >= 0
+              eventDayDataMap['MAU campaign'] ?= {}
+              eventDayDataMap['MAU campaign'][day] ?= 0
+              eventDayDataMap['MAU campaign'][day] += count
+
+        campaignData = []
+        for event, entry of eventDayDataMap
+          for day, count of entry
+            campaignData.push day: day, value: count / 1000
+        campaignData.reverse()
+
+        points = @createLineChartPoints(days, campaignData)
+        chartLines.push
+          points: points
+          description: 'Home Monthly Active Users (in thousands) (last year)'
+          lineColor: 'mediumorchid'
+          strokeWidth: 1
+          min: 0
+          max: _.max(points, 'y').y
+          showYScale: false
+          pointRadius: pointRadius
+
+    days = d3Utils.createContiguousDays(timeframeDays, true)
+
+    pointRadius = if timeframeDays > 365 then 1 else if timeframeDays > 90 then 1.5 else 2
 
     # Build active classes KPI line
     if @activeClasses?.length > 0
@@ -498,6 +665,7 @@ module.exports = class AnalyticsView extends RootView
         min: 0
         max: _.max(points, 'y').y
         showYScale: true
+        pointRadius: pointRadius
 
     # Build recurring revenue KPI line
     if @revenue?.length > 0
@@ -517,9 +685,37 @@ module.exports = class AnalyticsView extends RootView
         min: 0
         max: _.max(points, 'y').y
         showYScale: true
+        pointRadius: pointRadius
 
-    # Build campaign MAU KPI line
     if @activeUsers?.length > 0
+      # Build classroom MAU KPI line
+      eventDayDataMap = {}
+      for entry in @activeUsers
+        day = entry.day
+        for event, count of entry.events
+          if event.indexOf('MAU classroom') >= 0
+            eventDayDataMap['MAU classroom'] ?= {}
+            eventDayDataMap['MAU classroom'][day] ?= 0
+            eventDayDataMap['MAU classroom'][day] += count
+
+      classroomData = []
+      for event, entry of eventDayDataMap
+        for day, count of entry
+          classroomData.push day: day, value: count / 1000
+      classroomData.reverse()
+
+      points = @createLineChartPoints(days, classroomData)
+      chartLines.push
+        points: points
+        description: 'Classroom Monthly Active Users (in thousands)'
+        lineColor: 'red'
+        strokeWidth: 1
+        min: 0
+        max: _.max(points, 'y').y
+        showYScale: true
+        pointRadius: pointRadius
+
+      # Build campaign MAU KPI line
       eventDayDataMap = {}
       for entry in @activeUsers
         day = entry.day
@@ -544,6 +740,19 @@ module.exports = class AnalyticsView extends RootView
         min: 0
         max: _.max(points, 'y').y
         showYScale: true
+        pointRadius: pointRadius
+
+      # Use same max for classroom/campaign MAUs
+      chartLines[chartLines.length - 1].max = Math.max(chartLines[chartLines.length - 1].max, chartLines[chartLines.length - 2].max)
+      chartLines[chartLines.length - 2].max = Math.max(chartLines[chartLines.length - 1].max, chartLines[chartLines.length - 2].max)
+
+      # Update previous year maxes if necessary
+      if chartLines.length is 7
+        chartLines[0].max = chartLines[3].max
+        chartLines[1].max = chartLines[4].max
+        chartLines[2].max = chartLines[6].max
+
+      chartLines.reverse()  # X-axis is based off first one, first one might be previous year, so cheaply make sure first one is this year
 
   updateActiveClassesChartData: ->
     @activeClassesChartLines90 = []

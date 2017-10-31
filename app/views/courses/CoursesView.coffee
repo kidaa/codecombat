@@ -12,6 +12,8 @@ CocoCollection = require 'collections/CocoCollection'
 Course = require 'models/Course'
 Classroom = require 'models/Classroom'
 Classrooms = require 'collections/Classrooms'
+Courses = require 'collections/Courses'
+CourseInstances = require 'collections/CourseInstances'
 LevelSession = require 'models/LevelSession'
 Levels = require 'collections/Levels'
 NameLoader = require 'core/NameLoader'
@@ -34,13 +36,14 @@ module.exports = class CoursesView extends RootView
     'click .play-btn': 'onClickPlay'
     'click .view-class-btn': 'onClickViewClass'
     'click .view-levels-btn': 'onClickViewLevels'
+    'click .view-project-gallery-link': 'onClickViewProjectGalleryLink'
 
   getTitle: -> return $.i18n.t('courses.students')
 
   initialize: ->
     @classCodeQueryVar = utils.getQueryVariable('_cc', false)
     @courseInstances = new CocoCollection([], { url: "/db/user/#{me.id}/course_instances", model: CourseInstance})
-    @courseInstances.comparator = (ci) -> return ci.get('classroomID') + ci.get('courseID')
+    @courseInstances.comparator = (ci) -> return ci.get('classroomID') + utils.orderedCourseIDs.indexOf ci.get('courseID')
     @listenToOnce @courseInstances, 'sync', @onCourseInstancesLoaded
     @supermodel.loadCollection(@courseInstances, { cache: false })
     @classrooms = new CocoCollection([], { url: "/db/classroom", model: Classroom})
@@ -49,8 +52,9 @@ module.exports = class CoursesView extends RootView
     @ownedClassrooms = new Classrooms()
     @ownedClassrooms.fetchMine({data: {project: '_id'}})
     @supermodel.trackCollection(@ownedClassrooms)
-    @courses = new CocoCollection([], { url: "/db/course", model: Course})
-    @supermodel.loadCollection(@courses)
+    @courses = new Courses()
+    @courses.fetch()
+    @supermodel.trackCollection(@courses)
     @originalLevelMap = {}
     @urls = require('core/urls')
 
@@ -61,8 +65,7 @@ module.exports = class CoursesView extends RootView
     @hero.url = "/db/thang.type/#{heroOriginal}/version"
     # @hero.setProjection ['name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','unlockLevelName','i18n']
     @supermodel.loadModel(@hero, 'hero')
-    @listenTo @hero, 'all', ->
-      @render()
+    @listenTo @hero, 'all', -> @render() if @supermodel.finished()
 
   afterInsert: ->
     super()
@@ -104,6 +107,12 @@ module.exports = class CoursesView extends RootView
         @originalLevelMap[level.get('original')] = level for level in levels.models
         @render()
       @supermodel.trackRequest(levels.fetchForClassroom(classroomID, { data: { project: 'original,primerLanguage,slug' }}))
+
+  courseInstanceHasProject: (courseInstance) ->
+    classroom = @classrooms.get(courseInstance.get('classroomID'))
+    versionedCourse = _.find(classroom.get('courses'), {_id: courseInstance.get('courseID')})
+    levels = versionedCourse.levels
+    _.any(levels, { shareable: 'project' })
 
   onClickLogInButton: ->
     modal = new AuthModal()
@@ -215,4 +224,13 @@ module.exports = class CoursesView extends RootView
     courseID = $(e.target).data('course-id')
     courseInstanceID = $(e.target).data('courseinstance-id')
     window.tracker?.trackEvent 'Students View Levels', category: 'Students', courseID: courseID, courseInstanceID: courseInstanceID, ['Mixpanel']
-    application.router.navigate("/students/#{courseID}/#{courseInstanceID}", { trigger: true })
+    course = @courses.get(courseID)
+    courseInstance = @courseInstances.get(courseInstanceID)
+    levelsUrl = @urls.courseWorldMap({course, courseInstance})
+    application.router.navigate(levelsUrl, { trigger: true })
+
+  onClickViewProjectGalleryLink: (e) ->
+    courseID = $(e.target).data('course-id')
+    courseInstanceID = $(e.target).data('courseinstance-id')
+    window.tracker?.trackEvent 'Students View To Project Gallery View', category: 'Students', courseID: courseID, courseInstanceID: courseInstanceID, ['Mixpanel']
+    application.router.navigate("/students/project-gallery/#{courseInstanceID}", { trigger: true })

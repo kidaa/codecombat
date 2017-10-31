@@ -2,15 +2,28 @@ Product = require '../models/Product'
 errors = require '../commons/errors'
 config = require '../../server_config'
 wrap = require 'co-express'
+_ = require 'lodash'
 
 get = wrap (req, res) ->
   products = yield Product.find().lean()
   unless _.size(products) or config.isProduction
     products = productStubs
-  if (req.user.get('testGroupNumber') or 0) % 2 is 0
-    products = (p for p in products when p.name isnt 'year_subscription')
-  else
-    products = (p for p in products when p.name isnt 'lifetime_subscription')
+
+  if req.features.china
+    products = _.filter(products, (product) ->
+      return true if product.name is 'lifetime_subscription'
+      product.name.indexOf('subscription') is -1
+    )
+    return res.send(products)
+
+  # Remove old unsupported subscription products
+  products = _.filter products, (p) -> p.name not in ['year_subscription', 'lifetime_subscription2']
+  products = _.filter(products, (p) -> p.i18nCoverage?) if req.query.view is 'i18n-coverage'
+
+  for p in products
+    if p.coupons?
+      p.coupons = _.filter p.coupons, ((c) -> c.code is req.query.coupon)
+
   res.send(products)
 
 ###
@@ -56,6 +69,7 @@ productStubs = [
     amount: 100
     gems: 3500
     planID: 'basic'
+    payPalBillingPlanID: 'P-23R58281B73475317X2K7B4A'
   }
 
   {
@@ -85,14 +99,35 @@ productStubs = [
     amount: 0
     gems: 1500
     planID: 'basic'
+    payPalBillingPlanID: 'P-2KP02511G2731913DX2K4IKA'
   }
-  
+
   {
     name: 'lifetime_subscription'
     amount: 1000
     gems: 42000
+    coupons: [{code: 'c1', amount: 10}, {code: 'c2', amount: 99}]
+  }
+
+  {
+    name: 'lifetime_subscription2'
+    amount: 2000
+    gems: 42000
+    coupons: [{code: 'c1', amount: 10}, {code: 'c2', amount: 99}]
+  }
+
+  {
+    name: 'brazil_lifetime_subscription'
+    amount: 1001
+    gems: 42000
+    coupons: [{code: 'c1', amount: 10}, {code: 'c2', amount: 99}]
   }
 ]
+
+# For Backbone collection in dev environment, otherwise models merge
+if not global.testing
+  for productStub in productStubs
+    productStub._id = _.uniqueId()
 
 module.exports = {
   get

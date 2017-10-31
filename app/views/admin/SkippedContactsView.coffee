@@ -1,21 +1,8 @@
-RootView = require 'views/core/RootView'
+RootComponent = require 'views/core/RootComponent'
 template = require 'templates/base-flat'
-SkippedContacts = require 'collections/SkippedContacts'
-User = require 'models/User'
 require('vendor/co')
-require('vendor/vue')
-require('vendor/vuex')
-
-skippedContactApi =
-  setArchived: (_id, archived) ->
-    $.ajax({
-      url: '/db/skipped-contact/' + _id
-      type: 'PUT'
-      data: {
-        _id
-        archived
-      }
-    })
+api = require 'core/api'
+FlatLayout = require 'core/components/FlatLayout'
 
 SkippedContactInfo =
   template: require('templates/admin/skipped-contacts/skipped-contact-info')()
@@ -32,7 +19,7 @@ SkippedContactInfo =
       # TODO: Figure out how to make this less redundant with that script
       noteData = ""
       @skippedContact
-      if @skippedContact.trialRequest.properties
+      if @skippedContact.trialRequest?.properties
         props = @skippedContact.trialRequest.properties
         if (props.name)
           noteData += "#{props.name}\n"
@@ -67,6 +54,7 @@ SkippedContactInfo =
         noteData += "coco_numStudents: #{skippedContact.numStudents}\n"
       return noteData
 
+    # Optional TODO: Reconcile where these kinds of model-y calculations should go (API? the view?)
     queryString: ->
       if @skippedContact.trialRequest
         trialRequest = @skippedContact.trialRequest
@@ -77,6 +65,14 @@ SkippedContactInfo =
         else if (trialRequest.properties.nces_district_id)
           query = "custom.demo_nces_district_id:\"#{trialRequest.properties.nces_district_id}\" custom.demo_nces_id:\"\" custom.demo_nces_name:\"\""
         return query
+      if @skippedContact.zpContact
+        zpContact = @skippedContact.zpContact
+        query = "name:\"#{zpContact.organization}\""
+        if (zpContact.nces_school_id)
+          query = "custom.demo_nces_id:\"#{zpContact.nces_school_id}\""
+        else if (zpContact.nces_district_id)
+          query = "custom.demo_nces_district_id:\"#{zpContact.nces_district_id}\" custom.demo_nces_id:\"\" custom.demo_nces_name:\"\""
+        return query
 
     queryURL: ->
       "https://app.close.io/search/" + encodeURIComponent(@queryString)
@@ -84,30 +80,33 @@ SkippedContactInfo =
   methods:
     onClickArchiveContact: (e) ->
       archived = true
-      @$store.dispatch('archiveContact', {@skippedContact, archived})
+      @$store.dispatch('page/archiveContact', {@skippedContact, archived})
       # @$emit('archiveContact', @skippedContact, archived)
     onClickUnarchiveContact: (e) ->
       archived = false
-      @$store.dispatch('archiveContact', {@skippedContact, archived})
+      @$store.dispatch('page/archiveContact', {@skippedContact, archived})
       # @$emit('archiveContact', @skippedContact, archived)
 
 SkippedContactsComponent = Vue.extend
   template: require('templates/admin/skipped-contacts/skipped-contacts-view')()
   data: ->
-    sortOrder: 'date (ascending)'
+    sortOrder: 'date (descending)'
     showArchived: false
+    showTrialRequestContacts: true
+    showZenProspectContacts: true
+    searchInput: ''
   computed:
     _.assign({},
-      Vuex.mapState(['skippedContacts', 'users']),
-      Vuex.mapGetters(['numArchivedUsers']),
+      Vuex.mapState('page', ['skippedContacts', 'users']),
+      Vuex.mapGetters('page', ['numArchivedUsers']),
       sortedContacts: (state) ->
         switch state.sortOrder
           when 'date (ascending)'
-            return _(state.skippedContacts).sortBy((s) -> s.trialRequest.created).value()
+            return _(state.skippedContacts).sortBy((s) -> s.dateCreated).value()
           when 'date (descending)'
-            return _(state.skippedContacts).sortBy((s) -> s.trialRequest.created).reverse().value()
+            return _(state.skippedContacts).sortBy((s) -> s.dateCreated).reverse().value()
           when 'email'
-            return _(state.skippedContacts).sortBy((s) -> s.trialRequest.properties.email).value()
+            return _(state.skippedContacts).sortBy((s) -> s.trialRequest?.properties?.email).value()
           when 'archived'
             return _(state.skippedContacts).sortBy((s) -> !!s.archived).reverse().value()
           when 'unarchived'
@@ -115,55 +114,55 @@ SkippedContactsComponent = Vue.extend
           else
             return state.skippedContacts
     )
+  methods:
+    isContactShown: (contact) ->
+      return @matchesFilter(contact) if not _.isEmpty(@searchInput)
+      (@showArchived or not contact.archived) and
+        ((@showTrialRequestContacts and contact.trialRequest) or
+         (@showZenProspectContacts and contact.zpContact))
+    matchesFilter: (contact) ->
+      _.contains(contact.email, @searchInput)
   components:
     'skipped-contact-info': SkippedContactInfo
+    'flat-layout': FlatLayout
   created: co.wrap ->
-    skippedContacts = new SkippedContacts()
-    yield skippedContacts.fetch()
-    skippedContacts = skippedContacts.toJSON()
-    @$store.commit('loadContacts', skippedContacts)
-    yield skippedContacts.map co.wrap (skippedContact) =>
-      user = new User({ _id: skippedContact.trialRequest.applicant })
-      index = _.findIndex(@skippedContacts, (s) -> s._id is skippedContact._id)
-      yield user.fetch()
-      @$store.commit('addUser', { skippedContact , user: user.toJSON() })
+    try
+      skippedContacts = yield api.skippedContacts.getAll()
+      @$store.commit('page/loadContacts', skippedContacts)
+      yield skippedContacts.map co.wrap (skippedContact) =>
+        userHandle = skippedContact.trialRequest?.applicant
+        return unless userHandle
+        user = yield api.users.getByHandle(userHandle)
+        @$store.commit('page/addUser', { skippedContact , user })
+    catch e
+      @$store.commit('addPageError', e)
 
-module.exports = class SkippedContactsView extends RootView
+store = require('core/store')
+
+module.exports = class SkippedContactsView extends RootComponent
   id: 'skipped-contacts-view'
   template: template
-
-  initialize: ->
-    super(arguments...)
-    # Vuex Store
-    @store = new Vuex.Store({
-      state:
-        skippedContacts: []
-        users: {}
-      actions:
-        archiveContact: ({ commit, state }, {skippedContact, archived}) ->
-          skippedContactApi.setArchived(skippedContact._id, archived).then ->
-            commit('archiveContact', {skippedContact, archived})
-      strict: not application.isProduction()
-      mutations:
-        archiveContact: (state, { skippedContact, archived }) ->
-          index = _.findIndex(state.skippedContacts, (s) -> s._id is skippedContact._id)
-          oldContact = state.skippedContacts[index]
-          Vue.set(state.skippedContacts, index, _.assign({}, oldContact, { archived }))
-        addUser: (state, { skippedContact, user }) ->
-          Vue.set(state.users, skippedContact._id, user)
-        loadContacts: (state, skippedContacts) ->
-          state.skippedContacts = skippedContacts
-      getters:
-        numArchivedUsers: (state) ->
-          _.countBy(state.skippedContacts, (contact) -> contact.archived)[true]
-    })
-
-
-  afterRender: ->
-    @vueComponent?.$destroy() # TODO: Don't recreate this component every time things update
-    @vueComponent = new SkippedContactsComponent({
-      el: @$el.find('#site-content-area')[0]
-      store: @store
-    })
-
-    super(arguments...)
+  VueComponent: SkippedContactsComponent
+  vuexModule: -> {
+    namespaced: true
+    state:
+      skippedContacts: []
+      users: {}
+    actions:
+      archiveContact: ({ commit, state }, {skippedContact, archived}) ->
+        newContact = _.assign({}, skippedContact, {archived})
+        api.skippedContacts.put(newContact).then ->
+          commit('archiveContact', {skippedContact, archived})
+    mutations:
+      archiveContact: (state, { skippedContact, archived }) ->
+        index = _.findIndex(state.skippedContacts, (s) -> s._id is skippedContact._id)
+        oldContact = state.skippedContacts[index]
+        Vue.set(state.skippedContacts, index, _.assign({}, oldContact, { archived }))
+      addUser: (state, { skippedContact, user }) ->
+        Vue.set(state.users, skippedContact._id, user)
+      loadContacts: (state, skippedContacts) ->
+        state.skippedContacts = skippedContacts
+    getters:
+      numArchivedUsers: (state) ->
+        _.countBy(state.skippedContacts, (contact) -> contact.archived)[true]
+  }

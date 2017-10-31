@@ -61,6 +61,7 @@ require("locale/et")
 require("locale/hr")
 require("locale/mi")
 require("locale/haw")
+require("locale/kk")
 
 module.exports = class DiplomatView extends ContributeClassView
   id: 'diplomat-view'
@@ -74,7 +75,7 @@ module.exports = class DiplomatView extends ContributeClassView
     totalStrings = @countStrings @locale.en
     languageStats = {}
     for languageCode, language of @locale
-      continue if languageCode is 'update'
+      continue if languageCode in ['update', 'installVueI18n']
       languageStats[languageCode] =
         githubURL: "https://github.com/codecombat/codecombat/blob/master/app/locale/#{languageCode}.coffee"
         completion: @countStrings(language) / totalStrings
@@ -95,7 +96,7 @@ module.exports = class DiplomatView extends ContributeClassView
     'en-US': []        # English (US), English (US)
     'en-GB': []        # English (UK), English (UK)
     ru: ['EagleTA', 'ImmortalJoker', 'Mr A', 'Shpionus', 'a1ip', 'fess89', 'iulianR', 'kerradus', 'kisik21', 'nixel', 'ser-storchak', 'CatSkald']             # русский язык, Russian
-    'de-DE': ['Anon', 'Dirk', 'HiroP0', 'bahuma20', 'bkimminich', 'djsmith85', 'dkundel', 'domenukk', 'faabsen', 'Zeldaretter']        # Deutsch (Deutschland), German (Germany)
+    'de-DE': ['Anon', 'Dirk', 'HiroP0', 'bahuma20', 'bkimminich', 'djsmith85', 'dkundel', 'domenukk', 'faabsen', 'Zeldaretter', 'joca16']        # Deutsch (Deutschland), German (Germany)
     'de-AT': ['djsmith85']        # Deutsch (Österreich), German (Austria)
     'de-CH': ['greyhusky']        # Deutsch (Schweiz), German (Switzerland)
     'es-419': ['2xG', 'Federico Tomas', 'Jesús Ruppel', 'Mariano Luzza', 'Matthew Burt']       # español (América Latina), Spanish (Latin America)
@@ -104,7 +105,7 @@ module.exports = class DiplomatView extends ContributeClassView
     'zh-HANT': ['Adam23', 'gintau', 'shuwn']      # 繁體中文, Chinese (Traditional)
     'zh-WUU-HANS': []  # 吴语, Wuu (Simplified)
     'zh-WUU-HANT': ['benojan']  # 吳語, Wuu (Traditional)
-    fr: ['Anon', 'Armaldio', 'ChrisLightman', 'Elfisen', 'Feugy', 'MartinDelille', 'Oaugereau', 'Xeonarno', 'dc55028', 'jaybi', 'pstweb', 'veritable', 'xavismeh']             # français, French
+    fr: ['Anon', 'Armaldio', 'ChrisLightman', 'Elfisen', 'Feugy', 'MartinDelille', 'Oaugereau', 'Xeonarno', 'dc55028', 'jaybi', 'pstweb', 'veritable', 'xavismeh', 'CatSkald']             # français, French
     ja: ['Coderaulic', 'g1itch', 'kengos', 'treby']             # 日本語, Japanese
     ar: ['5y', 'ahmed80dz']             # العربية, Arabic
     'pt-BR': ['Bia41', 'Gutenberg Barros', 'Kieizroe', 'Matthew Burt', 'brunoporto', 'cassiocardoso', 'jklemm', 'Arkhad']        # português do Brasil, Portuguese (Brazil)
@@ -149,4 +150,5 @@ module.exports = class DiplomatView extends ContributeClassView
     hr: []             # hrvatski jezik, Croatian
     mi: []             # te reo Māori, Māori
     haw: []            # ʻŌlelo Hawaiʻi, Hawaiian
+    kk: []            # қазақ тілі, Kazakh
     fil: ['Celestz'] #Like This?

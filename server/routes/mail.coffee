@@ -692,6 +692,7 @@ handleNextSteps = (req, res) ->
 
 module.exports.sendNextStepsEmail = sendNextStepsEmail = (user, now, daysAgo) ->
   return log.info "Not sending next steps email to user with no email address" if not user.get('email')
+  return log.debug "Not sending next steps email to teacher based on role" if user.isTeacher()
   unless user.isEmailSubscriptionEnabled('generalNews') and user.isEmailSubscriptionEnabled('anyNotes')
     log.info "Not sending email to #{user.get('email')} #{user.get('name')} because they only want emails about #{JSON.stringify(user.get('emails'))}" if DEBUGGING
     return
@@ -738,7 +739,7 @@ module.exports.sendNextStepsEmail = sendNextStepsEmail = (user, now, daysAgo) ->
           secretLevelName: secretLevel.name
           secretLevelLink: "http://codecombat.com/play/level/#{secretLevel.slug}"
           levelsComplete: complete.length
-          isCoursePlayer: user.get('courseInstances')?.length > 0
+          isCoursePlayer: user.get('courseInstances')?.length > 0 # TODO: use based on role instead, as courseInstances can be unreliable
       log.info "Sending next steps email to #{context.recipient.address} with #{context.email_data.nextLevelName} next and #{context.email_data.levelsComplete} levels complete since #{daysAgo} day(s) ago." if DEBUGGING
       sendwithus.api.send context, (err, result) ->
         log.error "Error sending next steps email: #{err} with result #{result}" if err
@@ -761,18 +762,18 @@ handleMailChimpWebHook = wrap (req, res) ->
     user = yield User.findOne { 'mailChimp.leid': post.data.web_id }
   if not user
     user = yield User.findOne { 'mailChimp.email': email }
-  
+
   if not user
     throw new errors.NotFound('MailChimp subscriber not found')
 
   if not user.get('emailVerified')
     return res.send('User email unverified')
-    
+
   if post.type is 'profile'
     handleProfileUpdate(user, post)
   else if post.type in ['unsubscribe', 'upemail']
     handleUnsubscribe(user)
-    
+
   user.updatedMailChimp = true # so as not to echo back to mailchimp
   yield user.save()
   res.end('Success')
@@ -798,5 +799,3 @@ module.exports.handleUnsubscribe = handleUnsubscribe = (user) ->
   for interest in mailChimp.interests
     user.setEmailSubscription interest.property, false
   user.set 'mailChimp', undefined
-
-  

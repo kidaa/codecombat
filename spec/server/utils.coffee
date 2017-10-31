@@ -22,6 +22,8 @@ CourseInstance = require '../../server/models/CourseInstance'
 moment = require 'moment'
 Classroom = require '../../server/models/Classroom'
 TrialRequest = require '../../server/models/TrialRequest'
+AnalyticsString = require '../../server/models/AnalyticsString'
+AnalyticsPerDay = require '../../server/models/AnalyticsPerDay'
 APIClient = require '../../server/models/APIClient'
 campaignSchema = require '../../app/schemas/models/campaign.schema'
 campaignLevelProperties = _.keys(campaignSchema.properties.levels.additionalProperties.properties)
@@ -251,8 +253,9 @@ module.exports = mw =
     }, data)
     if not data.levels
       data.levels = {}
-      for level in sources?.levels or []
+      for level, i in sources?.levels or []
         data.levels[level.get('original').valueOf()] = _.pick level.toObject(), campaignLevelProperties
+        data.levels[level.get('original').valueOf()].position = {x: i, y: i}
 
     if not data.adjacentCampaigns
       data.adjacentCampaigns = {}
@@ -296,6 +299,15 @@ module.exports = mw =
     }, data)
 
     request.post { uri: getURL('/db/prepaid'), json: data }, (err, res) ->
+      return done(err) if err
+      expect(res.statusCode).toBe(201)
+      Prepaid.findById(res.body._id).exec done
+  
+  addJoinerToPrepaid: Promise.promisify (prepaid, joiner, done) ->
+    data = {
+      userID: joiner?.id or joiner
+    }
+    request.post { uri: getURL("/db/prepaid/#{prepaid.id}/joiners"), method: 'POST', json: data }, (err, res) ->
       return done(err) if err
       expect(res.statusCode).toBe(201)
       Prepaid.findById(res.body._id).exec done
@@ -364,7 +376,23 @@ module.exports = mw =
       return done(err) if err
       expect(res.statusCode).toBe(201)
       TrialRequest.findById(res.body._id).exec done
+      
+  makeAnalyticsString: (data={}, sources={}) -> co ->
+    data = _.clone(data)
+    if not data._id
+      data._id = parseInt(_.uniqueId())
+    return new AnalyticsString(data).save()
 
+  makeAnalyticsPerDay: (data={}, sources={}) -> co ->
+    data = _.clone(data)
+    if sources.e
+      data.e = sources.e._id
+    if sources.f
+      data.f = sources.f._id
+    if sources.l
+      data.l = sources.l._id
+    return new AnalyticsPerDay(data).save()
+    
   createDay: (offset) ->
     day = new Date()
     day.setUTCDate(day.getUTCDate() + offset)

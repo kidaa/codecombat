@@ -9,6 +9,7 @@ ActivateLicensesModal = require 'views/courses/ActivateLicensesModal'
 EditStudentModal = require 'views/teachers/EditStudentModal'
 RemoveStudentModal = require 'views/courses/RemoveStudentModal'
 CoursesNotAssignedModal = require './CoursesNotAssignedModal'
+CourseNagSubview = require 'views/teachers/CourseNagSubview'
 
 Campaigns = require 'collections/Campaigns'
 Classroom = require 'models/Classroom'
@@ -93,16 +94,13 @@ module.exports = class TeacherClassView extends RootView
     @sortedCourses = []
 
     @prepaids = new Prepaids()
-    @supermodel.trackRequest @prepaids.fetchByCreator(me.id)
+    @supermodel.trackRequest @prepaids.fetchMineAndShared()
 
     @students = new Users()
     @classroom.sessions = new LevelSessions()
     @listenTo @classroom, 'sync', ->
-      jqxhrs = @students.fetchForClassroom(@classroom, removeDeleted: true)
-      @supermodel.trackRequests jqxhrs
-
-      requests = @classroom.sessions.fetchForAllClassroomMembers(@classroom)
-      @supermodel.trackRequests(requests)
+      @fetchStudents()
+      @fetchSessions()
 
     @students.comparator = (student1, student2) =>
       dir = @state.get('sortDirection')
@@ -136,6 +134,22 @@ module.exports = class TeacherClassView extends RootView
 
     @attachMediatorEvents()
     window.tracker?.trackEvent 'Teachers Class Loaded', category: 'Teachers', classroomID: @classroom.id, ['Mixpanel']
+
+  fetchStudents: ->
+    Promise.all(@students.fetchForClassroom(@classroom, {removeDeleted: true, data: {project: 'firstName,lastName,name,email,coursePrepaid,coursePrepaidID,deleted'}}))
+    .then =>
+      return if @destroyed
+      @removeDeletedStudents() # TODO: Move this to mediator listeners?
+      @calculateProgressAndLevels()
+      @render?()
+
+  fetchSessions: ->
+    Promise.all(@classroom.sessions.fetchForAllClassroomMembers(@classroom))
+    .then =>
+      return if @destroyed
+      @removeDeletedStudents() # TODO: Move this to mediator listeners?
+      @calculateProgressAndLevels()
+      @render?()
 
   attachMediatorEvents: () ->
     # Model/Collection events
@@ -195,6 +209,9 @@ module.exports = class TeacherClassView extends RootView
 
   afterRender: ->
     super(arguments...)
+    unless @courseNagSubview
+      @courseNagSubview = new CourseNagSubview()
+      @insertSubView(@courseNagSubview)
     $('.progress-dot, .btn-view-project-level').each (i, el) ->
       dot = $(el)
       dot.tooltip({
@@ -203,16 +220,24 @@ module.exports = class TeacherClassView extends RootView
       }).delegate '.tooltip', 'mousemove', ->
         dot.tooltip('hide')
 
+  allStatsLoaded: ->
+    @classroom?.loaded and @classroom?.get('members')?.length is 0 or (@students?.loaded and @classroom?.sessions?.loaded)
+
   calculateProgressAndLevels: ->
-    return unless @supermodel.progress is 1
+    return unless @supermodel.progress is 1 and @allStatsLoaded()
+    userLevelCompletedMap = @classroom.sessions.models.reduce((map, session) =>
+      if session.completed()
+        map[session.get('creator')] ?= {}
+        map[session.get('creator')][session.get('level').original.toString()] = true
+      map
+    , {})
     # TODO: How to structure this in @state?
     for student in @students.models
       # TODO: this is a weird hack
       studentsStub = new Users([ student ])
-      student.latestCompleteLevel = helper.calculateLatestComplete(@classroom, @courses, @courseInstances, studentsStub)
-
+      student.latestCompleteLevel = helper.calculateLatestComplete(@classroom, @courses, @courseInstances, studentsStub, userLevelCompletedMap)
     earliestIncompleteLevel = helper.calculateEarliestIncomplete(@classroom, @courses, @courseInstances, @students)
-    latestCompleteLevel = helper.calculateLatestComplete(@classroom, @courses, @courseInstances, @students)
+    latestCompleteLevel = helper.calculateLatestComplete(@classroom, @courses, @courseInstances, @students, userLevelCompletedMap)
 
     classroomsStub = new Classrooms([ @classroom ])
     progressData = helper.calculateAllProgress(classroomsStub, @courses, @courseInstances, @students)
@@ -253,6 +278,9 @@ module.exports = class TeacherClassView extends RootView
   onClickEditClassroom: (e) ->
     return unless me.id is @classroom.get('ownerID') # May be viewing page as admin
     window.tracker?.trackEvent 'Teachers Class Edit Class Started', category: 'Teachers', classroomID: @classroom.id, ['Mixpanel']
+    @promptToEdit()
+
+  promptToEdit: () ->
     classroom = @classroom
     modal = new ClassroomSettingsModal({ classroom: classroom })
     @openModalView(modal)
@@ -344,7 +372,7 @@ module.exports = class TeacherClassView extends RootView
     courseLabelsArray = helper.courseLabelsArray(courses)
     for course, index in courses
       courseLabels += "#{courseLabelsArray[index]} Levels,#{courseLabelsArray[index]} Playtime,"
-    csvContent = "data:text/csv;charset=utf-8,Name,Username,Email,Total Levels, Total Playtime,#{courseLabels}Concepts\n"
+    csvContent = "Name,Username,Email,Total Levels,Total Playtime,#{courseLabels}Concepts\n"
     levelCourseIdMap = {}
     levelPracticeMap = {}
     language = @classroom.get('aceConfig')?.language
@@ -401,8 +429,8 @@ module.exports = class TeacherClassView extends RootView
           courseCountsString += "#{moment.duration(counts.playtime, 'seconds').humanize()},"
       csvContent += "#{student.broadName()},#{student.get('name')},#{student.get('email') or ''},#{levels},#{playtimeString},#{courseCountsString}\"#{conceptsString}\"\n"
     csvContent = csvContent.substring(0, csvContent.length - 1)
-    encodedUri = encodeURI(csvContent)
-    window.open(encodedUri)
+    file = new Blob([csvContent], {type: 'text/csv;charset=utf-8'})
+    saveAs(file, 'CodeCombat.csv')
 
   onClickAssignStudentButton: (e) ->
     return unless me.id is @classroom.get('ownerID') # May be viewing page as admin
@@ -493,9 +521,9 @@ module.exports = class TeacherClassView extends RootView
       # refresh prepaids, since the racing multiple parallel redeem requests in the previous `then` probably did not
       # end up returning the final result of all those requests together.
       @prepaids.fetchByCreator(me.id)
-      @students.fetchForClassroom(@classroom, removeDeleted: true)
+      @fetchStudents()
 
-      @trigger 'begin-assign-course'
+      @trigger 'begin-assign-course' # Only used for test automation
       if members.length
         noty text: $.i18n.t('teacher.assigning_course'), layout: 'center', type: 'information', killer: true
         return courseInstance.addMembers(members)
@@ -546,7 +574,7 @@ module.exports = class TeacherClassView extends RootView
         noty text: msg, layout: 'center', type: 'error', killer: true, timeout: 3000
       complete: => @render()
     })
-    
+
   onClickSelectAll: (e) ->
     e.preventDefault()
     checkboxStates = _.clone @state.get('checkboxStates')
@@ -600,4 +628,4 @@ module.exports = class TeacherClassView extends RootView
       when 'not-enrolled' then $.i18n.t('teacher.status_not_enrolled')
       when 'enrolled' then (if expires then $.i18n.t('teacher.status_enrolled') else '-')
       when 'expired' then $.i18n.t('teacher.status_expired')
-    return string.replace('{{date}}', moment(expires).utc().format('l'))
+    return string.replace('{{date}}', moment(expires).utc().format('ll'))

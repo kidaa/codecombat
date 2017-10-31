@@ -18,8 +18,10 @@ module.exports = class LevelSetupManager extends CocoClass
     unless @level = @options.level
       @loadLevel()
     if @session
+      console.log 'LevelSetupManager given preloaded session:', @session.cid
       @fillSessionWithDefaults()
     else
+      console.log 'LevelSetupManager given no preloaded session.'
       @loadSession()
 
   loadLevel: ->
@@ -33,7 +35,12 @@ module.exports = class LevelSetupManager extends CocoClass
     #sessionURL += "?team=#{@team}" if @options.team  # TODO: figure out how to get the teams for multiplayer PVP hero style
     sessionURL += "?course=#{@options.courseID}" if @options.courseID
     @session = new LevelSession().setURL sessionURL
+    originalCid = @session.cid
     @session = @supermodel.loadModel(@session).model
+    if originalCid is @session.cid
+      console.log 'LevelSetupManager made a new Level Session', @session
+    else
+      console.log 'LevelSetupManager used a Level Session from the SuperModel', @session
     if @session.loaded then @onSessionSync() else @listenToOnce @session, 'sync', @onSessionSync
 
   onLevelSync: ->
@@ -131,6 +138,28 @@ module.exports = class LevelSetupManager extends CocoClass
           "left-ring": "54692d2aa2b1f53ce794438f"
         }
       }
+    
+    if @level.get('slug') is 'tesla-tesoro'
+      #Need to update this for my level
+      assassin = '566a2202e132c81f00f38c81'
+      @session.set 'heroConfig', {
+        "thangType": assassin
+        "inventory":{
+          "eyes": "546941fda2b1f53ce794441d",
+          "feet": "546d4d8e9df4a17d0d449acd",  
+          "minion": "54eb5d1649fa2d5c905ddf52",
+          "neck": "54693363a2b1f53ce79443d1",
+          "wrists": "54693830a2b1f53ce79443f1",
+          "programming-book": "557871261ff17fef5abee3ee",
+          "left-ring": "5441c35c4e9aeb727cc9711d",
+          "torso": "546d3d549df4a17d0d449a47",
+          "head": "546d47c09df4a17d0d449a6f",
+          "left-hand": "54eb528449fa2d5c905ddf12",
+          "right-hand": "544d86318494308424f564e8"
+          }
+      }
+
+
       @onInventoryModalPlayClicked()
       return
     if @level.get('slug') is 'assembly-speed'
@@ -165,6 +194,7 @@ module.exports = class LevelSetupManager extends CocoClass
     else if allowedHeroSlugs = @level.get 'allowedHeroes'
       unless _.find(allowedHeroSlugs, (slug) -> ThangType.heroes[slug] is me.get('heroConfig')?.thangType)
         firstModal = @heroesModal
+    firstModal = @inventoryModal if me.isStudent()
     lastHeroesEarned = me.get('earned')?.heroes ? []
     lastHeroesPurchased = me.get('purchased')?.heroes ? []
 
@@ -197,11 +227,14 @@ module.exports = class LevelSetupManager extends CocoClass
     PlayLevelView = 'views/play/level/PlayLevelView'
     LadderView = 'views/ladder/LadderView'
     viewClass = if @options.levelPath is 'ladder' then LadderView else PlayLevelView
-    route = "/play/#{@options.levelPath || 'level'}/#{@options.levelID}"
-    route += "?codeLanguage=" + @level.get('primerLanguage') if @level.get('primerLanguage')
+    route = "/play/#{@options.levelPath || 'level'}/#{@options.levelID}?"
+    route += "&codeLanguage=" + @level.get('primerLanguage') if @level.get('primerLanguage')
+    if @options.courseID? and @options.courseInstanceID?
+      route += "&course=#{@options.courseID}&course-instance=#{@options.courseInstanceID}"
+    @supermodel.registerModel(@session)
     Backbone.Mediator.publish 'router:navigate', {
       route, viewClass
-      viewArgs: [{supermodel: @supermodel}, @options.levelID]
+      viewArgs: [{supermodel: @supermodel, sessionID: @session.id}, @options.levelID]
     }
 
   destroy: ->

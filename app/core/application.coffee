@@ -4,8 +4,10 @@ GitHubHandler = require 'core/social-handlers/GitHubHandler'
 ModuleLoader = require 'core/ModuleLoader'
 locale = require 'locale/locale'
 {me} = require 'core/auth'
+storage = require 'core/storage'
 Tracker = require 'core/Tracker'
 CocoModel = require 'models/CocoModel'
+api = require 'core/api'
 
 marked.setOptions {gfm: true, sanitize: true, smartLists: true, breaks: false}
 
@@ -51,6 +53,16 @@ Application = {
     
     Router = require('core/Router')
     @isProduction = -> document.location.href.search('https?://localhost') is -1
+    Vue.config.devtools = not @isProduction()
+
+    # propagate changes from global 'me' User to 'me' vuex module
+    store = require('core/store')
+    me.on('change', ->
+      store.commit('me/updateUser', me.changedAttributes())
+    )
+    store.commit('me/updateUser', me.attributes)
+    store.commit('updateFeatures', features)
+
     @isIPadApp = webkit?.messageHandlers? and navigator.userAgent?.indexOf('CodeCombat-iPad') isnt -1
     $('body').addClass 'ipad' if @isIPadApp
     $('body').addClass 'picoctf' if window.serverConfig.picoCTF
@@ -95,6 +107,7 @@ Application = {
       #resPostPath: '/languages/add/__lng__/__ns__'
     }, (t) =>
       @router = new Router()
+      @userIsIdle = false
       onIdleChanged = (to) => => Backbone.Mediator.publish 'application:idle-changed', idle: @userIsIdle = to
       @idleTracker = new Idle
         onAway: onIdleChanged true
@@ -115,17 +128,17 @@ Application = {
       me.checkForNewAchievement().then => @checkForNewAchievement()
       
   featureMode: {
-    useCodePlay: ->
-      $.ajax({method: 'put', url: '/admin/feature-mode/code-play'}).then(-> document.location.reload())
-      
-    usePicoCtf: ->
-      $.ajax({method: 'put', url: '/admin/feature-mode/pico-ctf'}).then(-> document.location.reload())
-
-    clear: ->
-      $.ajax({method: 'delete', url: '/admin/feature-mode'}).then(-> document.location.reload())
+    useChina: -> api.admin.setFeatureMode('china').then(-> document.location.reload())
+    useCodePlay: -> api.admin.setFeatureMode('code-play').then(-> document.location.reload())
+    usePicoCtf: -> api.admin.setFeatureMode('pico-ctf').then(-> document.location.reload())
+    useBrainPop: -> api.admin.setFeatureMode('brain-pop').then(-> document.location.reload())
+    clear: -> api.admin.clearFeatureMode().then(-> document.location.reload())
   }
       
   loadedStaticPage: window.alreadyLoadedView?
+  
+  setHocCampaign: (campaignSlug) -> storage.save('hoc-campaign', campaignSlug)
+  getHocCampaign: -> storage.load('hoc-campaign')
   
 }
 
