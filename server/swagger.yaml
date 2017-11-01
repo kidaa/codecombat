@@ -131,6 +131,11 @@ paths:
       description: Returns a `User`.
       parameters:
         - $ref: '#/parameters/handlePathParameter'
+        - name: includePlayTime
+          in: query
+          description: "Set to non-empty string to include stats.playTime in response"
+          required: false
+          type: string
       responses:
         "200":
           description: 'The requested user'
@@ -322,7 +327,7 @@ paths:
           schema:
             $ref: '#/definitions/ClassroomResponse'
         
-  /classrooms/{classroomHandle}/course/{courseHandle}/enrolled:
+  /classrooms/{classroomHandle}/courses/{courseHandle}/enrolled:
     put:
       tags:
         - classrooms
@@ -353,6 +358,32 @@ paths:
           description: 'The classroom with the user enrolled.'
           schema:
             $ref: '#/definitions/ClassroomResponse'
+            
+  /classrooms/{classroomHandle}/members/{memberHandle}/sessions:
+    get:
+      tags:
+        - classrooms
+      description: |
+        Returns a list of all levels played by the user for the classroom.
+      parameters:
+        - name: classroomHandle
+          in: path
+          type: string
+          required: true
+          description: The classroom's `_id`.
+        - name: memberHandle
+          in: path
+          type: string
+          required: true
+          description: The classroom member's `_id`.
+          
+      responses:
+        "200":
+          description: 'The classroom with the user enrolled.'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/LevelSessionResponse'
             
   /user-lookup/{property}/{value}:
     get:
@@ -458,6 +489,9 @@ definitions:
             type: object
             additionalProperties:
               type: number
+          playTime:
+            type: number
+            description: 'Included only when specifically requested on the endpoint'
       oAuthIdentities:
         type: array
         items:
@@ -521,3 +555,36 @@ definitions:
       gamesPlayed:
         type: number
         description: "Number of levels played"
+
+  LevelSessionResponse:
+    type: object
+    properties:
+      state:
+        type: object
+        properties:
+          complete:
+            type: boolean
+      level:
+        type: object
+        properties:
+          original:
+            type: string
+            description: 'The id for the level.'
+      creator:
+        type: 'string'
+        $ref: '#/definitions/objectIdString'
+      playtime:
+        type: 'integer'
+        description: 'Time played in seconds.'
+      changed:
+        $ref: '#/definitions/datetimeString'
+      created:
+        $ref: '#/definitions/datetimeString'
+      dateFirstCompleted:
+        $ref: '#/definitions/datetimeString'
+      submitted:
+        type: 'boolean'
+        description: 'For arenas. Whether or not the level has been added to the ladder.'
+      published:
+        type: 'boolean'
+        description: 'For shareable projects. Whether or not the project has been shared with classmates.'

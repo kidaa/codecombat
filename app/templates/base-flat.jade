@@ -3,23 +3,21 @@ mixin accountLinks
     a(href="/user/#{me.getSlugOrID()}", data-i18n="nav.profile")
   li
     a(href="/account/settings", data-i18n="play.settings")
-  if me.isAdmin() || !(me.isTeacher() || me.isStudent())
+  if me.isAdmin() || !(me.isTeacher() || me.isStudent() || me.freeOnly())
     li
       a(href="/account/payments", data-i18n="account.payments")
-  if me.isAdmin() || !(me.isTeacher() || me.isStudent()) || me.hasSubscription()
+  if me.isAdmin() || !(me.isTeacher() || me.isStudent() || me.freeOnly()) || me.hasSubscription()
     li
       a(href="/account/subscription", data-i18n="account.subscription")
-  if me.isAdmin() || !(me.isTeacher() || me.isStudent())
-    li
-      a(href="/account/prepaid", data-i18n="account.prepaid_codes")
   if me.isAdmin()
     li
       a(href="/admin", data-i18n="account_settings.admin")
   if serverSession && serverSession.amActually
     li
       a#nav-stop-spying-button Stop Spying
-  li
-    a#logout-button(data-i18n="login.log_out")
+  if !features.codePlay
+    li
+      a#logout-button(data-i18n="login.log_out")
 
 .style-flat
   block header
@@ -33,7 +31,7 @@ mixin accountLinks
                 span.icon-bar
                 span.icon-bar
                 span.icon-bar
-              a.navbar-brand(href="/")
+              a.navbar-brand(href="/home")
                 if serverConfig.codeNinjas
                   img#logo-img.code-ninjas-powered-by(src="/images/pages/base/logo.png")
                   img.code-ninjas-logo(src="/images/pages/base/code-ninjas-logo-right.png")
@@ -107,13 +105,15 @@ mixin accountLinks
                 li
                   a(href="/about", data-i18n="nav.about")
                 li
-                  a(href="/about#jobs", data-i18n="nav.jobs")
+                  a(href="/about#careers", data-i18n="nav.careers")
                 li
                   a(href="http://blog.codecombat.com/", data-i18n="nav.blog")
                 li
                   a(href="/legal", data-i18n="nav.legal")
                 li
                   a(href="/privacy", data-i18n="nav.privacy")
+                if features.china
+                  li 京ICP备16061132号
 
             if !me.isStudent()
               .col-sm-3
@@ -157,7 +157,7 @@ mixin accountLinks
                   a(href="https://twitter.com/codecombat", data-i18n="nav.twitter")
 
       #final-footer.small.text-center
-        | Copyright ©2016 CodeCombat. All Rights Reserved.
+        | Copyright ©2017 CodeCombat. All Rights Reserved.
         br.hidden-lg.hidden-md
         img(src="/images/pages/base/logo.png" alt="CodeCombat")
         br.hidden-lg.hidden-md

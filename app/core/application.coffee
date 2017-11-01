@@ -4,6 +4,7 @@ GitHubHandler = require 'core/social-handlers/GitHubHandler'
 ModuleLoader = require 'core/ModuleLoader'
 locale = require 'locale/locale'
 {me} = require 'core/auth'
+storage = require 'core/storage'
 Tracker = require 'core/Tracker'
 CocoModel = require 'models/CocoModel'
 api = require 'core/api'
@@ -106,6 +107,7 @@ Application = {
       #resPostPath: '/languages/add/__lng__/__ns__'
     }, (t) =>
       @router = new Router()
+      @userIsIdle = false
       onIdleChanged = (to) => => Backbone.Mediator.publish 'application:idle-changed', idle: @userIsIdle = to
       @idleTracker = new Idle
         onAway: onIdleChanged true
@@ -129,10 +131,14 @@ Application = {
     useChina: -> api.admin.setFeatureMode('china').then(-> document.location.reload())
     useCodePlay: -> api.admin.setFeatureMode('code-play').then(-> document.location.reload())
     usePicoCtf: -> api.admin.setFeatureMode('pico-ctf').then(-> document.location.reload())
+    useBrainPop: -> api.admin.setFeatureMode('brain-pop').then(-> document.location.reload())
     clear: -> api.admin.clearFeatureMode().then(-> document.location.reload())
   }
       
   loadedStaticPage: window.alreadyLoadedView?
+  
+  setHocCampaign: (campaignSlug) -> storage.save('hoc-campaign', campaignSlug)
+  getHocCampaign: -> storage.load('hoc-campaign')
   
 }
 

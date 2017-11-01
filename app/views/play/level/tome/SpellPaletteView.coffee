@@ -24,7 +24,6 @@ module.exports = class SpellPaletteView extends CocoView
     'tome:change-language': 'onTomeChangedLanguage'
     'tome:palette-clicked': 'onPalleteClick'
     'surface:stage-mouse-down': 'hide'
-    'level:set-playing': 'hide'
 
 
   events:
@@ -39,7 +38,6 @@ module.exports = class SpellPaletteView extends CocoView
     @showsHelp = docs.specificArticles?.length or docs.generalArticles?.length
     @createPalette()
     $(window).on 'resize', @onResize
-    console.log "My thang is", @thang
 
   getRenderData: ->
     c = super()
@@ -101,7 +99,6 @@ module.exports = class SpellPaletteView extends CocoView
       @$el.toggleClass 'web-dev', @options.level.isType('web-dev')
 
     tts = @supermodel.getModels ThangType
-    console.log @deferredDocs
 
     for dn of @deferredDocs
       doc = @deferredDocs[dn]
@@ -338,11 +335,9 @@ module.exports = class SpellPaletteView extends CocoView
     @render()
 
   onSectionHeaderClick: (e) ->
-
-    $et = @$(e.target)
+    $et = @$(e.currentTarget)
     target = @$($et.attr('data-panel'))
     isCollapsed = !target.hasClass('in')
-    console.log "O", target[0], isCollapsed
     if isCollapsed
       target.collapse 'show'
       $et.find('.glyphicon').removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down')

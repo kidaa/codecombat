@@ -4,6 +4,7 @@ RootView = require 'views/core/RootView'
 template = require 'templates/admin'
 AdministerUserModal = require 'views/admin/AdministerUserModal'
 forms = require 'core/forms'
+utils = require 'core/utils'
 
 Campaigns = require 'collections/Campaigns'
 Classroom = require 'models/Classroom'
@@ -25,6 +26,7 @@ module.exports = class MainAdminView extends RootView
     'click #stop-spying-btn': 'onClickStopSpyingButton'
     'click #increment-button': 'incrementUserAttribute'
     'click .user-spy-button': 'onClickUserSpyButton'
+    'click .teacher-dashboard-button': 'onClickTeacherDashboardButton'
     'click #user-search-result': 'onClickUserSearchResult'
     'click #create-free-sub-btn': 'onClickFreeSubLink'
     'click #terminal-create': 'onClickTerminalSubLink'
@@ -40,6 +42,12 @@ module.exports = class MainAdminView extends RootView
       @supermodel.trackModel(@amActually)
     @featureMode = window.serverSession.featureMode
     super()
+
+  afterInsert: ->
+    super()
+    if search = utils.getQueryVariable 'search'
+      $('#user-search').val search
+      $('#user-search-button').click()
 
   onClickStopSpyingButton: ->
     button = @$('#stop-spying-btn')
@@ -79,6 +87,14 @@ module.exports = class MainAdminView extends RootView
         errors.showNotyNetworkError(arguments...)
     })
 
+  onClickTeacherDashboardButton: (e) ->
+    e.stopPropagation()
+    userID = $(e.target).closest('tr').data('user-id')
+    button = $(e.currentTarget)
+    forms.disableSubmit(button)
+    url = "/teachers/classes?teacherID=#{userID}"
+    application.router.navigate(url, { trigger: true })
+
   onSubmitUserSearchForm: (e) ->
     e.preventDefault()
     searchValue = @$el.find('#user-search').val()
@@ -104,7 +120,16 @@ module.exports = class MainAdminView extends RootView
     forms.enableSubmit(@$('#user-search-button'))
     result = ''
     if users.length
-      result = ("<tr data-user-id='#{user._id}'><td><code>#{user._id}</code></td><td>#{_.escape(user.name or 'Anonymous')}</td><td>#{_.escape(user.email)}</td><td><button class='user-spy-button'>Spy</button></td></tr>" for user in users)
+      result = ("
+      <tr data-user-id='#{user._id}'>
+        <td><code>#{user._id}</code></td>
+        <td><img src='/db/user/#{user._id}/avatar?s=18' class='avatar'> #{_.escape(user.name or 'Anonymous')}</td>
+        <td>#{_.escape(user.email)}</td>
+        <td>
+          <button class='user-spy-button'>Spy</button>
+          #{if new User(user).isTeacher() then "<button class='teacher-dashboard-button'>View Classes</button>" else ""}
+        </td>
+      </tr>" for user in users)
       result = "<table class=\"table\">#{result.join('\n')}</table>"
     @$el.find('#user-search-result').html(result)
 

@@ -14,6 +14,7 @@ utils = require 'core/utils'
 urls = require 'core/urls'
 Course = require 'models/Course'
 GameDevVictoryModal = require './modal/GameDevVictoryModal'
+GameDevTrackView = require './GameDevTrackView'
 
 require 'game-libraries'
 
@@ -25,6 +26,8 @@ module.exports = class PlayGameDevLevelView extends RootView
   
   subscriptions:
     'god:new-world-created': 'onNewWorld'
+    'surface:ticked': 'onSurfaceTicked'
+    'god:streaming-world-updated': 'onStreamingWorldUpdated'
 
   events:
     'click #edit-level-btn': 'onEditLevelButton'
@@ -51,6 +54,7 @@ module.exports = class PlayGameDevLevelView extends RootView
     @levelLoader = new LevelLoader({ @supermodel, @levelID, @sessionID, observing: true, team: TEAM, @courseID })
     @supermodel.setMaxProgress 1 # Hack, why are we setting this to 0.2 in LevelLoader?
     @listenTo @state, 'change', _.debounce @renderAllButCanvas
+    @updateDb = _.throttle(@updateDb, 1000)
 
     @levelLoader.loadWorldNecessities()
 
@@ -112,7 +116,9 @@ module.exports = class PlayGameDevLevelView extends RootView
         levelSlug: @level.get('slug')
       }
       window.tracker?.trackEvent 'Play GameDev Level - Load', @eventProperties, ['Mixpanel']
-      @god.createWorld(@spells, false, false, true)
+      @insertSubView new GameDevTrackView {} if @level.isType('game-dev')
+      sessionDb = @session.get('keyValueDb') ? {}
+      @god.createWorld(@spells, false, false, true, sessionDb)
 
     .catch (e) =>
       throw e if e.stack
@@ -129,7 +135,8 @@ module.exports = class PlayGameDevLevelView extends RootView
     }
 
   onClickPlayButton: ->
-    @god.createWorld(@spells, false, true)
+    sessionDb = @session.get('keyValueDb') ? {}
+    @god.createWorld(@spells, false, true, false, sessionDb)
     Backbone.Mediator.publish('playback:real-time-playback-started', {})
     Backbone.Mediator.publish('level:set-playing', {playing: true})
     action = if @state.get('playing') then 'Play GameDev Level - Restart Level' else 'Play GameDev Level - Start Level'
@@ -158,6 +165,25 @@ module.exports = class PlayGameDevLevelView extends RootView
       modal = new GameDevVictoryModal({ shareURL: @state.get('shareURL'), @eventProperties })
       @openModalView(modal)
       modal.once 'replay', @onClickPlayButton, @
+
+  onSurfaceTicked: (e) ->
+    return if @studentGoals
+    goals = @surface.world?.thangMap?['Hero Placeholder']?.stringGoals
+    return unless _.size(goals)
+    @updateRealTimeGoals(goals)
+
+  updateRealTimeGoals: (goals) ->
+    @studentGoals = goals?.map((g) -> JSON.parse(g))
+    @renderSelectors '#directions'
+
+  onStreamingWorldUpdated: (e) ->
+    @updateDb()
+
+  updateDb: ->
+    return unless @state.get('playing')
+    if @surface.world.keyValueDb and not _.isEqual(@surface.world.keyValueDb, @session.attributes.keyValueDb)
+      @session.updateKeyValueDb(_.cloneDeep(@surface.world.keyValueDb))
+      @session.saveKeyValueDb()
 
   destroy: ->
     @levelLoader?.destroy()

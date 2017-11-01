@@ -19,6 +19,8 @@ TrialRequest = require '../models/TrialRequest'
 sendwithus = require '../sendwithus'
 co = require 'co'
 delighted = require '../delighted'
+subscriptions = require './subscriptions'
+{ makeHostUrl } = require '../commons/urls'
 
 module.exports =
   fetchByCode: wrap (req, res, next) ->
@@ -30,7 +32,7 @@ module.exports =
       throw new errors.NotFound('Classroom not found.')
     classroom = classroom.toObject()
     # Tack on the teacher's name for display to the user
-    owner = (yield User.findOne({ _id: mongoose.Types.ObjectId(classroom.ownerID) }).select('name')).toObject()
+    owner = (yield User.findOne({ _id: mongoose.Types.ObjectId(classroom.ownerID) }).select('name firstName lastName')).toObject()
     res.status(200).send({ data: classroom, owner } )
 
   getByOwner: wrap (req, res, next) ->
@@ -112,34 +114,13 @@ module.exports =
     classroom = yield database.getDocFromHandle(req, Classroom)
     throw new errors.NotFound('Classroom not found.') if not classroom
     throw new errors.Forbidden('You do not own this classroom.') unless req.user.isAdmin() or classroom.get('ownerID').equals(req.user._id)
-    courseLevelsMap = {}
-    codeLanguage = classroom.get('aceConfig.language')
-    for course in classroom.get('courses') ? []
-      courseLevelsMap[course._id.toHexString()] = _.map(course.levels, (l) ->
-        {'level.original':l.original?.toHexString(), codeLanguage: l.primerLanguage or codeLanguage}
-      )
-    courseInstances = yield CourseInstance.find({classroomID: classroom._id}).select('_id courseID members').lean()
-    memberCoursesMap = {}
-    for courseInstance in courseInstances
-      for userID in courseInstance.members ? []
-        memberCoursesMap[userID.toHexString()] ?= []
-        memberCoursesMap[userID.toHexString()].push(courseInstance.courseID)
+
     memberLimit = parse.getLimitFromReq(req, {default: 10, max: 100, param: 'memberLimit'})
     memberSkip = parse.getSkipFromReq(req, {param: 'memberSkip'})
     members = classroom.get('members') or []
     members = members.slice(memberSkip, memberSkip + memberLimit)
-    dbqs = []
-    select = 'state.complete level creator playtime changed created dateFirstCompleted submitted'
-    for member in members
-      $or = []
-      for courseID in memberCoursesMap[member.toHexString()] ? []
-        for subQuery in courseLevelsMap[courseID.toHexString()] ? []
-          $or.push(_.assign({creator: member.toHexString()}, subQuery))
-      if $or.length
-        query = { $or }
-        dbqs.push(LevelSession.find(query).select(select).lean().exec())
-    results = yield dbqs
-    sessions = _.flatten(results)
+
+    sessions = yield classroom.fetchSessionsForMembers(members)
     res.status(200).send(sessions)
 
   fetchMembers: wrap (req, res, next) ->
@@ -204,11 +185,11 @@ module.exports =
     query = {$and: [
       {_id: {$gte: utils.objectIdFromTimestamp(startDay + "T00:00:00.000Z")}}
       {'level.original': {$in: levelOriginals}}
-      {heroConfig: {$exists: false}}
+      { isForClassroom: true }
       {'state.complete': true}
       ]}
     query.$and.push({_id: {$lt: utils.objectIdFromTimestamp(endDay + "T00:00:00.000Z")}}) if endDay
-    project = {'level.original': 1, playtime: 1}
+    project = {creator: 1, 'level.original': 1, playtime: 1}
     levelSessions = yield LevelSession.find(query, project).lean()
     # console.log "DEBUG: courseID=#{req.query?.courseID} level sessions=#{levelSessions.length}"
 
@@ -286,6 +267,9 @@ module.exports =
     freeCourseInstanceIDs = (courseInstance._id for courseInstance in freeCourseInstances)
     yield CourseInstance.update({_id: {$in: freeCourseInstanceIDs}}, { $addToSet: { members: req.user._id }})
     yield User.update({ _id: req.user._id }, { $addToSet: { courseInstances: { $each: freeCourseInstanceIDs } } })
+
+    yield subscriptions.unsubscribeUser(req, req.user, false)
+
     res.send(classroom.toObject({req: req}))
 
   setStudentPassword: wrap (req, res, next) ->
@@ -331,7 +315,7 @@ module.exports =
         email_data:
           teacher_name: req.user.broadName()
           class_name: classroom.get('name')
-          join_link: "https://codecombat.com/students?_cc=" + joinCode
+          join_link: makeHostUrl(req, '/students?_cc=' + joinCode)
           join_code: joinCode
       sendwithus.api.send context, _.noop
 

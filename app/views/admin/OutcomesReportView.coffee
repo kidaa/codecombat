@@ -13,8 +13,6 @@ Course = require 'models/Course'
 Courses = require 'collections/Courses'
 CourseInstances = require 'collections/CourseInstances'
 require('vendor/co')
-require('vendor/vue')
-require('vendor/vuex')
 helper = require 'lib/coursesHelper'
 utils = require 'core/utils'
 
@@ -35,21 +33,23 @@ OutcomesReportComponent = Vue.extend
   template: require('templates/admin/outcomes-report-view')()
   data: ->
     accountManager: me.toJSON()
-    teacherEmail: ''
+    teacherEmail: utils.getQueryVariable('email')
     teacher: null
     teacherFullName: null
     accountManagerFullName: null
     schoolName: null
     schoolAddress: null
     trialRequest: null
-    startDate: null
     classrooms: null
     courses: null
     courseInstances: []
     dataReady: false
     isClassroomSelected: {}
     isCourseSelected: {}
+    startDate: null
     endDate: moment(new Date()).format('MMM D, YYYY')
+    earliestSessionDate: new Date()
+    earliestClassroomDate: new Date()
     insightsMarkdown: ""
   computed:
     sessions: ->
@@ -119,11 +119,11 @@ OutcomesReportComponent = Vue.extend
       @schoolName ?= trialRequest?.properties.nces_name
       @schoolName ?= trialRequest?.properties.school
       @schoolName ?= trialRequest?.properties.organization
-      @startDate = moment(new Date(trialRequest?.created)).format('MMM D, YYYY')
+      @earliestClassroomDate = new Date(trialRequest?.created)
     classrooms: (classrooms) ->
       for classroom in classrooms
         if _.isUndefined(@isClassroomSelected[classroom._id])
-          Vue.set(@isClassroomSelected, classroom._id, true)
+          Vue.set(@isClassroomSelected, classroom._id, not classroom.archived)
     courses: (courses) ->
       for course in courses
         if _.isUndefined(@isCourseSelected[course._id])
@@ -243,6 +243,10 @@ OutcomesReportComponent = Vue.extend
                   Object.freeze(sessions)
                   Object.freeze(session) for session in sessions
                   Vue.set classroom, 'sessions', sessions
+                  return classroom
+              .then (classrooms) =>
+                @earliestSessionDate = _.min _.map classrooms, (classroom) ->
+                  _.min _.map classroom.sessions, (s) -> new Date(s.created)
             Promise.all([
               @fetchCourseInstances(teacher).then (courseInstances) =>
                 @courseInstances = courseInstances
@@ -255,7 +259,8 @@ OutcomesReportComponent = Vue.extend
               @courses = utils.sortCourses(courseIDs.map (courseID) =>
                 indexedCourses[courseID]
               )
-          ])
+          ]).then (trialRequests, classrooms) =>
+            @startDate = moment(_.max([@earliestSessionDate, @earliestClassroomDate])).format('MMM D, YYYY')
     
     fetchCompleteUser: (data) ->
       new Promise (accept, reject) ->
@@ -269,9 +274,6 @@ OutcomesReportComponent = Vue.extend
       new Promise (accept, reject) ->
         trialRequests = new TrialRequests()
         trialRequests.fetchByApplicant(teacher._id).then (data) ->
-          if data.length is 0
-            noty text: "WARNING: No trial request found for that user!", type: 'error'
-            return reject("WARNING: No trial request found for that user!")
           return accept(data)
         , (error) ->
           return reject(error) if error

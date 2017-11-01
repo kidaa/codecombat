@@ -234,6 +234,12 @@ module.exports = Surface = class Surface extends CocoClass
     frame = @world.getFrame(@getCurrentFrame())
     return unless frame
     frame.restoreState()
+
+    if @options.levelType is 'game-dev'
+      Backbone.Mediator.publish('surface:ui-tracked-properties-changed',
+        thangStateMap: frame.thangStateMap
+      )
+
     current = Math.max(0, Math.min(@currentFrame, @world.frames.length - 1))
     if current - Math.floor(current) > 0.01 and Math.ceil(current) < @world.frames.length - 1
       next = Math.ceil current
@@ -567,7 +573,9 @@ module.exports = Surface = class Surface extends CocoClass
       newWidth = 1024
       newHeight = newWidth / aspectRatio
     else if @options.resizeStrategy is 'wrapper-size'
-      newWidth = $('#canvas-wrapper').width()
+      canvasWrapperWidth = $('#canvas-wrapper').width()
+      pageHeight = window.innerHeight - $('#control-bar-view').outerHeight() - $('#playback-view').outerHeight()
+      newWidth = Math.min(pageWidth, pageHeight * aspectRatio, canvasWrapperWidth)
       newHeight = newWidth / aspectRatio
     else if @realTime or @options.spectateGame
       pageHeight = window.innerHeight - $('#control-bar-view').outerHeight() - $('#playback-view').outerHeight()

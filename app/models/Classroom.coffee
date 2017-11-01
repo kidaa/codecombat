@@ -77,6 +77,7 @@ module.exports = class Classroom extends CocoModel
 
   getLevels: (options={}) ->
     # options: courseID, withoutLadderLevels, projectLevels
+    # TODO: find a way to get the i18n in here so that level names can be translated (Courses don't include in their denormalized copy of levels)
     Levels = require 'collections/Levels'
     courses = @get('courses')
     return new Levels() unless courses
@@ -153,6 +154,7 @@ module.exports = class Classroom extends CocoModel
       needsPractice = utils.needsPractice(currentPlaytime, currentLevel.get('practiceThresholdMinutes'))
       nextIndex = utils.findNextLevel(levels, currentIndex, needsPractice)
     nextLevel = courseLevels.models[nextIndex]
+    nextLevel = arena if levelsLeft is 0
     nextLevel ?= _.find courseLevels.models, (level) -> not levelSessionMap[level.get('original')]?.get('state')?.complete
 
     stats =
@@ -194,3 +196,12 @@ module.exports = class Classroom extends CocoModel
     options.url = @url() + '/update-courses'
     options.type = 'POST'
     @fetch(options)
+
+  getSetting: (name) =>
+    settings = @get('settings') or {}
+    propInfo = Classroom.schema.properties.settings.properties
+    return settings[name] if name in Object.keys(settings)
+    if name in Object.keys(propInfo)
+      return propInfo[name].default
+
+    return false

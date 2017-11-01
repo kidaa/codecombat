@@ -6,6 +6,7 @@ Label = require './Label'
 AudioPlayer = require 'lib/AudioPlayer'
 {me} = require 'core/auth'
 ThangType = require 'models/ThangType'
+utils = require 'core/utils'
 
 # We'll get rid of this once level's teams actually have colors
 healthColors =
@@ -733,12 +734,6 @@ module.exports = Lank = class Lank extends CocoClass
     Backbone.Mediator.publish 'surface:gold-changed', {team: @thang.team, gold: gold, goldEarned: Math.floor(@thang.goldEarned ? 0)}
 
   shouldMuteMessage: (m) ->
-    if me.getAnnouncesActionAudioGroup() in ['no-audio', 'just-take-damage']
-      return true if m in ['moveRight', 'moveUp', 'moveDown', 'moveLeft']
-      return true if /^attack /.test m
-      return true if /^Repeating loop/.test m
-      return true if /^findNearestEnemy/.test m
-
     return false if m in ['moveRight', 'moveUp', 'moveDown', 'moveLeft']
     @previouslySaidMessages ?= {}
     t0 = @previouslySaidMessages[m] ? 0
@@ -749,10 +744,7 @@ module.exports = Lank = class Lank extends CocoClass
 
   playSounds: (withDelay=true, volume=1.0) ->
     for event in @thang.currentEvents ? []
-      if event is 'take-damage' and me.getAnnouncesActionAudioGroup() in ['no-audio', 'without-take-damage']
-        null  # Skip playing it
-      else
-        @playSound event, withDelay, volume
+      @playSound event, withDelay, volume
       if event is 'pay-bounty-gold' and @thang.bountyGold > 25 and @thang.team isnt me.team
         AudioPlayer.playInterfaceSound 'coin_1', 0.25
     if @thang.actionActivated and (action = @thang.getActionName()) isnt 'say'
@@ -765,7 +757,8 @@ module.exports = Lank = class Lank extends CocoClass
 
   playSound: (sound, withDelay=true, volume=1.0) ->
     if _.isString sound
-      sound = @thangType.get('soundTriggers')?[sound]
+      soundTriggers = utils.i18n @thangType.attributes, 'soundTriggers'
+      sound = soundTriggers?[sound]
     if _.isArray sound
       sound = sound[Math.floor Math.random() * sound.length]
     return null unless sound

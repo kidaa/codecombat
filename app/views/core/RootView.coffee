@@ -124,6 +124,9 @@ module.exports = class RootView extends CocoView
 
     if title = @getTitle() then title += ' | CodeCombat'
     else title = 'CodeCombat - Learn how to code by playing a game'
+    
+    if localStorage?.showViewNames
+      title = @constructor.name
 
     $('title').text(title)
 
@@ -159,10 +162,7 @@ module.exports = class RootView extends CocoView
     $.i18n.setLng(newLang, {})
     @saveLanguage(newLang)
 
-    loading = application.moduleLoader.loadLanguage(me.get('preferredLanguage', true))
-    if loading
-      @listenToOnce application.moduleLoader, 'load-complete', @onLanguageLoaded
-    else
+    application.moduleLoader.loadLanguage(me.get('preferredLanguage', true)).then =>
       @onLanguageLoaded()
 
   onLanguageLoaded: ->

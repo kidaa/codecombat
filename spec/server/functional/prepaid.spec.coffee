@@ -19,7 +19,7 @@ describe 'POST /db/prepaid', ->
     admin = yield utils.initAdmin()
     yield utils.loginUser(admin)
     done()
-  
+
   it 'creates a new prepaid for type "course"', utils.wrap (done) ->
     user = yield utils.initUser()
     [res, body] = yield request.postAsync({url: getURL('/db/prepaid'), json: {
@@ -32,7 +32,7 @@ describe 'POST /db/prepaid', ->
     expect(prepaid.get('creator').equals(user._id)).toBe(true)
     expect(prepaid.get('code')).toBeDefined()
     done()
-    
+
   it 'does not work for non-admins', utils.wrap (done) ->
     user = yield utils.initUser()
     yield utils.loginUser(user)
@@ -42,7 +42,7 @@ describe 'POST /db/prepaid', ->
     }})
     expect(res.statusCode).toBe(403)
     done()
-    
+
   it 'accepts start and end dates', utils.wrap (done) ->
     user = yield utils.initUser()
     [res, body] = yield request.postAsync({url: getURL('/db/prepaid'), json: {
@@ -57,8 +57,173 @@ describe 'POST /db/prepaid', ->
     expect(prepaid.get('startDate')).toBeDefined()
     expect(prepaid.get('endDate')).toBeDefined()
     done()
-    
-    
+
+describe 'GET /db/prepaid', ->
+  beforeEach utils.wrap (done) ->
+    @user = yield utils.initUser()
+    yield utils.loginUser(@user)
+    prepaid = new Prepaid({creator: @user.id, type: 'course'})
+    yield prepaid.save()
+    prepaid = new Prepaid({creator: @user.id, type: 'starter_license'})
+    yield prepaid.save()
+    prepaid = new Prepaid({creator: @user.id, type: 'terminal_subscription'})
+    yield prepaid.save()
+    prepaid = new Prepaid({creator: @user.id, type: 'subscription'})
+    yield prepaid.save()
+    done()
+
+  describe 'when creator param', ->
+    it 'returns only course and starter_license prepaids for creator', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: getURL("/db/prepaid?creator=#{@user.id}"), json: true})
+      expect(body.length).toEqual(2)
+      done()
+
+  describe 'when creator and allTypes=true', ->
+    it 'returns all for creator', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: getURL("/db/prepaid?creator=#{@user.id}&allTypes=true"), json: true})
+      expect(body.length).toEqual(4)
+      done()
+
+describe 'GET /db/prepaid/:handle/creator', ->
+  beforeEach utils.wrap (done) ->
+    yield utils.clearModels([Course, CourseInstance, Payment, Prepaid, User])
+    @creator = yield utils.initUser({role: 'teacher'})
+    @joiner = yield utils.initUser({role: 'teacher'})
+    @admin = yield utils.initAdmin()
+    yield utils.loginUser(@admin)
+    @prepaid = yield utils.makePrepaid({ creator: @creator.id })
+    yield utils.loginUser(@creator)
+    yield utils.addJoinerToPrepaid(@prepaid, @joiner)
+    @url = getURL("/db/prepaid/#{@prepaid.id}/creator")
+    done()
+
+  describe 'when the prepaid ID is wrong', ->
+    beforeEach utils.wrap (done) ->
+      yield utils.loginUser(@creator)
+      @url = getURL("/db/prepaid/123456789012345678901234/creator")
+      done()
+
+    it 'returns a NotFound error', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(404)
+      done()
+
+  describe 'when user is the creator', ->
+    beforeEach utils.wrap (done) ->
+      yield utils.loginUser(@creator)
+      done()
+
+    it 'returns only course and starter_license prepaids for creator', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(200)
+      expect(body.email).toEqual(@creator.email)
+      expect(body.name).toEqual(@creator.name)
+      expect(body.firstName).toEqual(@creator.firstName)
+      expect(body.lastName).toEqual(@creator.lastName)
+      done()
+
+  describe 'when user is a joiner', ->
+    beforeEach utils.wrap (done) ->
+      yield utils.loginUser(@joiner)
+      done()
+      
+    it 'returns only course and starter_license prepaids for creator', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(200)
+      expect(body.email).toEqual(@creator.email)
+      expect(body.name).toEqual(@creator.name)
+      expect(body.firstName).toEqual(@creator.firstName)
+      expect(body.lastName).toEqual(@creator.lastName)
+      done()
+
+  describe 'when user is not a teacher', ->
+    beforeEach utils.wrap (done) ->
+      @user = yield utils.initUser()
+      yield utils.loginUser(@user)
+      done()
+
+    it 'returns a Forbidden Error', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(403)
+      expect(body.email).toBeUndefined()
+      done()
+
+  describe 'when user is neither the creator nor joiner', ->
+    beforeEach utils.wrap (done) ->
+      @user = yield utils.initUser({role: 'teacher'})
+      yield utils.loginUser(@user)
+      done()
+
+    it 'returns a Forbidden Error', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(403)
+      expect(body.email).toBeUndefined()
+      done()
+      
+describe 'GET /db/prepaid/:handle/joiners', ->
+  beforeEach utils.wrap (done) ->
+    yield utils.clearModels([Course, CourseInstance, Payment, Prepaid, User])
+    @creator = yield utils.initUser({role: 'teacher'})
+    @joiner = yield utils.initUser({role: 'teacher', firstName: 'joiner', lastName: 'one'})
+    @joiner2 = yield utils.initUser({role: 'teacher', firstName: 'joiner', lastName: 'two'})
+    @admin = yield utils.initAdmin()
+    yield utils.loginUser(@admin)
+    @prepaid = yield utils.makePrepaid({ creator: @creator.id })
+    yield utils.loginUser(@creator)
+    yield utils.addJoinerToPrepaid(@prepaid, @joiner)
+    yield utils.addJoinerToPrepaid(@prepaid, @joiner2)
+    @url = getURL("/db/prepaid/#{@prepaid.id}/joiners")
+    done()
+
+  describe 'when user is the creator', ->
+    beforeEach utils.wrap (done) ->
+      yield utils.loginUser(@creator)
+      done()
+
+    it 'returns an array of users', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(200)
+      expect(body.length).toBe(2)
+      expect(body[0]._id).toEqual(@joiner._id+'')
+      expect(_.omit(body[0], '_id')).toEqual(_.pick(@joiner.toObject(), 'name', 'email', 'firstName', 'lastName'))
+      expect(_.omit(body[1], '_id')).toEqual(_.pick(@joiner2.toObject(), 'name', 'email', 'firstName', 'lastName'))
+      done()
+
+  describe 'when user is not a teacher', ->
+    beforeEach utils.wrap (done) ->
+      @user = yield utils.initUser()
+      yield utils.loginUser(@user)
+      done()
+
+    it 'returns a Forbidden Error', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(403)
+      expect(body.email).toBeUndefined()
+      done()
+
+  describe 'when user is not the creator', ->
+    beforeEach utils.wrap (done) ->
+      yield utils.loginUser(@joiner)
+      done()
+
+    it 'returns a Forbidden Error', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(403)
+      expect(body.email).toBeUndefined()
+      done()
+
+  describe 'when user is neither the creator nor joiner', ->
+    beforeEach utils.wrap (done) ->
+      @user = yield utils.initUser({role: 'teacher'})
+      yield utils.loginUser(@user)
+      done()
+
+    it 'returns a Forbidden Error', utils.wrap (done) ->
+      [res, body] = yield request.getAsync({url: @url, json: true})
+      expect(res.statusCode).toBe(403)
+      expect(body.email).toBeUndefined()
+      done()
+
 describe 'GET /db/prepaid/:handle', ->
   it 'populates startDate and endDate with default values', utils.wrap (done) ->
     prepaid = new Prepaid({type: 'course' })
@@ -67,10 +232,9 @@ describe 'GET /db/prepaid/:handle', ->
     expect(body.endDate).toBe(Prepaid.DEFAULT_END_DATE)
     expect(body.startDate).toBe(Prepaid.DEFAULT_START_DATE)
     done()
-  
 
 describe 'POST /db/prepaid/:handle/redeemers', ->
-  
+
   beforeEach utils.wrap (done) ->
     yield utils.clearModels([Course, CourseInstance, Payment, Prepaid, User])
     @teacher = yield utils.initUser({role: 'teacher'})
@@ -93,6 +257,25 @@ describe 'POST /db/prepaid/:handle/redeemers', ->
     expect(@student.get('role')).toBe('student')
     done()
 
+  describe 'when user is a joiner', ->
+    beforeEach ->
+      @joiner = yield utils.initUser({role: 'teacher', firstName: 'joiner', lastName: 'one'})
+      yield utils.loginUser(@admin)
+      yield utils.loginUser(@teacher)
+      yield utils.addJoinerToPrepaid(@prepaid, @joiner)
+      yield utils.loginUser(@joiner)
+
+    it 'adds a given user to the redeemers property', utils.wrap (done) ->
+      [res, body] = yield request.postAsync {uri: @url, json: { userID: @student.id } }
+      expect(body.redeemers.length).toBe(1)
+      expect(res.statusCode).toBe(201)
+      prepaid = yield Prepaid.findById(body._id)
+      expect(prepaid.get('redeemers').length).toBe(1)
+      @student = yield User.findById(@student.id)
+      expect(@student.get('coursePrepaid')._id.equals(@prepaid._id)).toBe(true)
+      expect(@student.get('role')).toBe('student')
+      done()
+
   it 'returns 403 if maxRedeemers is reached', utils.wrap (done) ->
     admin = yield utils.initAdmin()
     yield utils.loginUser(admin)
@@ -104,7 +287,7 @@ describe 'POST /db/prepaid/:handle/redeemers', ->
     expect(res.body.message).toBe('Too many redeemers')
     done()
 
-  it 'returns 403 unless the user is the "creator"', utils.wrap (done) ->
+  it 'returns 403 unless the user is the "creator" or a joiner', utils.wrap (done) ->
     @otherTeacher = yield utils.initUser({role: 'teacher'})
     yield utils.loginUser(@otherTeacher)
     [res, body] = yield request.postAsync({uri: @url, json: { userID: @student.id } })
@@ -142,7 +325,7 @@ describe 'POST /db/prepaid/:handle/redeemers', ->
     student = yield User.findById(@student.id)
     expect(student.get('coursePrepaid')._id.equals(@prepaid._id)).toBe(true)
     done()
-    
+
   it 'updates the user if their license is expired', utils.wrap (done) ->
     yield utils.loginUser(@admin)
     prepaid = yield utils.makePrepaid({
@@ -227,6 +410,34 @@ describe 'POST /db/prepaid/:handle/redeemers', ->
     expect(student.get('coursePrepaid')?.type).toEqual('starter_license')
     done()
 
+  describe 'when user is a joiner on a shared license', ->
+    beforeEach utils.wrap (done) ->
+      yield utils.clearModels([Course, CourseInstance, Payment, Prepaid, User])
+      @creator = yield utils.initUser({role: 'teacher'})
+      @joiner = yield utils.initUser({role: 'teacher'})
+      @admin = yield utils.initAdmin()
+      yield utils.loginUser(@admin)
+      @prepaid = yield utils.makePrepaid({ creator: @creator.id })
+      yield utils.loginUser(@creator)
+      yield utils.addJoinerToPrepaid(@prepaid, @joiner)
+      yield utils.loginUser(@joiner)
+      @student = yield utils.initUser()
+      @url = getURL("/db/prepaid/#{@prepaid.id}/redeemers")
+      done()
+    
+    it 'allows teachers with shared licenses to redeem', utils.wrap (done) ->
+      prepaid = yield Prepaid.findById(@prepaid.id)
+      expect(prepaid.get('redeemers').length).toBe(0)
+      [res, body] = yield request.postAsync {uri: @url, json: { userID: @student.id } }
+      expect(body.redeemers.length).toBe(1)
+      expect(res.statusCode).toBe(201)
+      prepaid = yield Prepaid.findById(body._id)
+      expect(prepaid.get('redeemers').length).toBe(1)
+      @student = yield User.findById(@student.id)
+      expect(@student.get('coursePrepaid')._id.equals(@prepaid._id)).toBe(true)
+      expect(@student.get('role')).toBe('student')
+      done()
+
 describe 'DELETE /db/prepaid/:handle/redeemers', ->
 
   beforeEach utils.wrap (done) ->
@@ -254,22 +465,6 @@ describe 'DELETE /db/prepaid/:handle/redeemers', ->
     expect(student.get('coursePrepaid')).toBeUndefined()
     done()
 
-  it 'works if the user has not migrated from coursePrepaidID to coursePrepaid', utils.wrap (done) ->
-    yield @student.update({
-      $set: { coursePrepaidID: @prepaid._id }
-      $unset: { coursePrepaid: '' }
-    })
-    yield @student.save()
-    [res, body] = yield request.delAsync {uri: @url, json: { userID: @student.id } }
-    expect(body.redeemers.length).toBe(0)
-    expect(res.statusCode).toBe(200)
-    prepaid = yield Prepaid.findById(body._id)
-    expect(prepaid.get('redeemers').length).toBe(0)
-    student = yield User.findById(@student.id)
-    expect(student.get('coursePrepaid')).toBeUndefined()
-    expect(student.get('coursePrepaidID')).toBeUndefined()
-    done()
-    
   it 'returns 403 unless the user is the "creator"', utils.wrap (done) ->
     otherTeacher = yield utils.initUser({role: 'teacher'})
     yield utils.loginUser(otherTeacher)
@@ -282,26 +477,113 @@ describe 'DELETE /db/prepaid/:handle/redeemers', ->
     [res, body] = yield request.delAsync {uri: @url, json: { userID: otherStudent.id } }
     expect(res.statusCode).toBe(422)
     done()
-    
+
   it 'returns 403 if the prepaid is a starter license', utils.wrap ->
     yield @prepaid.update({$set: {type: 'starter_license'}})
     [res, body] = yield request.delAsync {uri: @url, json: { userID: @student.id } }
     expect(res.statusCode).toBe(403)
 
+  describe 'when user is a joiner on a shared license', ->
+    beforeEach utils.wrap (done) ->
+      yield utils.clearModels([Course, CourseInstance, Payment, Prepaid, User])
+      @creator = yield utils.initUser({role: 'teacher'})
+      @joiner = yield utils.initUser({role: 'teacher'})
+      @admin = yield utils.initAdmin()
+      yield utils.loginUser(@admin)
+      @prepaid = yield utils.makePrepaid({ creator: @creator.id })
+      yield utils.loginUser(@creator)
+      yield utils.addJoinerToPrepaid(@prepaid, @joiner)
+      yield utils.loginUser(@joiner)
+      @student = yield utils.initUser()
+      @url = getURL("/db/prepaid/#{@prepaid.id}/redeemers")
+      [res, body] = yield request.postAsync {uri: @url, json: { userID: @student.id } }
+      expect(res.statusCode).toBe(201)
+      done()
+
+    it 'allows teachers with shared licenses to revoke', utils.wrap (done) ->
+      prepaid = yield Prepaid.findById(@prepaid.id)
+      expect(prepaid.get('redeemers').length).toBe(1)
+      [res, body] = yield request.delAsync {uri: @url, json: { userID: @student.id } }
+      expect(body.redeemers.length).toBe(0)
+      expect(res.statusCode).toBe(200)
+      prepaid = yield Prepaid.findById(body._id)
+      expect(prepaid.get('redeemers').length).toBe(0)
+      student = yield User.findById(@student.id)
+      expect(student.get('coursePrepaid')).toBeUndefined()
+      done()
+
+describe 'POST /db/prepaid/:handle/joiners', ->
+
+  beforeEach utils.wrap (done) ->
+    yield utils.clearModels([Course, CourseInstance, Payment, Prepaid, User])
+    @teacher = yield utils.initUser({role: 'teacher'})
+    @admin = yield utils.initAdmin()
+    yield utils.loginUser(@admin)
+    @prepaid = yield utils.makePrepaid({ creator: @teacher.id })
+    yield utils.loginUser(@teacher)
+    @joiner = yield utils.initUser({role: 'teacher'})
+    @url = getURL("/db/prepaid/#{@prepaid.id}/joiners")
+    done()
+
+  it 'adds a given user to the joiners property', utils.wrap (done) ->
+    [res, body] = yield request.postAsync {uri: @url, json: { userID: @joiner.id } }
+    expect(res.statusCode).toBe(201)
+    prepaid = yield Prepaid.findById(body._id)
+    expect(prepaid.get('joiners').length).toBe(1)
+    expect(prepaid.get('joiners')[0].userID + '').toBe(@joiner.id)
+    done()
+  
+  describe 'when a user has already been added to joiners', ->
+    it "doesn't add a user twice", utils.wrap (done) ->
+      [res, body] = yield request.postAsync {uri: @url, json: { userID: @joiner.id } }
+      expect(res.statusCode).toBe(201)
+      [res, body] = yield request.postAsync {uri: @url, json: { userID: @joiner.id } }
+      expect(res.statusCode).toBe(422)
+      expect(body.i18n).toBe('share_licenses.already_shared')
+      prepaid = yield Prepaid.findById(@prepaid.id)
+      expect(prepaid.get('joiners').length).toBe(1)
+      expect(prepaid.get('joiners')[0].userID + '').toBe(@joiner.id)
+      done()
+
+  it 'returns 403 if user is not the creator', utils.wrap (done) ->
+    yield utils.loginUser(@joiner)
+    [res, body] = yield request.postAsync {uri: @url, json: { userID: @joiner.id } }
+    expect(res.statusCode).toBe(403)
+    done()
+
+  it 'returns 403 if user is not a teacher', utils.wrap (done) ->
+    @user = yield utils.initUser()
+    yield utils.loginUser(@user)
+    [res, body] = yield request.postAsync {uri: @url, json: { userID: @joiner.id } }
+    expect(res.statusCode).toBe(403)
+    done()
+
+  it 'returns 422 if joiner is not a teacher', utils.wrap (done) ->
+    @nonteacher = yield utils.initUser()
+    [res, body] = yield request.postAsync {uri: @url, json: { userID: @nonteacher.id } }
+    expect(res.statusCode).toBe(422)
+    done()
+
+  it 'returns 404 if prepaid is not found', utils.wrap (done) ->
+    @url = getURL("/db/prepaid/123456789012345678901234/joiners")
+    [res, body] = yield request.postAsync {uri: @url, json: { userID: @joiner.id } }
+    expect(res.statusCode).toBe(404)
+    done()
+
 describe 'GET /db/prepaid?creator=:id', ->
   beforeEach utils.wrap (done) ->
     yield utils.clearModels([Course, CourseInstance, Payment, Prepaid, User])
     @teacher = yield utils.initUser({role: 'teacher'})
-    admin = yield utils.initAdmin()
-    yield utils.loginUser(admin)
+    @admin = yield utils.initAdmin()
+    yield utils.loginUser(@admin)
     @prepaid = yield utils.makePrepaid({ creator: @teacher.id })
-    @otherPrepaid = yield utils.makePrepaid({ creator: admin.id })
+    @otherPrepaid = yield utils.makePrepaid({ creator: @admin.id })
     @expiredPrepaid = yield utils.makePrepaid({ creator: @teacher.id, endDate: moment().subtract(1, 'month').toISOString() })
     @unmigratedPrepaid = yield utils.makePrepaid({ creator: @teacher.id })
     yield @unmigratedPrepaid.update({$unset: { endDate: '', startDate: '' }})
     yield utils.loginUser(@teacher)
     done()
-    
+
   it 'return all prepaids for the creator', utils.wrap (done) ->
     url = getURL("/db/prepaid?creator=#{@teacher.id}")
     [res, body] = yield request.getAsync({uri: url, json: true})
@@ -314,20 +596,41 @@ describe 'GET /db/prepaid?creator=:id', ->
         fail('All prepaids should have start and end dates')
     expect(res.body[0]._id).toBe(@prepaid.id)
     done()
-    
+
   it 'returns 403 if the user tries to view another user\'s prepaids', utils.wrap (done) ->
-    anotherUser = yield utils.initUser() 
+    anotherUser = yield utils.initUser()
     url = getURL("/db/prepaid?creator=#{anotherUser.id}")
     [res, body] = yield request.getAsync({uri: url, json: true})
     expect(res.statusCode).toBe(403)
     done()
 
-    
+  describe 'when includeShared is set to true', ->
+    beforeEach utils.wrap (done) ->
+      yield utils.loginUser(@admin)
+      @joiner = yield utils.initUser({role: 'teacher'})
+      @joinersPrepaid = yield utils.makePrepaid({ creator: @joiner.id })
+      yield @prepaid.update({$set: { joiners: { userID: @joiner._id }}})
+      yield utils.loginUser(@joiner)
+      done()
+
+    it 'returns licenses that have been shared with the user', utils.wrap (done) ->
+      url = getURL("/db/prepaid?creator=#{@joiner.id}&includeShared=true")
+      [res, body] = yield request.getAsync({uri: url, json: true})
+      expect(res.statusCode).toBe(200)
+      expect(res.body.length).toEqual(2)
+      if _.any((prepaid._id is @otherPrepaid.id for prepaid in res.body))
+        fail('Found the admin prepaid in response')
+      for prepaid in res.body
+        unless prepaid.startDate and prepaid.endDate
+          fail('All prepaids should have start and end dates')
+      expect(res.body[0]._id).toBe(@prepaid.id)
+      done()
+
 describe '/db/prepaid', ->
   beforeEach utils.wrap (done) ->
     yield utils.populateProducts()
     done()
-  
+
   prepaidURL = getURL('/db/prepaid')
 
   headers = {'X-Change-Plan': 'true'}
@@ -514,7 +817,7 @@ describe '/db/prepaid', ->
 
   describe 'Purchase terminal_subscription', ->
     afterEach nockUtils.teardownNock
-    
+
     it 'Anonymous submits a prepaid purchase', (done) ->
       nockUtils.setupNock 'db-prepaid-purchase-term-sub-test-1.json', (err, nockDone) ->
         stripe.tokens.create {
@@ -697,7 +1000,7 @@ describe '/db/prepaid', ->
   # TODO: Move redeem subscription prepaid code tests to subscription tests file
   describe 'Subscription redeem tests', ->
     afterEach nockUtils.teardownNock
-    
+
     it 'Creator can redeeem a prepaid code', (done) ->
       nockUtils.setupNock 'db-sub-redeem-test-1.json', (err, nockDone) ->
         loginJoe (joe) ->
@@ -709,7 +1012,7 @@ describe '/db/prepaid', ->
           # joe has a stripe subscription, so test if the months are added to the end of it.
           stripe.customers.retrieve joeData.stripe.customerID, (err, customer) =>
             expect(err).toBeNull()
-  
+
             findStripeSubscription customer.id, subscriptionID: joeData.stripe?.subscriptionID, (err, subscription) =>
               if subscription
                 stripeSubscriptionPeriodEndDate = new moment(subscription.current_period_end * 1000)
@@ -808,14 +1111,14 @@ describe '/db/prepaid', ->
 
       user = yield utils.initUser()
       yield utils.loginUser(user)
-      
+
       codeRedeemers = 50
       codeMonths = 3
       redeemers = 51
-      
+
       purchasePrepaidAsync = Promise.promisify(purchasePrepaid, {multiArgs: true})
       [res, prepaid] = yield purchasePrepaidAsync('terminal_subscription', months: codeMonths, codeRedeemers, token.id)
-      
+
       expect(prepaid).toBeDefined()
       expect(prepaid.code).toBeDefined()
 
@@ -828,17 +1131,17 @@ describe '/db/prepaid', ->
         thread.user = yield utils.initUser()
         yield utils.loginUser(thread.user, {request: thread.request})
         threads.push(thread)
-    
+
       # Spawn all requests at once!
       requests = []
-      options = { 
+      options = {
         url: getURL('/db/subscription/-/subscribe_prepaid')
         json: { ppc: prepaid.code }
       }
       for thread in threads
         requests.push(thread.request.postAsync(options))
-        
-      # Wait until all requests finish, make sure all but one succeeded 
+
+      # Wait until all requests finish, make sure all but one succeeded
       responses = yield requests
       redeemed = _.size(_.where(responses, {statusCode: 200}))
       errors = _.size(_.where(responses, {statusCode: 403}))
