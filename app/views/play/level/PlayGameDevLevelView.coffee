@@ -1,3 +1,4 @@
+require('app/styles/play/level/play-game-dev-level-view.sass')
 RootView = require 'views/core/RootView'
 
 GameUIState = require 'models/GameUIState'
@@ -14,9 +15,11 @@ utils = require 'core/utils'
 urls = require 'core/urls'
 Course = require 'models/Course'
 GameDevVictoryModal = require './modal/GameDevVictoryModal'
+aetherUtils = require 'lib/aether_utils'
 GameDevTrackView = require './GameDevTrackView'
+api = require 'core/api'
 
-require 'game-libraries'
+require 'lib/game-libraries'
 
 TEAM = 'humans'
 
@@ -35,7 +38,7 @@ module.exports = class PlayGameDevLevelView extends RootView
     'click #copy-url-btn': 'onClickCopyURLButton'
     'click #play-more-codecombat-btn': 'onClickPlayMoreCodeCombatButton'
 
-  initialize: (@options, @levelID, @sessionID) ->
+  initialize: (@options, @sessionID) ->
     @state = new State({
       loading: true
       progress: 0
@@ -46,17 +49,23 @@ module.exports = class PlayGameDevLevelView extends RootView
     @supermodel.on 'update-progress', (progress) =>
       @state.set({progress: (progress*100).toFixed(1)+'%'})
     @level = new Level()
-    @session = new LevelSession()
+    @session = new LevelSession({ _id: @sessionID })
     @gameUIState = new GameUIState()
-    @courseID = @getQueryVariable 'course'
-    @courseInstanceID = @getQueryVariable 'course-instance'
+    @courseID = utils.getQueryVariable 'course'
+    @courseInstanceID = utils.getQueryVariable 'course-instance'
     @god = new God({ @gameUIState, indefiniteLength: true })
-    @levelLoader = new LevelLoader({ @supermodel, @levelID, @sessionID, observing: true, team: TEAM, @courseID })
-    @supermodel.setMaxProgress 1 # Hack, why are we setting this to 0.2 in LevelLoader?
-    @listenTo @state, 'change', _.debounce @renderAllButCanvas
-    @updateDb = _.throttle(@updateDb, 1000)
 
-    @levelLoader.loadWorldNecessities()
+    @supermodel.registerModel(@session)
+    new Promise((accept,reject) => @session.fetch({ cache: false }).then(accept, reject)).then (sessionData) =>
+      api.levels.getByOriginal(sessionData.level.original)
+    .then (levelData) =>
+      @levelID = levelData.slug
+      @levelLoader = new LevelLoader({ @supermodel, @levelID, @sessionID, observing: true, team: TEAM, @courseID })
+      @supermodel.setMaxProgress 1 # Hack, why are we setting this to 0.2 in LevelLoader?
+      @listenTo @state, 'change', _.debounce @renderAllButCanvas
+      @updateDb = _.throttle(@updateDb, 1000)
+
+      @levelLoader.loadWorldNecessities()
 
     .then (levelLoader) =>
       { @level, @session, @world } = levelLoader
@@ -95,17 +104,21 @@ module.exports = class PlayGameDevLevelView extends RootView
       @surface.setWorld(@world)
       @scriptManager.initializeCamera()
       @renderSelectors '#info-col'
-      @spells = @session.generateSpellsObject level: @level
+      @spells = aetherUtils.generateSpellsObject level: @level, levelSession: @session
       goalNames = (utils.i18n(goal, 'name') for goal in @goalManager.goals)
       
       course = if @courseID then new Course({_id: @courseID}) else null
       shareURL = urls.playDevLevel({@level, @session, course})
       
+      creatorString = if @session.get('creatorName')
+        $.i18n.t('play_game_dev_level.created_by').replace('{{name}}', @session.get('creatorName'))
+      else
+        $.i18n.t('play_game_dev_level.created_during_hoc')
       @state.set({
         loading: false
         goalNames
         shareURL
-        creatorString: $.i18n.t('play_game_dev_level.created_by').replace('{{name}}', @session.get('creatorName'))
+        creatorString
         isOwner: me.id is @session.get('creator')
       })
       @eventProperties = {

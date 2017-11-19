@@ -95,6 +95,7 @@ courseIDs =
   GAME_DEVELOPMENT_2: '57b621e7ad86a6efb5737e64'
   WEB_DEVELOPMENT_2: '5789587aad86a6efb5737020'
   COMPUTER_SCIENCE_3: '56462f935afde0c6fd30fc8c'
+  GAME_DEVELOPMENT_3: '5a0df02b8f2391437740f74f'
   COMPUTER_SCIENCE_4: '56462f935afde0c6fd30fc8d'
   COMPUTER_SCIENCE_5: '569ed916efa72b0ced971447'
   COMPUTER_SCIENCE_6: '5817d673e85d1220db624ca4'
@@ -107,6 +108,7 @@ orderedCourseIDs = [
   courseIDs.GAME_DEVELOPMENT_2
   courseIDs.WEB_DEVELOPMENT_2
   courseIDs.COMPUTER_SCIENCE_3
+  courseIDs.GAME_DEVELOPMENT_3
   courseIDs.COMPUTER_SCIENCE_4
   courseIDs.COMPUTER_SCIENCE_5
   courseIDs.COMPUTER_SCIENCE_6
@@ -120,6 +122,7 @@ courseAcronyms[courseIDs.COMPUTER_SCIENCE_2] = 'CS2'
 courseAcronyms[courseIDs.GAME_DEVELOPMENT_2] = 'GD2'
 courseAcronyms[courseIDs.WEB_DEVELOPMENT_2] = 'WD2'
 courseAcronyms[courseIDs.COMPUTER_SCIENCE_3] = 'CS3'
+courseAcronyms[courseIDs.GAME_DEVELOPMENT_3] = 'GD3'
 courseAcronyms[courseIDs.COMPUTER_SCIENCE_4] = 'CS4'
 courseAcronyms[courseIDs.COMPUTER_SCIENCE_5] = 'CS5'
 courseAcronyms[courseIDs.COMPUTER_SCIENCE_6] = 'CS6'
@@ -455,38 +458,6 @@ filterMarkdownCodeLanguages = (text, language) ->
 
   return text
 
-aceEditModes =
-  javascript: 'ace/mode/javascript'
-  coffeescript: 'ace/mode/coffee'
-  python: 'ace/mode/python'
-  lua: 'ace/mode/lua'
-  java: 'ace/mode/java'
-  html: 'ace/mode/html'
-
-# These ACEs are used for displaying code snippets statically, like in SpellPaletteEntryView popovers
-# and have short lifespans
-initializeACE = (el, codeLanguage) ->
-  contents = $(el).text().trim()
-  editor = ace.edit el
-  editor.setOptions maxLines: Infinity
-  editor.setReadOnly true
-  editor.setTheme 'ace/theme/textmate'
-  editor.setShowPrintMargin false
-  editor.setShowFoldWidgets false
-  editor.setHighlightActiveLine false
-  editor.setHighlightActiveLine false
-  editor.setBehavioursEnabled false
-  editor.renderer.setShowGutter false
-  editor.setValue contents
-  editor.clearSelection()
-  session = editor.getSession()
-  session.setUseWorker false
-  session.setMode aceEditModes[codeLanguage]
-  session.setWrapLimitRange null
-  session.setUseWrapMode true
-  session.setNewLineMode 'unix'
-  return editor
-
 capitalLanguages =
   'javascript': 'JavaScript'
   'coffeescript': 'CoffeeScript'
@@ -652,7 +623,6 @@ isValidEmail = (email) ->
   emailRegex.test(email?.trim().toLowerCase())
 
 module.exports = {
-  aceEditModes
   capitalLanguages
   clone
   combineAncestralObject
@@ -678,7 +648,6 @@ module.exports = {
   hexToHSL
   hslToHex
   i18n
-  initializeACE
   injectCSS
   isID
   isRegionalSubscription

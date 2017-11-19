@@ -37,7 +37,6 @@ module.exports = class RootView extends CocoView
 
   subscriptions:
     'achievements:new': 'handleNewAchievements'
-    'modal:open-modal-view': 'onOpenModalView'
 
   shortcuts:
     'ctrl+shift+a': 'navigateToAdmin'
@@ -94,10 +93,6 @@ module.exports = class RootView extends CocoView
     window.tracker?.trackEvent anchorText, category: 'Homepage', ['Google Analytics'] if @id is 'home-view' and anchorText
     @toggleModal e
 
-  onOpenModalView: (e) ->
-    return console.error "Couldn't find modalPath #{e.modalPath}" unless e.modalPath and ModalClass = require e.modalPath
-    @openModalView new ModalClass {}
-
   showLoading: ($el) ->
     $el ?= @$el.find('#site-content-area')
     super($el)
@@ -124,7 +119,7 @@ module.exports = class RootView extends CocoView
 
     if title = @getTitle() then title += ' | CodeCombat'
     else title = 'CodeCombat - Learn how to code by playing a game'
-    
+
     if localStorage?.showViewNames
       title = @constructor.name
 
@@ -149,7 +144,7 @@ module.exports = class RootView extends CocoView
     genericCodes = _.filter codes, (code) ->
       _.find(codes, (code2) ->
         code2 isnt code and code2.split('-')[0] is code)
-    for code, localeInfo of locale when code not in ['update', 'installVueI18n'] and (not (code in genericCodes) or code is initialVal)
+    for code, localeInfo of locale when (not (code in genericCodes) or code is initialVal)
       $select.append(
         $('<option></option>').val(code).text(localeInfo.nativeDescription))
       if code is 'fr'
@@ -162,7 +157,7 @@ module.exports = class RootView extends CocoView
     $.i18n.setLng(newLang, {})
     @saveLanguage(newLang)
 
-    application.moduleLoader.loadLanguage(me.get('preferredLanguage', true)).then =>
+    locale.load(me.get('preferredLanguage', true)).then =>
       @onLanguageLoaded()
 
   onLanguageLoaded: ->

@@ -46,16 +46,6 @@ block content
           button.btn.btn-primary.btn-large#user-search-button  Search
     #user-search-result
     
-    .form-horizontal
-      form(action='/db/payments/-/all').form-group
-        label.control-label.col-sm-2(for="paypal-input") PayPal Search
-        .col-sm-4
-          input.form-control#paypal-input(name="payPalResource", placeholder="PayPal Transaction ID")
-          input(type="hidden", name="project", value="purchaser,recipient,created,service,amount,gems")
-          input(type="hidden", name="limit", value="10")
-        .col-sm-1
-          button.btn.btn-primary(type="submit") Search
-
   if !me.isAdmin()
     div.text-center You must be logged in as an admin to view this page.
   else
@@ -79,6 +69,8 @@ block content
         input.classroom-progress-class-code(type=text placeholder="<class code>")
       li
         a(href="/admin/analytics") Dashboard
+      li
+        a(href="/admin/level-hints") Level Hints
       li
         a(href="/admin/school-licenses") School Active Licenses
       li
@@ -125,3 +117,16 @@ block content
 
     input#increment-field(type="text")
     a.btn.btn-secondary#increment-button(href="#") Increment
+    
+    hr
+
+    .form-horizontal
+      h3 PayPal Search
+      form(action='/db/payments/-/all').form-group
+        label.control-label.col-sm-2(for="paypal-input") PayPal Search
+        .col-sm-4
+          input.form-control#paypal-input(name="payPalResource", placeholder="PayPal Transaction ID")
+          input(type="hidden", name="project", value="purchaser,recipient,created,service,amount,gems")
+          input(type="hidden", name="limit", value="10")
+        .col-sm-1
+          button.btn.btn-primary(type="submit") Search

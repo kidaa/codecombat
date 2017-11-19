@@ -1,14 +1,17 @@
+# TODO Webpack: Fix this (used to use module loader)
+
+require('app/styles/editor/verifier/i18n-verifier-view.sass')
 RootComponent = require 'views/core/RootComponent'
 Problem = require 'views/play/level/tome/Problem'
 locale = require 'locale/locale'
 api = require 'core/api'
-require 'vendor/co'
+co = require 'co'
 utils = require 'core/utils'
 
 I18nVerifierComponent = Vue.extend
   template: require('templates/editor/verifier/i18n-verifier-view')()
   data: ->
-    allLocales: Object.keys(_.omit(locale, 'update', 'installVueI18n')).concat('rot13')
+    allLocales: Object.keys(locale).concat('rot13')
     language: 'en'
     levelSlug: null
     startDay: moment(new Date()).subtract(2, 'weeks').format("YYYY-MM-DD")
