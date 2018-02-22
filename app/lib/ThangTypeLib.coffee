@@ -1,4 +1,6 @@
-ThangTypeLib = {
+utils = require 'core/utils'
+
+ThangTypeLib =
   getPortraitURL: (thangTypeObj) ->
     return '' if application.testing
     if iconURL = thangTypeObj.rasterIcon
@@ -6,9 +8,13 @@ ThangTypeLib = {
     if rasterURL = thangTypeObj.raster
       return "/file/#{rasterURL}"
     "/file/db/thang.type/#{thangTypeObj.original}/portrait.png"
-    
+
   getHeroShortName: (thangTypeObj) ->
-    # TODO: Eventually nice to move this into ThangType DB object so it can be translated like the rest
+    # New way: moved into ThangType model
+    if shortName = utils.i18n thangTypeObj, 'shortName'
+      return shortName
+
+    # Old way: hard-coded
     map = {
       'Assassin': {'en-US': 'Ritic'}
       'Captain': {'en-US': 'Anya', 'zh-HANS': '安雅'}
@@ -34,6 +40,17 @@ ThangTypeLib = {
     name = map[thangTypeObj.name]
     return translated if translated = name?[me.get('preferredLanguage', true)]
     return name?['en-US']
-}
+
+  getGender: (thangTypeObj) ->
+    # New way: moved into ThangType model
+    if gender = thangTypeObj?.gender
+      return gender
+
+    # Old way: hard-coded
+    slug = thangTypeObj?.slug ? thangTypeObj?.get?('slug') ? ''
+    heroGenders =
+      male: ['knight', 'samurai', 'trapper', 'potion-master', 'goliath', 'assassin', 'necromancer', 'duelist', 'code-ninja']
+      female: ['captain', 'ninja', 'forest-archer', 'librarian', 'sorcerer', 'raider', 'guardian', 'pixie', 'master-wizard', 'champion']
+    if slug in heroGenders.female then 'female' else 'male'
 
 module.exports = ThangTypeLib

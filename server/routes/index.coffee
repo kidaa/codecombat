@@ -6,6 +6,8 @@ module.exports.setup = (app) ->
   app.delete('/admin/feature-mode', mw.admin.deleteFeatureMode)
   app.get('/admin/calculate-lines-of-code', mw.admin.calculateLinesOfCode) # For outcomes report
 
+  app.get('/apcsp-files/*', mw.apcsp.getAPCSPFile)
+
   app.all('/api/*', mw.api.clientAuth)
 
   app.get('/api/auth/login-o-auth', mw.auth.loginByOAuthProvider)
@@ -42,6 +44,8 @@ module.exports.setup = (app) ->
   app.get('/auth/whoami', mw.auth.whoAmI)
 
   app.post('/contact/send-parent-signup-instructions', mw.contact.sendParentSignupInstructions)
+  app.post('/contact/send-teacher-game-dev-project-share', mw.contact.sendTeacherGameDevProjectShare)
+  app.post('/contact/send-teacher-signup-instructions', mw.contact.sendTeacherSignupInstructions)
 
   app.delete('/db/*', mw.auth.checkHasUser())
   app.patch('/db/*', mw.auth.checkHasUser())
@@ -212,6 +216,7 @@ module.exports.setup = (app) ->
   app.get('/db/users/-/by-age', mw.auth.checkHasPermission(['admin']), mw.users.fetchByAge)
   app.put('/db/user/-/remain-teacher', mw.users.remainTeacher)
   app.get('/db/user/-/lead-priority', mw.auth.checkLoggedIn(), mw.users.getLeadPriority)
+  app.put('/db/user/:handle/verifiedTeacher', mw.auth.checkHasPermission(['admin']), mw.users.setVerifiedTeacher)
   app.post('/db/user/:userID/request-verify-email', mw.users.sendVerificationEmail)
   app.post('/db/user/:userID/verify/:verificationCode', mw.users.verifyEmailAddress) # TODO: Finalize URL scheme
   app.get('/db/user/-/students', mw.auth.checkHasPermission(['admin']), mw.users.getStudents)

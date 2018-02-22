@@ -63,9 +63,9 @@ module.exports = class CoursesView extends RootView
     defaultHeroOriginal = ThangType.heroes.captain
     heroOriginal = me.get('heroConfig')?.thangType or defaultHeroOriginal
     @hero.url = "/db/thang.type/#{heroOriginal}/version"
-    # @hero.setProjection ['name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','unlockLevelName','i18n']
+    # @hero.setProjection ['name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','shortName','unlockLevelName','i18n']
     @supermodel.loadModel(@hero, 'hero')
-    @listenTo @hero, 'all', -> @render() if @supermodel.finished()
+    @listenTo @hero, 'change', -> @render() if @supermodel.finished()
 
   afterInsert: ->
     super()

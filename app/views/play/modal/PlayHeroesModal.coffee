@@ -42,7 +42,7 @@ module.exports = class PlayHeroesModal extends ModalView
     @confirmButtonI18N = options.confirmButtonI18N ? "common.save"
     @heroes = new CocoCollection([], {model: ThangType})
     @heroes.url = '/db/thang.type?view=heroes'
-    @heroes.setProjection ['original','name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','unlockLevelName','i18n','poseImage','tier','releasePhase']
+    @heroes.setProjection ['original','name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','shortName','unlockLevelName','i18n','poseImage','tier','releasePhase']
     @heroes.comparator = 'gems'
     @listenToOnce @heroes, 'sync', @onHeroesLoaded
     @supermodel.loadCollection(@heroes, 'heroes')
@@ -62,6 +62,7 @@ module.exports = class PlayHeroesModal extends ModalView
 
   formatHero: (hero) ->
     hero.name = utils.i18n hero.attributes, 'extendedName'
+    hero.name ?= utils.i18n hero.attributes, 'shortName'
     hero.name ?= utils.i18n hero.attributes, 'name'
     hero.description = utils.i18n hero.attributes, 'description'
     hero.unlockLevelName = utils.i18n hero.attributes, 'unlockLevelName'
@@ -177,12 +178,13 @@ module.exports = class PlayHeroesModal extends ModalView
 
   loadHero: (hero, heroIndex, preloading=false) ->
     createjs.Ticker.removeEventListener 'tick', stage for stage in _.values @stages
-    createjs.Ticker.setFPS 30  # In case we paused it from being inactive somewhere else
+    createjs.Ticker.framerate = 30  # In case we paused it from being inactive somewhere else
     if poseImage = hero.get 'poseImage'
       $(".hero-item[data-hero-id='#{hero.get('original')}'] canvas").hide()
       $(".hero-item[data-hero-id='#{hero.get('original')}'] .hero-pose-image").show().find('img').prop('src', '/file/' + poseImage)
       @playSelectionSound hero unless preloading
       return hero
+    # TODO: remove animated hero code, as we have poseImages for all heroes.
     if stage = @stages[heroIndex]
       unless preloading
         _.defer -> createjs.Ticker.addEventListener 'tick', stage  # Deferred, otherwise it won't start updating for some reason.
