@@ -52,9 +52,10 @@ ClassroomSchema.methods.isOwner = (userID) ->
 ClassroomSchema.methods.isMember = (userID) ->
   return _.any @get('members') or [], (memberID) -> userID.equals(memberID)
 
-ClassroomSchema.methods.generateCoursesData = co.wrap ({isAdmin}) ->
+ClassroomSchema.methods.generateCoursesData = co.wrap ({isAdmin, includeAssessments}) ->
   # Helper function for generating the latest version of courses
   isAdmin ?= false
+  includeAssessments ?= false
   query = {}
   query = {releasePhase: 'released'} unless isAdmin
   courses = yield Course.find(query)
@@ -71,12 +72,15 @@ ClassroomSchema.methods.generateCoursesData = co.wrap ({isAdmin}) ->
     levels = _.sortBy(_.values(campaign.get('levels')), 'campaignIndex')
     for level in levels
       continue if classLanguage and level.primerLanguage is classLanguage
+      continue if level.assessment and not includeAssessments
       levelData = { original: mongoose.Types.ObjectId(level.original) }
-      _.extend(levelData, _.pick(level, 
+      _.extend(levelData, _.pick(level,
         'type',
         'slug',
-        'name', 
-        'practice', 
+        'name',
+        'assessment',
+        'assessmentPlacement'
+        'practice',
         'practiceThresholdMinutes',
         'primerLanguage',
         'shareable',
@@ -86,8 +90,9 @@ ClassroomSchema.methods.generateCoursesData = co.wrap ({isAdmin}) ->
     coursesData.push(courseData)
   coursesData
 
-ClassroomSchema.methods.generateCourseData = co.wrap ({courseId}) ->
+ClassroomSchema.methods.generateCourseData = co.wrap ({courseId, includeAssessments}) ->
   # Helper function for generating the latest version of a course
+  includeAssessments ?= false
   course = yield Course.findById(courseId)
   campaign = yield Campaign.findById({_id: course.get('campaignID')})
   classLanguage = @get('aceConfig')?.language
@@ -95,14 +100,16 @@ ClassroomSchema.methods.generateCourseData = co.wrap ({courseId}) ->
   levels = _.sortBy(_.values(campaign.get('levels')), 'campaignIndex')
   for level in levels
     continue if classLanguage and level.primerLanguage is classLanguage
+    continue if level.assessment and not includeAssessments
     levelData = { original: mongoose.Types.ObjectId(level.original) }
     _.extend(levelData, _.pick(level, 'type', 'slug', 'name', 'practice', 'practiceThresholdMinutes', 'primerLanguage', 'shareable'))
     courseData.levels.push(levelData)
   courseData
 
-ClassroomSchema.methods.setUpdatedCourse = co.wrap ({courseId}) ->
+ClassroomSchema.methods.setUpdatedCourse = co.wrap ({courseId, includeAssessments}) ->
   # Update existing or add missing course
-  latestCourse = yield @generateCourseData({courseId})
+  includeAssessments ?= false
+  latestCourse = yield @generateCourseData({courseId, includeAssessments})
   updatedCourses = _.clone(@get('courses') or [])
   existingIndex = _.findIndex(updatedCourses, (c) -> c._id.equals(courseId))
   oldCourseCount = updatedCourses.length
@@ -118,11 +125,12 @@ ClassroomSchema.methods.setUpdatedCourse = co.wrap ({courseId}) ->
   @set('courses', updatedCourses)
   {oldCourseCount, newCourseCount, oldLevelCount, newLevelCount}
 
-ClassroomSchema.methods.setUpdatedCourses = co.wrap ({isAdmin, addNewCoursesOnly}) ->
+ClassroomSchema.methods.setUpdatedCourses = co.wrap ({isAdmin, addNewCoursesOnly, includeAssessments}) ->
   # Add missing courses, and update existing courses if addNewCoursesOnly=false
   isAdmin ?= false
   addNewCoursesOnly ?= true
-  coursesData = yield @generateCoursesData({isAdmin})
+  includeAssessments ?= false
+  coursesData = yield @generateCoursesData({isAdmin, includeAssessments})
   if addNewCoursesOnly
     newestCoursesData = coursesData
     coursesData = @get('courses') or []
@@ -158,15 +166,16 @@ ClassroomSchema.methods.fetchSessionsForMembers = co.wrap (members) ->
       memberCoursesMap[userID.toHexString()] ?= []
       memberCoursesMap[userID.toHexString()].push(courseInstance.courseID)
   dbqs = []
-  select = 'state.complete level creator playtime changed created dateFirstCompleted submitted published'
+  select = 'state.complete state.topScores level creator playtime changed created dateFirstCompleted submitted published code codeConcepts'
+  $or = []
   for member in members
-    $or = []
     for courseID in memberCoursesMap[member.toHexString()] ? []
       for subQuery in courseLevelsMap[courseID.toHexString()] ? []
         $or.push(_.assign({creator: member.toHexString()}, subQuery))
-    if $or.length
-      query = { $or }
-      dbqs.push(LevelSession.find(query).setOptions({maxTimeMS:5000}).select(select).lean().exec())
+  while $or.length
+    chunk = $or.splice(0, 50)
+    break if chunk.length is 0
+    dbqs.push(LevelSession.find({ $or: chunk }).setOptions({maxTimeMS:1000}).select(select).lean().exec())
   results = yield dbqs
   return _.flatten(results)
 

@@ -12,6 +12,7 @@ Campaign = require '../models/Campaign'
 Course = require  '../models/Course'
 CourseInstance = require '../models/CourseInstance'
 Classroom = require '../models/Classroom'
+simpleCache = require '../lib/simpleCache'
 
 LevelHandler = class LevelHandler extends Handler
   modelClass: Level
@@ -80,6 +81,7 @@ LevelHandler = class LevelHandler extends Handler
         valueArray = _.pluck data, (session) -> _.find(session.leagues, leagueID: league)?.stats?.totalScore or 10
       else
         valueArray = _.pluck data, 'totalScore'
+        simpleCache.setLadderScores req.query.levelSlug, match.team, valueArray
       @sendSuccess res, valueArray
 
   checkExistence: (req, res, slugOrID) ->
@@ -124,10 +126,16 @@ LevelHandler = class LevelHandler extends Handler
   getMyLeaderboardRank: (req, res, id) ->
     req.query.order = 1
     sessionsQueryParameters = @makeLeaderboardQueryParameters(req, id)
-    t0 = new Date()
     Session.count(sessionsQueryParameters).setOptions({maxTimeMS:200}).exec (err, count) =>
-      return @sendDatabaseError(res, err) if err
-      res.send JSON.stringify(count + 1)
+      if err and err.message is 'operation exceeded time limit'
+        rank = "unknown"
+        if not sessionsQueryParameters['leagues.leagueID'] and req.query.levelSlug
+          rank = simpleCache.getLadderRank(req.query.levelSlug, req.query.team, req.query.scoreOffset) or rank
+      else if err
+        return @sendDatabaseError(res, err)
+      else
+        rank = count + 1
+      res.send JSON.stringify rank
 
   makeLeaderboardQueryParameters: (req, id) ->
     @validateLeaderboardRequestParameters req
@@ -213,7 +221,7 @@ LevelHandler = class LevelHandler extends Handler
       findParameters['_id'] = slugOrID
     else
       findParameters['slug'] = slugOrID
-    selectString = 'original version'
+    selectString = 'original version slug'
     query = Level.findOne(findParameters)
       .select(selectString)
       .lean()
@@ -228,20 +236,36 @@ LevelHandler = class LevelHandler extends Handler
           original: level.original.toString()
           majorVersion: level.version.major
         submitted: true
+      if leagueID = req.query.league
+        sessionsQueryParameters['leagues.leagueID'] = leagueID
+        # Index with league uses levelID instead of level
+        delete sessionsQueryParameters.level
+        sessionsQueryParameters.levelID = level.slug
 
       teams = ['humans', 'ogres']
-      findTop20Players = (sessionQueryParams, team, cb) ->
-        sessionQueryParams['team'] = team
-        aggregate = Session.aggregate [
-          {$match: _.clone(sessionQueryParams)}
-          {$sort: {'totalScore': -1}}
-          {$limit: 20}
-          {$project: {'totalScore': 1}}
-        ]
-        aggregate.cache(3 * 60 * 1000)
-        aggregate.exec cb
+      findRandomPlayer = (query, team, cb) ->
+        query['team'] = team
+        if leagueID
+          # Find any random player, since there probably aren't that many
+          aggregate = Session.aggregate [
+            {$match: _.clone(query)}
+            {$limit: 100}
+            {$sample: {size: 1}}
+            {$project: {'totalScore': 1}}
+          ]
+          aggregate.exec cb
+        else
+          # Find from among top 20 players
+          aggregate = Session.aggregate [
+            {$match: _.clone(query)}
+            {$sort: {'totalScore': -1}}
+            {$limit: 20}
+            {$project: {'totalScore': 1}}
+          ]
+          aggregate.cache(3 * 60 * 1000)
+          aggregate.exec cb
 
-      async.map teams, findTop20Players.bind(@, sessionsQueryParameters), (err, map) =>
+      async.map teams, findRandomPlayer.bind(@, sessionsQueryParameters), (err, map) =>
         if err? then return @sendDatabaseError(res, err)
         sessions = []
         for mapItem in map

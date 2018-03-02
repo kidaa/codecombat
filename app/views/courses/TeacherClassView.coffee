@@ -16,6 +16,7 @@ Campaigns = require 'collections/Campaigns'
 Classroom = require 'models/Classroom'
 Classrooms = require 'collections/Classrooms'
 Levels = require 'collections/Levels'
+LevelSession = require 'models/LevelSession'
 LevelSessions = require 'collections/LevelSessions'
 User = require 'models/User'
 Users = require 'collections/Users'
@@ -54,6 +55,7 @@ module.exports = class TeacherClassView extends RootView
     'click .student-checkbox': 'onClickStudentCheckbox'
     'keyup #student-search': 'onKeyPressStudentSearch'
     'change .course-select, .bulk-course-select': 'onChangeCourseSelect'
+    'click a.student-level-progress-dot': 'onClickStudentProgressDot'
 
   getInitialState: ->
     {
@@ -96,6 +98,7 @@ module.exports = class TeacherClassView extends RootView
     @supermodel.trackRequest @classroom.fetch()
     @onKeyPressStudentSearch = _.debounce(@onKeyPressStudentSearch, 200)
     @sortedCourses = []
+    @latestReleasedCourses = []
 
     @prepaids = new Prepaids()
     @supermodel.trackRequest @prepaids.fetchMineAndShared()
@@ -134,7 +137,7 @@ module.exports = class TeacherClassView extends RootView
     @supermodel.trackRequest @courseInstances.fetchForClassroom(classroomID)
 
     @levels = new Levels()
-    @supermodel.trackRequest @levels.fetchForClassroom(classroomID, {data: {project: 'original,concepts,primerLanguage,practice,shareable,i18n'}})
+    @supermodel.trackRequest @levels.fetchForClassroom(classroomID, {data: {project: 'original,name,primaryConcepts,concepts,primerLanguage,practice,shareable,i18n,assessment,assessmentPlacement,slug,scoreTypes'}})
 
     @attachMediatorEvents()
     window.tracker?.trackEvent 'Teachers Class Loaded', category: 'Teachers', classroomID: @classroom.id, ['Mixpanel']
@@ -209,6 +212,7 @@ module.exports = class TeacherClassView extends RootView
       else
         @debouncedRender()
     @listenTo @students, 'sort', @debouncedRender
+    @getCourseAssessmentPairs()
     super()
 
   afterRender: ->
@@ -253,6 +257,14 @@ module.exports = class TeacherClassView extends RootView
       progressData
       classStats: @calculateClassStats()
     }
+  
+  getCourseAssessmentPairs: () ->
+    @courseAssessmentPairs = []
+    for course in @courses.models
+      assessmentLevels = @classroom.getLevels({courseID: course.id, assessmentLevels: true}).models
+      fullLevels = _.filter(@levels.models, (l) => l.get('original') in _.map(assessmentLevels, (l2)=>l2.get('original')))
+      @courseAssessmentPairs.push([course, fullLevels])
+    return @courseAssessmentPairs
 
   onClickNavTabLink: (e) ->
     e.preventDefault()
@@ -395,6 +407,7 @@ module.exports = class TeacherClassView extends RootView
         if instance and instance.hasMember(student)
           for trimLevel in trimCourse.levels
             level = @levels.findWhere({ original: trimLevel.original })
+            continue if level.get('assessment')
             progress = @state.get('progressData').get({ classroom: @classroom, course: course, level: level, user: student })
             concepts.push(level.get('concepts') ? []) if progress?.completed
       concepts = _.union(_.flatten(concepts))
@@ -406,6 +419,8 @@ module.exports = class TeacherClassView extends RootView
         continue unless session.get('creator') is student.id
         continue unless session.get('state')?.complete
         continue if levelPracticeMap[session.get('level')?.original]
+        level = @levels.findWhere({ original: session.get('level')?.original })
+        continue if level?.get('assessment')
         levels++
         playtime += session.get('playtime') or 0
         if courseID = levelCourseIdMap[session.get('level')?.original]
@@ -575,12 +590,14 @@ module.exports = class TeacherClassView extends RootView
   removeCourse: (courseID, members) ->
     return unless me.id is @classroom.get('ownerID') # May be viewing page as admin
     courseInstance = null
-    numberRemoved = 0
+    membersBefore = 0
 
     return Promise.resolve()
     # Find the necessary course instance
     .then =>
       courseInstance = @courseInstances.findWhere({ courseID, classroomID: @classroom.id })
+      if courseInstance
+        membersBefore = courseInstance.get('members').length
       # if not courseInstance
       # TODO: show some message if no courseInstance?
       return courseInstance
@@ -595,11 +612,13 @@ module.exports = class TeacherClassView extends RootView
         return courseInstance?.removeMembers(members)
 
     # Show a success/error notification
-    .then =>
+    .then (res) =>
+      membersAfter = courseInstance?.get('members').length or 0
+      numberRemoved = membersBefore - membersAfter
       course = @courses.get(courseID)
       lines = [
         $.i18n.t('teacher.removed_course_msg')
-          .replace('{{numberRemoved}}', members.length)
+          .replace('{{numberRemoved}}', numberRemoved)
           .replace('{{courseName}}', course.get('name'))
       ]
       noty text: lines.join('<br />'), layout: 'center', type: 'information', killer: true, timeout: 5000
@@ -643,6 +662,14 @@ module.exports = class TeacherClassView extends RootView
     checkboxStates[studentID] = not checkboxStates[studentID]
     @state.set { checkboxStates }
 
+  onClickStudentProgressDot: (e) ->
+    classroomId = @classroom.id
+    courseId = @$(e.currentTarget).data('course-id')
+    studentId = @$(e.currentTarget).data('student-id')
+    levelSlug = @$(e.currentTarget).data('level-slug')
+    levelProgress = @$(e.currentTarget).data('level-progress')
+    window.tracker?.trackEvent 'Click Class Courses Tab Student Progress Dot', {category: 'Teachers', classroomId, courseId, studentId, levelSlug, levelProgress}
+
   calculateClassStats: ->
     return {} unless @classroom.sessions?.loaded and @students.loaded
     stats = {}
@@ -678,3 +705,12 @@ module.exports = class TeacherClassView extends RootView
       when 'enrolled' then (if expires then $.i18n.t('teacher.status_enrolled') else '-')
       when 'expired' then $.i18n.t('teacher.status_expired')
     return string.replace('{{date}}', moment(expires).utc().format('ll'))
+
+  getTopScore: ({level, session}) ->
+    return unless level and session
+    scoreType = _.first(level.get('scoreTypes'))
+    if _.isObject(scoreType)
+      scoreType = scoreType.type
+    topScores = LevelSession.getTopScores({level: level.toJSON(), session: session.toJSON()}) 
+    topScore = _.find(topScores, {type: scoreType})
+    return topScore

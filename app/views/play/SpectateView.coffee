@@ -180,9 +180,10 @@ module.exports = class SpectateLevelView extends RootView
     @insertSubView @tome = new TomeView levelID: @levelID, session: @session, otherSession: @otherSession, thangs: @world.thangs, supermodel: @supermodel, spectateView: true, spectateOpponentCodeLanguage: @otherSession?.get('submittedCodeLanguage'), level: @level, god: @god
     @insertSubView new PlaybackView session: @session, level: @level
 
-    @insertSubView new GoldView {}
+    goldInDuelStatsView = @level.get('slug') in ['wakka-maul', 'cross-bones']
+    @insertSubView new GoldView {} unless goldInDuelStatsView
     @insertSubView new HUDView {level: @level}
-    @insertSubView new DuelStatsView level: @level, session: @session, otherSession: @otherSession, supermodel: @supermodel, thangs: @world.thangs if @level.isType('hero-ladder', 'course-ladder')
+    @insertSubView new DuelStatsView level: @level, session: @session, otherSession: @otherSession, supermodel: @supermodel, thangs: @world.thangs, showsGold: goldInDuelStatsView if @level.isType('hero-ladder', 'course-ladder')
     @insertSubView @controlBar = new ControlBarView {worldName: utils.i18n(@level.attributes, 'name'), session: @session, level: @level, supermodel: @supermodel, spectateGame: true}
 
   # callbacks
@@ -202,10 +203,7 @@ module.exports = class SpectateLevelView extends RootView
     bounds = [{x:worldBounds.left, y:worldBounds.top}, {x:worldBounds.right, y:worldBounds.bottom}]
     @surface.camera.setBounds(bounds)
     zoom = =>
-      @surface.camera.zoomTo({x: (worldBounds.right - worldBounds.left) / 2, y: (worldBounds.top - worldBounds.bottom) / 2}, 0.1, 0)
-      if @level.get('name') is 'Escort Duty'
-        @surface.camera.setBounds [{x: -7, y: -5}, {x: 87, y: 75}]
-        @surface.camera.zoomTo null, 0.1, 0
+      @surface?.camera.zoomTo({x: (worldBounds.right - worldBounds.left) / 2, y: (worldBounds.top - worldBounds.bottom) / 2}, 0.1, 0)
     _.delay zoom, 4000  # call it later for some reason (TODO: figure this out)
 
   findPlayerNames: ->
@@ -221,7 +219,7 @@ module.exports = class SpectateLevelView extends RootView
   initScriptManager: ->
     if @world.scripts
       nonVictoryPlaybackScripts = _.reject @world.scripts, (script) ->
-        script.id.indexOf('Set Camera Boundaries') is -1
+        not /(Set Camera Boundaries|Introduction)/.test script.id
     else
       console.log 'World scripts don\'t exist!'
       nonVictoryPlaybackScripts = []
@@ -295,6 +293,8 @@ module.exports = class SpectateLevelView extends RootView
   fetchRandomSessionPair: (cb) ->
     console.log 'Fetching random session pair!'
     randomSessionPairURL = "/db/level/#{@levelID}/random_session_pair"
+    if leagueID = utils.getQueryVariable 'league'
+      randomSessionPairURL += "?league=" + leagueID
     $.ajax
       url: randomSessionPairURL
       type: 'GET'

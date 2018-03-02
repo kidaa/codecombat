@@ -90,6 +90,8 @@ LevelSchema.statics.editableProperties = [
   'requiresSubscription'
   'adventurer'
   'practice'
+  'assessment'
+  'assessmentPlacement'
   'shareable'
   'adminOnly'
   'disableSpaces'

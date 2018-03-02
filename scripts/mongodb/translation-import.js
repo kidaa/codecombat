@@ -11,12 +11,10 @@
 // * return after the first change is found (commented out)
 // * uncomment "return true" lines
 
-// TODO: update to import Article translations
-
 // Constants (change these for different languages)
-langCode = 'zh-HANS';
-langProperty = 'Chinese';  // Match column name in CSV
-fileName = 'common-zh-HANS.csv';
+langCode = 'he';
+langProperty = 'Hebrew';  // Match column name in CSV
+fileName = 'en-to-he-2017-12-22.csv';
 doSave = false;  // Change to true to actually save
 
 if (!doSave)
@@ -66,10 +64,12 @@ differ = deltasLib.makeJSONDiffer()
 omissions = ['original'].concat(deltasLib.DOC_SKIP_PATHS)
 
 updatedCount = 0
+unchangedCount = 0
 update = _.curry(function(translationMap, propertyPrefix, rootDoc, property) {
   englishString = rootDoc[property]
   if(!englishString) return;
   var normalizedEnglish = normalizeEscapesAndPunctuationKeys(englishString);
+  //if(_.isUndefined(translationMap[normalizedEnglish])) { console.log("Couldn't find", englishString, normalizedEnglish, "for", propertyPrefix); }
   if(_.isUndefined(translationMap[normalizedEnglish])) { return }
   translation = translationMap[normalizedEnglish]
   if(!_.isString(translation)) { translation = translation.toString() }
@@ -83,12 +83,26 @@ update = _.curry(function(translationMap, propertyPrefix, rootDoc, property) {
   if (!rootDoc.i18n) { rootDoc.i18n = {} }
   if (!rootDoc.i18n[langCode]) { rootDoc.i18n[langCode] = {} }
   var oldTranslation = rootDoc.i18n[langCode][property];
+  if(logUpdate(englishString, translation, oldTranslation))
+    rootDoc.i18n[langCode][property] = translation
+})
+
+function logUpdate(englishString, translation, oldTranslation) {
+  if (langCode == 'he' && oldTranslation && isHebrew(oldTranslation) && translation != oldTranslation) {
+    console.log("Skipping overwriting on", englishString);
+    ++unchangedCount;
+    return false;  // Don't overwrite any Hebrew, it might be a more recent correction from proofreader
+  }
   if (translation != oldTranslation) {
     ++updatedCount;
     console.log('Changed:',updatedCount,'\tUpdating translation\nFor:', englishString.slice(0,100).replace(/\n/g, '\\n'), '\nOld:', (oldTranslation || '').slice(0,100).replace(/\n/g, '\\n'), '\nNew:', translation.slice(0,100).replace(/\n/g, '\\n'),'\n');
+    return true;
   }
-  rootDoc.i18n[langCode][property] = translation
-})
+  else {
+    ++unchangedCount;
+    return true;
+  }
+}
 
 function isHebrew(s) {
   for(var i = 0; i < s.length; ++i) {
@@ -113,7 +127,15 @@ function normalizeEscapesAndPunctuationValues(s) {
   s = s.replace(/\\r/g, '');
   s = s.replace(/\\n/g, '\n');
   s = s.replace(/\\"/g, '"');
-  //s = s.replace(/\\/, '"');  // Saw this in Chinese spreadsheet import once, probably don't want to use generally unless problem resurfaces
+  if (langCode == 'zh-HANS' || langCode == 'he') {
+    var s1 = s;
+    s = s.replace(/\\/, '"');  // Saw this in Chinese spreadsheet import once, probably don't want to use generally unless problem resurfaces
+    if (s != s1) {
+      var quotes = s.match(/(")/g);
+      if (quotes && quotes.length % 2)
+        s = s.replace(/"$/, '');  // Kill the trailing quote we didn't want
+    }
+  }
   //s = s.replace(/"$/, '');  // Saw this in Hebrew spreadsheet import once, probably don't want to use generally unless problem resurfaces
   return s;
 }
@@ -206,16 +228,35 @@ co(function* () {
           _.forEach(component.config.programmableMethods, function(method, k) {
             _.forEach(method.context, function(value, property) {
               englishString = value
-              if(!translationMap[englishString]) { return }
+              var normalizedEnglish = normalizeEscapesAndPunctuationKeys(englishString);
+              if(!translationMap[normalizedEnglish]) { return }
               if (!method.i18n) { method.i18n = {} }
               if (!method.i18n[langCode]) { method.i18n[langCode] = {} }
               if (!method.i18n[langCode].context) { method.i18n[langCode].context = {} }
-              method.i18n[langCode].context[property] = translationMap[englishString]
+              if(logUpdate(englishString, translationMap[normalizedEnglish], method.i18n[langCode].context[property]))
+                method.i18n[langCode].context[property] = translationMap[normalizedEnglish]
             })
           })
         }
       })
     })
+
+    _.forEach(levelObj.thangs, function(thang, i) {
+      _.forEach(thang.components, function(component, j) {
+        if (component.config && component.config.context && component.config.i18n) {
+          _.forEach(component.config.context, function(value, property) {
+            englishString = value
+            var normalizedEnglish = normalizeEscapesAndPunctuationKeys(englishString);
+            if(!translationMap[normalizedEnglish]) { return }
+            if (!component.config.i18n[langCode]) { component.config.i18n[langCode] = {} }
+            if (!component.config.i18n[langCode].context) { component.config.i18n[langCode].context = {} }
+            if(logUpdate(englishString, translationMap[normalizedEnglish], component.config.i18n[langCode].context[property]))
+              component.config.i18n[langCode].context[property] = translationMap[normalizedEnglish]
+          })
+        }
+      })
+    })
+
     updatedLevel.set(levelObj)
     updatedLevel.set('commitMessage', `Import ${langProperty} translations`)
   
@@ -329,20 +370,32 @@ co(function* () {
       else {
         _.forEach(propDoc.description, function (description, j) {
           englishString = description
-          if(!translationMap[englishString]) { return }
+          var normalizedEnglish = normalizeEscapesAndPunctuationKeys(englishString);
+          if(!translationMap[normalizedEnglish]) { return }
           if (!propDoc.i18n) { return }
           if (!propDoc.i18n[langCode]) { propDoc.i18n[langCode] = {} }
           if (!propDoc.i18n[langCode].description) { propDoc.i18n[langCode].description = {} }
-          propDoc.i18n[langCode].description[j] = translationMap[englishString]
+          if (langCode == 'he' && translationMap[normalizedEnglish] && isHebrew(translationMap[normalizedEnglish])) {
+            console.log("Skipping overwriting on", englishString);
+            return;  // Don't overwrite any Hebrew, it might be a more recent correction from proofreader
+          }
+          if(logUpdate(englishString, translationMap[normalizedEnglish], propDoc.i18n[langCode].description[j]))
+            propDoc.i18n[langCode].description[j] = translationMap[normalizedEnglish]
         })
       }
       _.forEach(propDoc.context, function(value, j) {
         englishString = value
-        if(!translationMap[englishString]) { return }
+        var normalizedEnglish = normalizeEscapesAndPunctuationKeys(englishString);
+        if(!translationMap[normalizedEnglish]) { return }
         if (!propDoc.i18n) { return }
         if (!propDoc.i18n[langCode]) { propDoc.i18n[langCode] = {} }
         if (!propDoc.i18n[langCode].context) { propDoc.i18n[langCode].context = {} }
-        propDoc.i18n[langCode].context[j] = translationMap[englishString]
+        if (langCode == 'he' && translationMap[normalizedEnglish] && isHebrew(translationMap[normalizedEnglish])) {
+          console.log("Skipping overwriting on", englishString);
+          return;  // Don't overwrite any Hebrew, it might be a more recent correction from proofreader
+        }
+        if(logUpdate(englishString, translationMap[normalizedEnglish], propDoc.i18n[langCode].context[j]))
+          propDoc.i18n[langCode].context[j] = translationMap[normalizedEnglish]
       })
     })
   
@@ -475,6 +528,8 @@ co(function* () {
 
   
 }).then(function() {
+  console.log("Final updated count:", updatedCount);
+  console.log("    Unchanged count:", unchangedCount);
   process.exit(0)
 }).catch(function(e) {
   console.log('err', e.stack);
